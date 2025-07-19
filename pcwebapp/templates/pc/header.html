@@ -316,7 +316,7 @@
                   <script>
                   (function(){
                     const WIDGET_URL = "https://telegram.org/js/telegram-widget.js?22&v=1";
-                    const AUTH_URL   = "https://legitcheck.one/pc/telegram/login/";  // ваш endpoint
+                    const AUTH_URL   = "/pc/telegram/login/";  // ваш endpoint
                     const BOT_NAME   = "LegitLogisticsBot";                          // имя бота без @
 
                     // Если хотите вернуть юзера на текущую страницу после логина:
@@ -349,7 +349,7 @@
                     const nextMatch = authAttr.match(/[?&]next=([^&]+)/);
                     if (nextMatch) params.append('next', nextMatch[1]);
 
-                    window.location = "https://legitcheck.one/pc/telegram/login/?" + params.toString();
+                    window.location = "/pc/telegram/login/?" + params.toString();
                   }
                   </script>
 
