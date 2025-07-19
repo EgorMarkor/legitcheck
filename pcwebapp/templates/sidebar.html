@@ -1,0 +1,184 @@
+{% load static %}
+<div class="_3-account__border2">
+      <div class="_3-account__frame-1948754056">
+        <div class="_3-account__frame-1948754055">
+          <a class="_3-account__frame-1948754052 button" href="{% url 'home' %}">
+            <img class="_3-account__group-8745" src="{% static 'account/group-87450.svg' %}" />
+            <div class="_3-account__div13">Главная</div>
+          </a>
+          <div class="_3-account__bt"></div>
+        </div>
+        <a class="_3-account__frame-1948754076 button" href="{% url 'startcheck' %}">
+          <div class="_3-account__frame-1948754054">
+            <div class="_3-account__go">GO</div>
+          </div>
+        </a>
+        <a class="_3-account__frame-1948754053 button" href="{% url 'verdicts' %}">
+          <img class="_3-account__group-87452" src="{% static 'account/group-87451.svg' %}" />
+          <div class="_3-account__div14">Вердикты</div>
+        </a>
+      </div>
+    </div>
+
+<style>
+    ._3-account__border2 {
+  background: var(
+    --bek-plashek-temnyj,
+    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
+  );
+  border-radius: 100rem;
+  border-width: 0.2rem;
+  
+  border-image: var(
+    --obvodka-temnaya-versiya,
+    linear-gradient(
+      180deg,
+      rgba(179, 214, 255, 0.03) 0%,
+      rgba(179, 214, 255, 0) 100%
+    )
+  );
+  border-image-slice: 1;
+  padding: 2.3rem 2.6rem 2.3rem 2.6rem;
+  width: 28.7rem;
+  height: 7.9rem;
+  position: fixed;
+  left: 81.6rem;
+  top: 87.8rem;
+  overflow: hidden;
+}
+._3-account__frame-1948754056 {
+  display: flex;
+  flex-direction: row;
+  gap: 2.284rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: absolute;
+  left: 3.5rem;
+  top: 2rem;
+}
+._3-account__frame-1948754055 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.028rem;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 5.368rem;
+  position: relative;
+}
+._3-account__frame-1948754052 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6849999999999999rem;
+  align-items: center;
+  justify-content: flex-start;
+  align-self: stretch;
+  flex-shrink: 0;
+  position: relative;
+}
+._3-account__group-8745 {
+  flex-shrink: 0;
+  width: 1.7149999999999999rem;
+  height: 1.7129999999999999rem;
+  position: relative;
+  overflow: visible;
+}
+._3-account__div13 {
+  color: #464f5d;
+  text-align: center;
+  font-family: "GoogleSans-Bold", sans-serif;
+  font-size: 1.1421051979064942rem;
+  line-height: 1.827rem;
+  font-weight: 700;
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+._3-account__bt {
+  border-radius: 0.571rem 0.571rem 0rem 0rem;
+  flex-shrink: 0;
+  width: 2.855rem;
+  height: 0.22799999999999998rem;
+  position: relative;
+}
+._3-account__frame-1948754076 {
+  display: flex;
+  flex-direction: row;
+  gap: 1.142rem;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 5.482rem;
+  height: 3.7689999999999997rem;
+  position: relative;
+}
+._3-account__frame-1948754054 {
+  background: var(
+    --zelenyj-plashka,
+    linear-gradient(
+      247.01deg,
+      rgba(12, 200, 139, 1) 0%,
+      rgba(29, 120, 91, 1) 100%
+    )
+  );
+  border-radius: 114.21099999999998rem;
+  flex-shrink: 0;
+  width: 5.482rem;
+  height: 3.7689999999999997rem;
+  position: relative;
+  box-shadow: 0rem 0rem 2.284rem 0rem rgba(19, 205, 144, 0.2);
+}
+._3-account__go {
+  color: #ffffff;
+  text-align: center;
+  font-family: "GoogleSans-Bold", sans-serif;
+  font-size: 1.5989473342895508rem;
+  line-height: 1.827rem;
+  font-weight: 700;
+  position: absolute;
+  left: 1.371rem;
+  top: 1.028rem;
+  width: 2.741rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+._3-account__frame-1948754053 {
+  flex-shrink: 0;
+  width: 6.282rem;
+  height: 4.375rem;
+  position: relative;
+}
+._3-account__group-87452 {
+  height: auto;
+  position: absolute;
+  left: 2.17rem;
+  top: 0rem;
+  overflow: visible;
+}
+._3-account__div14 {
+  color: #464f5d;
+  text-align: center;
+  font-family: "GoogleSans-Bold", sans-serif;
+  font-size: 1.1421051979064942rem;
+  line-height: 1.827rem;
+  font-weight: 700;
+  position: absolute;
+  left: -0.11399999999999999rem;
+  top: 2.548rem;
+  width: 6.51rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button {
+  transition: .3s;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+</style>

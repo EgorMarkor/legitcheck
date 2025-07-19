@@ -1,0 +1,353 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  .bg_card {
+    background: linear-gradient(180deg, rgba(23, 28, 36, 0.75) 0%, rgba(17, 21, 26, 0.75) 100%);
+  }
+
+  .border_card {
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+    /* общий стиль для всех кликабельных плашек */
+    .clickable {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    }
+    /* сам эффект волны */
+    .clickable .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(255, 255, 255, 0.3);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+    }
+
+    @keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+    }
+
+    .bg_you {
+      background: linear-gradient(90deg, #1570D8 0%, #268BFF 100%);
+    }
+
+
+    .method_payment,
+    .success_payment {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+    .success_payment {
+      display: none;
+      opacity: 0;
+    }
+
+    .error_payment {
+      display: none;
+      transition: .3s;
+    }
+
+    .bg_success {
+      background: linear-gradient(247deg, #0CC88B 19.49%, #1D785B 97.92%);
+    }
+
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    <div class="method_payment">
+
+      <div class="px-16">
+          <img src="{% static 'moneta_yookassa.png' %}" class="w-full" alt="Scanner" />
+      </div>
+      <div class="px-10">
+          <div class="text-[1.6rem] font-bold">
+            Способы оплаты
+          </div>
+          <div class="text-[#464F5D] text-[1.2rem]">
+            В скором времени мы добавим<br>
+  еще больше методов пополнения баланса
+          </div>
+      </div>
+
+      <div class="px-6 mt-2">
+        <div
+      class="
+        items-center
+        w-full
+        p-[1.5rem]
+        rounded-[1.46rem]
+        bg-gradient-to-b from-[#171C24] to-[#11151A]
+        cursor-text
+      "
+    >
+      <label for="amountInput" class="sr-only">Сумма пополнения</label>
+      <span
+        class="
+          block
+          text-[1rem]
+          font-google-sans font-medium
+          text-[#464F5D]
+          mr-2
+        "
+      >
+        Сумма пополнения
+      </span>
+      <input
+        id="amountInput"
+        type="tel"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="8 160,00 ₽"
+        class="
+          flex-1
+          bg-transparent
+          border-none
+          focus:outline-none
+          text-[1.6rem] leading-[1.25rem]
+          font-google-sans font-bold
+          text-white
+          placeholder:text-[#FFF]/50
+        "
+      />
+    </div>
+
+        <div class="p-5 w-full flex justify-center gap-1 rounded-[12px] bg_you items-center mt-4" id="payBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 18 13" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3853 12.589C14.6789 12.589 17.3488 9.91908 17.3488 6.62556C17.3488 3.33204 14.6789 0.662109 11.3853 0.662109C8.74397 0.662109 6.50371 2.37934 5.72006 4.7583V2.45114H0.651123L3.48376 11.3963H5.72006V8.49282C6.50371 10.8718 8.74397 12.589 11.3853 12.589ZM11.3853 8.86185C12.6204 8.86185 13.6216 7.86064 13.6216 6.62556C13.6216 5.39048 12.6204 4.38927 11.3853 4.38927C10.1503 4.38927 9.14904 5.39048 9.14904 6.62556C9.14904 7.86064 10.1503 8.86185 11.3853 8.86185Z" fill="white"/>
+          </svg>
+          <div class="text-[1.2rem] font-bold">
+            Перейти в Ю-касса
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="success_payment">
+      <div class="px-16">
+        <img src="{% static 'success_pl.png' %}" class="w-full" alt="Scanner" />
+    </div>
+    <div class="px-10">
+        <div class="text-[1.6rem] font-bold">
+          Оплата прошла
+        </div>
+        <div class="text-[#464F5D] text-[1.2rem]">
+          В скором времени мы добавим<br>
+еще больше методов пополнения баланса
+        </div>
+    </div>
+
+    <div class="px-6 mt-2">
+      <div
+    class="
+      items-center
+      w-full
+      p-[1.5rem]
+      rounded-[1.46rem]
+      bg-gradient-to-b from-[#171C24] to-[#11151A]
+      cursor-text
+    "
+  >
+    <label for="amountInput2" class="sr-only">Сумма пополнения</label>
+    <span
+      class="
+        block
+        text-[1rem]
+        font-google-sans font-medium
+        text-[#464F5D]
+        mr-2
+      "
+    >
+      Сумма пополнения
+    </span>
+    <input
+      id="amountInput2"
+      type="tel"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      placeholder="8 160,00 ₽"
+      readonly
+      class="
+        flex-1
+        bg-transparent
+        border-none
+        focus:outline-none
+        text-[1.6rem] leading-[1.25rem]
+        font-google-sans font-bold
+        text-white
+        placeholder:text-[#FFF]/50
+      "
+    />
+  </div>
+
+      <div class="p-5 w-full flex justify-center gap-1 rounded-[12px] bg_success items-center mt-4" onclick="window.location.href='/'">
+        <div class="text-[1.2rem] font-bold">
+          Вернуться к услугам
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="error_payment">
+      <div class="px-16">
+        <img src="{% static 'moneta_yookassa.png' %}" class="w-full" alt="Scanner" />
+    </div>
+    <div class="px-10">
+        <div class="text-[1.6rem] font-bold">
+          Способы оплаты
+        </div>
+        <div class="text-[#464F5D] text-[1.2rem]">
+          В скором времени мы добавим<br>
+еще больше методов пополнения баланса
+        </div>
+    </div>
+
+    <div class="px-6 mt-2">
+      <div
+    class="
+      items-center
+      w-full
+      p-[1.5rem]
+      rounded-[1.46rem]
+      bg-gradient-to-b from-[#171C24] to-[#11151A]
+      cursor-text
+    "
+  >
+    <label for="amountInput3" class="sr-only">Сумма пополнения</label>
+    <span
+      class="
+        block
+        text-[1rem]
+        font-google-sans font-medium
+        text-[#464F5D]
+        mr-2
+      "
+    >
+      Сумма пополнения
+    </span>
+    <input
+      id="amountInput3"
+      type="tel"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      readonly
+      placeholder="8 160,00 ₽"
+      class="
+        flex-1
+        bg-transparent
+        border-none
+        focus:outline-none
+        text-[1.6rem] leading-[1.25rem]
+        font-google-sans font-bold
+        text-white
+        placeholder:text-[#FFF]/50
+      "
+    />
+  </div>
+
+      <div class="p-5 w-full flex justify-center gap-1 rounded-[12px] bg_you items-center mt-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 18 13" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3853 12.589C14.6789 12.589 17.3488 9.91908 17.3488 6.62556C17.3488 3.33204 14.6789 0.662109 11.3853 0.662109C8.74397 0.662109 6.50371 2.37934 5.72006 4.7583V2.45114H0.651123L3.48376 11.3963H5.72006V8.49282C6.50371 10.8718 8.74397 12.589 11.3853 12.589ZM11.3853 8.86185C12.6204 8.86185 13.6216 7.86064 13.6216 6.62556C13.6216 5.39048 12.6204 4.38927 11.3853 4.38927C10.1503 4.38927 9.14904 5.39048 9.14904 6.62556C9.14904 7.86064 10.1503 8.86185 11.3853 8.86185Z" fill="white"/>
+        </svg>
+        <div class="text-[1.2rem] font-bold">
+          Перейти в Ю-касса
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const inp = document.getElementById('amountInput');
+    
+        // При клике вне поля — снимаем фокус (прячет клавиатуру)
+        document.addEventListener('click', (e) => {
+          if (e.target !== inp) {
+            inp.blur();
+          }
+        });
+    
+        // При нажатии Enter — перенаправляем на главную
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            window.location.href = '/';
+          }
+        });
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('payBtn')
+          .addEventListener('click', status_payment);
+      });
+
+      function status_payment() {
+        value = document.querySelector("#amountInput").value;
+        document.querySelector("#amountInput2").value = value;
+        document.querySelector("#amountInput3").value = value;
+        const method = document.querySelector('.method_payment');
+        const success = document.querySelector('.success_payment');
+
+        // начнём затухание первого
+        method.style.opacity = '0';
+
+        // по окончании анимации спрячем первый и покажем второй
+        method.addEventListener('transitionend', function onFadeOut() {
+          method.style.display = 'none';
+          
+          // подготовим success к появлению
+          success.style.display = 'block';
+          // «форсируем» перерисовку, чтобы transition отработал
+          // (чтобы браузер заметил изменение display до opacity)
+          void success.offsetWidth;
+
+          success.style.opacity = '1';
+
+          // отписываемся, чтобы не реагировать на будущие transitionend
+          method.removeEventListener('transitionend', onFadeOut);
+        });
+      }
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,153 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  .bg_card {
+    background: linear-gradient(180deg, rgba(23, 28, 36, 0.75) 0%, rgba(17, 21, 26, 0.75) 100%);
+  }
+
+  .border_card {
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+    /* общий стиль для всех кликабельных плашек */
+    .clickable {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    }
+    /* сам эффект волны */
+    .clickable .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(255, 255, 255, 0.3);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+    }
+
+    @keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+    }
+
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    <div class="flex text-center justify-center mx-6 mt-4">
+        <div>
+            <div class="font-bold text-[2.4rem]">All Authentication
+                Guides</div>
+            <div class="text-[1.2rem]">
+                Read all of Legit Check’s guides comparing real
+                vs fake items. From sneakers to watches and
+                bags, we’ve got all the tutorials you’ll ever need.
+            </div>
+        </div>
+    </div>
+    <div class="mx-6 mb-4 mt-4">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by title..."
+          class="w-full px-4 py-2 rounded-[0.75rem] bg-[#1e1e1e] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0CC88B]"
+        />
+      </div>      
+    <div class="mt-4">
+        <div class="rounded-[1rem] shadow-md overflow-hidden bg_black mx-6 search-card">
+            <img src="{% static 'balenciaga_track.png' %}" alt="Balenciaga Track" class="w-full h-auto" />
+            <div class="p-4 py-8">
+                <div class="text-[1rem] text-white font-medium leading-snug search-title">
+                Balenciaga Track: REAL vs FAKE White Orange
+                </div>
+            </div>
+        </div>
+        <div class="rounded-[1rem] shadow-md overflow-hidden bg_black mx-6 search-card">
+            <img src="{% static 'balenciaga_track.png' %}" alt="Balenciaga Track" class="w-full h-auto" />
+            <div class="p-4 py-8">
+              <div class="text-[1rem] text-white font-medium leading-snug search-title">
+                Adidas
+              </div>
+            </div>
+          </div>
+          <div class="rounded-[1rem] shadow-md overflow-hidden bg_black mx-6 search-card">
+            <img src="{% static 'balenciaga_track.png' %}" alt="Balenciaga Track" class="w-full h-auto" />
+            <div class="p-4 py-8">
+              <div class="text-[1rem] text-white font-medium leading-snug search-title">
+                Nike
+              </div>
+            </div>
+          </div>
+          
+    </div>
+
+    <script>
+        const input = document.getElementById('searchInput');
+        const cards = document.querySelectorAll('.search-card');
+      
+        input.addEventListener('input', function () {
+          const query = this.value.toLowerCase();
+          cards.forEach(card => {
+            const title = card.querySelector('.search-title').textContent.toLowerCase();
+            card.style.display = title.includes(query) ? 'block' : 'none';
+          });
+        });
+      </script>
+      
+  <script>
+    // инициализируем WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // показываем кнопку "Назад" в заголовке
+    tg.BackButton.show();
+
+    // при клике уходим на предыдущий шаг истории
+    tg.BackButton.onClick(() => {
+      window.history.back();
+      tg.BackButton.hide();
+    });
+  </script>
+
+      
+    
+    
+</body>
+</html>

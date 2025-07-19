@@ -1,0 +1,245 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  .bg_card {
+    background: linear-gradient(180deg, rgba(23, 28, 36, 0.75) 0%, rgba(17, 21, 26, 0.75) 100%);
+  }
+
+  .border_card {
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+    /* общий стиль для всех кликабельных плашек */
+    .clickable {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    }
+    /* сам эффект волны */
+    .clickable .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(255, 255, 255, 0.3);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+    }
+
+    @keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+    }
+
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    <div class="flex items-center justify-center">
+        <div>
+            <img src="{{ tg_user.img }}" class="mt-6 text-center w-[10rem] h-[10rem] rounded-full">
+            <div class="text-[2rem] text-center mt-2 font-bold">{{ tg_user.name }}</div>
+            <div class="mt-2 rounded-full px-[1.7rem] py-[0.5rem] flex align-items justify-center gap-2 bg_black">
+                <img src="{% static 'calendar.svg' %}" class="w-[1.2rem] h-[1.2rem]">
+                <div class="text-[1rem] font-bold text-[#464F5D]">21.03.2025</div>
+            </div>
+        </div>
+    </div>
+    <h3 class="text-[1.2rem] text-[#464F5D] px-10 mt-5 mb-2 font-medium">Ваш баланс</h3>
+
+    <div class="px-6 overflow-hidden relative">
+        <div class="text-[1.8rem] text-[#FFF] font-bold absolute top-[1.8rem] left-[1.8rem] ml-[1.8rem]" style="color: #FFF !important; z-index: 10;">{{ tg_user.balance }} ₽</div>
+        <img src="{% static 'balance_p.png' %}" class="w-full" alt="Scanner" />
+    </div>
+
+    <h3 class="text-[1.2rem] text-[#464F5D] px-10 mt-5 font-medium">Заказы</h3>
+    <div class="overflow-x-auto ml-6">
+      <div class="flex space-x-2 min-w-max py-2">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="obrabotka">В обработке</button>
+        <button class="filter-btn" data-filter="todo">Требует действия</button>
+        <button class="filter-btn" data-filter="finish">Завершено</button>
+      </div>
+    </div>
+
+    <div class="bg_card border_card rounded-[1.2rem] p-[1rem] grid grid-cols-3 gap-2 mx-5">
+
+        {% for verdict in verdicts %}
+        <a href="{% url 'verdict' %}?code={{ verdict.code }}">
+          <div class="bg-[#0A0C11] rounded-[1.2rem] mb-4 {% if verdict.status == 'LEGIT' %} obrabotka
+          {% elif verdict.status == 'LEGIT' %} todo
+          {% elif verdict.status == 'FAKE' %} finish
+          {% endif %}">
+              {# Картинка из verdict.photo1 #}
+              <div
+              class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
+              style="background-image: url('{{ verdict.photo1.url }}');"
+              >
+              {# Метка LEGIT/FAKE #}
+              <div
+                  class="flex justify-center items-center text-[0.7rem] flex-shrink-0 p-1 mt-2 ml-2 w-[5.5rem] rounded-[801.32px] bg-[rgba(21,26,33,0.8)] font-bold
+                  {% if verdict.status == 'legit' %}
+                    text-[#35E6AD]
+                  {% elif verdict.status == 'fake' %}
+                    text-[#FF5151]
+                  {% endif %}
+                  "
+              >
+                  {{ verdict.get_status_display }}
+              </div>
+              </div>
+
+              <div class="p-[0.5rem]">
+              {# Дата создания #}
+              <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
+                  <img src="{% static 'calendar.svg' %}" class="w-[1.2rem] h-[1.2rem]" alt="Дата">
+                  <div class="text-[0.8rem] font-bold text-[#464F5D]">
+                  {{ verdict.created_at|date:"d.m.Y" }}
+                  </div>
+              </div>
+
+              {# Например, выводим комментарий вместо второго блока с NSDFW #}
+              <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
+                  <div class="text-[0.8rem] font-bold text-[#464F5D]">
+                  {{ verdict.code }}
+                  </div>
+              </div>
+              </div>
+          </div>
+        </a>
+        {% empty %}
+        <p>У этого пользователя ещё нет вердиктов.</p>
+        {% endfor %}
+
+    
+
+    </div>
+    
+
+    <div class="px-6 mt-4">
+        <div class="bg_black flex rounded-[1.2rem] px-[1.5rem] py-[1rem] items-center justify-between" onclick="window.location.href='{% url 'license' %}'">
+            <div class="flex items-center gap-2">
+                <img src="{% static 'file.svg' %}" class="w-[1.2rem] h-[1.2rem]">
+                <div class="text-[1rem] font-medium text-white">Пользовательское соглашение</div>
+            </div>
+            <img src="{% static 'arrow.svg' %}" class="w-[3rem] h-[3rem]">
+        </div>
+    </div>
+    <div class="px-6 mt-4 pb-4">
+        <div class="bg_black flex rounded-[1.2rem] px-[1.5rem] py-[1rem] items-center justify-between" onclick="window.location.href='{% url 'confident' %}'"">
+            <div class="flex items-center gap-2">
+                <img src="{% static 'file.svg' %}" class="w-[1.2rem] h-[1.2rem]">
+                <div class="text-[1rem] font-medium text-white">Политика конфиденциональности</div>
+            </div>
+            <img src="{% static 'arrow.svg' %}" class="w-[3rem] h-[3rem]">
+        </div>
+    </div>
+  </div>
+  <div class="mt-4">
+
+  </div>
+  <!-- в самый низ body перед закрывающим </body> -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Выбираем все картинки на странице
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.classList.add('clickable');
+        img.addEventListener('pointerdown', e => {
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+          // Размер — максимум между шириной и высотой картинки
+          const size = Math.max(img.offsetWidth, img.offsetHeight);
+          ripple.style.width = ripple.style.height = size + 'px';
+          // Позиционируем по месту клика
+          const rect = img.getBoundingClientRect();
+          ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+          ripple.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+          img.appendChild(ripple);
+          // Убираем span после окончания анимации
+          ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+        });
+      });
+    });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('.filter-btn');
+        const cards   = document.querySelectorAll('.card');
+      
+        buttons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Помечаем активную кнопку
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+      
+            const filter = btn.dataset.filter;
+            cards.forEach(card => {
+              // Показываем, если совпадает по классу или выбран "all"
+              if (filter === 'all' || card.classList.contains(filter)) {
+                card.style.display = '';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+          });
+        });
+      });
+      </script>
+
+  <script>
+    // инициализируем WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // показываем кнопку "Назад" в заголовке
+    tg.BackButton.show();
+
+    // при клике уходим на предыдущий шаг истории
+    tg.BackButton.onClick(() => {
+      window.history.back();
+      tg.BackButton.hide();
+    });
+  </script>
+
+      
+    
+    
+</body>
+</html>

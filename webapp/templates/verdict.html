@@ -1,0 +1,283 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  .bg_card {
+    background: linear-gradient(180deg, rgba(23, 28, 36, 0.75) 0%, rgba(17, 21, 26, 0.75) 100%);
+  }
+
+  .border_card {
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .code-inputs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .code-inputs input {
+      width: 5rem;
+      height: 5rem;
+      font-size: 1.5rem;
+      text-align: center;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .code-inputs input:not(:placeholder-shown) {
+        color: white;
+    }
+
+    .code-inputs input {
+        width: 5rem;
+        height: 3.6rem;
+        padding: 0;               /* сбросить отступы */
+        box-sizing: border-box;   /* чтобы padding/бордер не ломали размеры */
+        font-size: 1.5rem;
+        line-height: 5rem;        /* == высота, чтобы вертикально центрировать */
+        text-align: center;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+
+    .check-btn {
+      background: linear-gradient(247deg, rgba(12,200,139,0.1) 19.49%, rgba(29,120,91,0.1) 97.92%);
+      color: #10B781;
+      cursor: not-allowed;
+      transition: background 0.2s;
+    }
+
+    .check-btn.green_button {
+      /* Ваш “густой” зелёный градиент */
+      background: linear-gradient(247deg, #0CC88B 19.49%, #1D785B 97.92%);
+      cursor: pointer;
+    }
+
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+
+    <img src="{% static 'phone.png' %}" class="hidden mt-6 text-center w-full h-auto rounded-full">
+    <section class="px-6 mt-4">
+        <div class="font-bold text-[1.6rem]">Вердикты</div>
+        <div class="font-medium text-[1.2rem] text-[#464F5D]">Введите код вердикта, чтобы проверить оригинальность изделия</div>
+        <div class="code-inputs mt-4">
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+          </div>
+
+          <div class="check-btn bg-[linear-gradient(247deg,rgba(12,200,139,0.1)_19.49%,rgba(29,120,91,0.1)_97.92%)] w-full flex items-center justify-center py-[1.5rem] rounded-[1rem] mt-4 font-semibold text-center text-[#10B781] text-[1.2rem]">
+            Отчёт найден
+          </div>
+
+          <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-4 flex items-center space-x-4 mt-4">
+            <div class="bg-[#0B0D11] p-4 rounded-[1.2rem] flex items-center w-full">
+              <div class="flex-1 space-y-1">
+                <div class="text-neutral-500 text-sm">Категория</div>
+                <div id="verdict-category" class="text-white text-lg font-semibold">{{ verdict.get_category_display }}</div>
+                <div class="text-neutral-500 text-sm">Бренд</div>
+                <div id="verdict-brand" class="text-white text-lg font-semibold">{{ verdict.brand }}</div>
+                <div class="text-neutral-500 text-sm">Модель</div>
+                <div id="verdict-model" class="text-white text-lg font-semibold">{{ verdict.item_model }}</div>
+              </div>
+              <!-- Картинка: первая из загруженных -->
+              <img id="verdict-photo" src="https://legitcheck.one/media/{{ first_photo.image }}" alt="Sneaker" class="w-32 h-auto rounded-lg object-cover" />
+              <!-- Текстовые данные -->
+            </div>
+          </div>
+
+          <div class="text-[1.2rem] text-white px-6 mt-4">
+            Фотографии в отчете
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-4  pb-4">
+            {% for photo in photos %}
+              <a data-fancybox="gallery" href="{{ photo.image.url }}">
+                <div
+                  class="relative h-[8rem] rounded-[1.2rem] bg-no-repeat bg-center bg-cover flex items-center justify-center"
+                  style="background-image: url('{{ photo.image.url }}');"
+                >
+                  <!-- затемняющий слой -->
+                  <div class="absolute inset-0 bg-black/50 rounded-[1.2rem]"></div>
+                  <!-- иконка поверх -->
+                  <img
+                    src="{% static 'check.png' %}"
+                    class="relative z-10 w-[3rem] h-auto"
+                    alt="check"
+                  />
+                </div>
+              </a>
+            {% empty %}
+              <p>Фотографий нет.</p>
+            {% endfor %}
+          </div>
+          
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" />
+          <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script>
+        
+          <script>
+            const inputs = document.querySelectorAll('.code-inputs input');
+            inputs.forEach((input, idx) => {
+              input.addEventListener('input', () => {
+                // разрешаем только один символ; при вводе — переходим вперёд
+                if (input.value.length > 0 && idx < inputs.length - 1) {
+                  inputs[idx + 1].focus();
+                }
+                updateValue();
+              });
+              input.addEventListener('keydown', (e) => {
+                // при Backspace на пустом — переходим назад
+                if (e.key === 'Backspace' && input.value === '' && idx > 0) {
+                  inputs[idx - 1].focus();
+                }
+              });
+            });
+        
+            document.querySelector('.check-btn').addEventListener('click', () => {
+              const code = Array.from(inputs).map(i => i.value).join('');
+              alert('Введённый код: ' + code);
+              // здесь можно добавить AJAX-запрос или валидацию
+            });
+        
+            function updateValue() {
+              // можно отслеживать заполненность всех полей и, например, активировать кнопку
+              const allFilled = Array.from(inputs).every(i => i.value !== '');
+              document.querySelector('.check-btn').disabled = !allFilled;
+            }
+        
+            // фокус на первый при загрузке
+            window.addEventListener('load', () => inputs[0].focus());
+
+            function blurOnOutsideTap(e) {
+                // если сейчас в фокусе инпут и тап был НЕ по нему
+                const active = document.activeElement;
+                if (active && active.tagName === 'INPUT' && !e.target.closest('.code-inputs input')) {
+                active.blur();
+                }
+            }
+
+            // Для мобильных: тач
+            document.addEventListener('touchstart', blurOnOutsideTap, { passive: true });
+            // Для десктопа: клик
+            document.addEventListener('click', blurOnOutsideTap);
+
+            // фокус на первый при загрузке
+            window.addEventListener('load', () => inputs[0].focus());
+          </script>
+    </section>
+
+  </div>
+  <script>
+    const inputs = document.querySelectorAll('.code-inputs input');
+    const btn = document.querySelector('.check-btn');
+  
+    function updateValue() {
+      const allFilled = Array.from(inputs).every(i => i.value !== '');
+      if (allFilled) {
+        btn.disabled = false;
+        btn.classList.add('green_button');
+      } else {
+        btn.disabled = true;
+        btn.classList.remove('green_button');
+      }
+    }
+  
+    inputs.forEach((input, idx) => {
+      input.addEventListener('input', () => {
+        // переход вперёд при вводе
+        if (input.value.length > 0 && idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        }
+        updateValue();
+      });
+      input.addEventListener('keydown', (e) => {
+        // при Backspace на пустом — назад
+        if (e.key === 'Backspace' && input.value === '' && idx > 0) {
+          inputs[idx - 1].focus();
+        }
+      });
+    });
+  
+    // клик по кнопке
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const code = Array.from(inputs).map(i => i.value).join('');
+      alert('Введённый код: ' + code);
+      // сюда AJAX/валидацию
+    });
+  
+    // при загрузке страницы блокируем кнопку и фокусируем первый ввод
+    window.addEventListener('load', () => {
+      updateValue();
+      inputs[0].focus();
+    });
+  
+    // блюрим инпут при клике вне его (как у вас было)
+    function blurOnOutsideTap(e) {
+      const active = document.activeElement;
+      if (active && active.tagName === 'INPUT' && !e.target.closest('.code-inputs input')) {
+        active.blur();
+      }
+    }
+    document.addEventListener('touchstart', blurOnOutsideTap, { passive: true });
+    document.addEventListener('click', blurOnOutsideTap);
+  </script>
+
+<script>
+  // инициализируем WebApp
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+
+  // показываем кнопку "Назад" в заголовке
+  tg.BackButton.show();
+
+  // при клике уходим на предыдущий шаг истории
+  tg.BackButton.onClick(() => {
+    window.history.back();
+  });
+</script>
+  
+</body>
+</html>

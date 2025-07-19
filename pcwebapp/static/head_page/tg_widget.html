@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход через Telegram</title>
+  <script async src="https://telegram.org/js/telegram-widget.js"></script>
+
+</head>
+<body>
+  <!-- Telegram Login Widget -->
+    <div class="_1-hi__frame-1948754034 custom-telegram-btn">
+        <div class="_1-hi__frame-1948754049">
+            <div class="_1-hi__frame-19487540492">
+            <img class="_1-hi__svg" src="svg0.svg">
+            <div class="_1-hi__frame-1948754048">
+                <div class="_1-hi__div5">Авторизируйтесь</div>
+                <div class="_1-hi__telegram">Через Telegram</div>
+            </div>
+            </div>
+            <img class="_1-hi__svg2" src="svg1.svg">
+        </div>
+    </div>
+
+</body>
+<script>
+document.querySelector('.custom-telegram-btn').addEventListener('click', function() {
+  // вызываем метод из telegram-widget.js
+  window.Telegram.Login.auth(
+    {
+      bot_id: '7620197633',      // только цифры до двоеточия из токена
+      request_access: true,      // если нужно разрешение на отправку
+      lang: 'ru'                 // язык виджета
+    },
+    function(data) {
+      if (!data) {
+        console.error('Авторизация не удалась');
+        return;
+      }
+      // data = { id, first_name, last_name, username, photo_url, auth_date, hash }
+      // перенаправим на бэкенд для проверки и логина:
+      const params = new URLSearchParams(data).toString();
+      window.location.href = `/telegram-login/?${params}`;
+    }
+  );
+});
+</script>
+
+</html>

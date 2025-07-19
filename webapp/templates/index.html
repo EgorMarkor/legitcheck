@@ -1,0 +1,283 @@
+{% load static %}
+<!doctype html>
+<html>
+  <script>
+    // фикс для iOS/Safari: без этого :active почти не применяется
+    document.addEventListener("touchstart", function(){}, false);
+  </script>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  img {
+    display: inline-block;
+    user-select: none;              
+    -webkit-user-drag: none;        
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;     /* чтобы быстро реагировать на тап */
+    transition: transform 0.3s ease, filter 0.1s ease;
+    cursor: pointer;
+  }
+  /* «вдавленное» состояние */
+  img:active,
+  img.pressed {
+    transform: scale(0.9);
+  }
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    
+    <!-- Промо блок с каруселью -->
+    <div class="rounded-xl mx-4 mt-2 relative overflow-hidden">
+      <!-- Swiper-контейнер -->
+      <div class="swiper myPromoSwiper">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide flex items-center justify-center">
+            <img src="{% static 'express.png' %}" alt="Promo 1" class="w-full h-auto" />
+          </div>
+          <div class="swiper-slide flex items-center justify-center">
+            <img src="{% static 'express.png' %}" alt="Promo 2" class="w-full h-auto" />
+          </div>
+          <div class="swiper-slide flex items-center justify-center">
+            <img src="{% static 'express.png' %}" alt="Promo 3" class="w-full h-auto" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Подключение Swiper -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+  <script>
+    const promoSwiper = new Swiper('.myPromoSwiper', {
+      loop: true,
+      autoplay: {
+        delay: 3000,
+      },
+      slidesPerView: 1,
+      // Отключаем пагинацию и стрелки
+      pagination: false,
+      navigation: false,
+    });
+  </script>
+    <!-- Две большие кнопки -->
+    <div class="flex gap-3 px-4 mt-4">
+      <a href="/check" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+        <img src="{% static 'start_prov.png' %}" alt="Scanner"  />
+      </a>
+      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+        <img src="{% static 'find_brend.png' %}" alt="Scanner" />
+      </a>
+    </div>
+    <!-- Раздел "Кроссовки" -->
+    <h3 class="text-sm text-gray-400 px-4 mt-6 mb-2">Кроссовки</h3>
+    <div class="flex gap-2 px-4 overflow-x-auto">
+      <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=yeezy'" />
+      <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=nike'"/>
+      <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=newbalance'"/>
+      <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=stoneisland'"/>
+    </div>
+    <!-- Раздел "Одежда" (аналогично) -->
+    <h3 class="text-sm text-gray-400 px-4 mt-5 mb-2">Одежда</h3>
+    <div class="flex gap-2 px-4 overflow-x-auto">
+      <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=palmangels'"/>
+      <img src="{% static 'eye.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=palmangels'"/>
+      <img src="{% static 'supreme.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=palmangels'"/>
+      <img src="{% static 'palmangels.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=palmangels'"/>
+    </div>
+    <!-- Раздел "Премиальная обувь" -->
+    <h3 class="text-sm text-gray-400 px-4 mt-5 mb-2">Премиальная обувь</h3>
+    <div class="flex gap-2 px-4 overflow-x-auto">
+      <img src="{% static 'nb.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=nb'"/>
+      <img src="{% static 'balenciaga.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=balenciaga'"/>
+      <img src="{% static 'dior.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=dior'"/>
+      <img src="{% static 'louisvuitton.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=louisvuitton'"/>
+    </div>
+
+    <div class="flex gap-3 px-4 mt-4">
+      <a href="#" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+        <img src="{% static 'our_garanties.png' %}" alt="Scanner"  />
+      </a>
+      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+        <img src="{% static 'how_me_work.png' %}" alt="Scanner" />
+      </a>
+    </div>
+
+    <h3 class="text-sm text-gray-400 px-4 mt-5 mb-2">Популярные бренды</h3>
+    <div class="flex gap-2 px-4 overflow-x-auto">
+      <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=nike'"/>
+      <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=yeezy'"/>
+      <img src="{% static 'nb.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=nb'"/>
+      <img src="{% static 'eye.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'check' %}?brand=eye'"/>
+    </div>
+
+    <div class="flex gap-3 px-4 mt-4">
+      <a href="{% url 'articles' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+        <img src="{% static 'how_check.png' %}" alt="Scanner"  />
+      </a>
+      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+        <img src="{% static 'full_finance.png' %}" alt="Scanner" />
+      </a>
+    </div>
+
+    <h3 class="text-sm text-white px-4 mt-5 mb-2">🔥 Самые популярные позиции</h3>
+    <section class="px-4">
+      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
+        <div class="relative">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">
+            #1
+          </div>
+          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" />
+        </div>
+        <div>
+          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+          <div class="flex gap-2 mt-2 items-center justify-between">
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full">
+              <img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}">
+              231
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">
+              43%
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">
+              57%
+            </div>
+        </div>
+        </div>
+      </div>
+      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
+        <div class="relative">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">
+            #2
+          </div>
+          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" />
+        </div>
+        <div>
+          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+          <div class="flex gap-2 mt-2 items-center justify-between">
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full">
+              <img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}">
+              231
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">
+              43%
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">
+              57%
+            </div>
+        </div>
+        </div>
+      </div>
+      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
+        <div class="relative">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">
+            #3
+          </div>
+          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" />
+        </div>
+        <div>
+          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+          <div class="flex gap-2 mt-2 items-center justify-between">
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full">
+              <img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}">
+              231
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">
+              43%
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">
+              57%
+            </div>
+        </div>
+        </div>
+      </div>
+      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
+        <div class="relative">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">
+            #4
+          </div>
+          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" />
+        </div>
+        <div>
+          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+          <div class="flex gap-2 mt-2 items-center justify-between">
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full">
+              <img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}">
+              231
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">
+              43%
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">
+              57%
+            </div>
+        </div>
+        </div>
+      </div>
+      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
+        <div class="relative">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">
+            #5
+          </div>
+          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" />
+        </div>
+        <div>
+          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+          <div class="flex gap-2 mt-2 items-center justify-between">
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full">
+              <img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}">
+              231
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">
+              43%
+            </div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">
+              57%
+            </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Нижняя навигация -->
+    <!-- Контейнер, фиксированный внизу экрана, выравнивает панель по центру -->
+  {% include 'sidebar.html' %}
+
+  </div>
+</body>
+</html>

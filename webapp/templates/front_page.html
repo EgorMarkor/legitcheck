@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0A0C10] text-gray-100 font-sans">
+    <div class="max-w-[390px] mx-auto">
+        <div class="flex justify-between items-center px-4 py-2 max-w-[390px] mx-auto">
+            <!-- Telegram блок -->
+            <div class="flex items-center bg-[#181B20] rounded-full px-4 py-2 shadow-inner">
+              <div class="bg-[#24D2A0] w-6 h-6 flex items-center justify-center rounded-full mr-2">
+                <!-- Иконка Telegram, можно вставить SVG -->
+                <span class="text-black text-xs font-bold">✈️</span>
+              </div>
+              <div class="leading-tight">
+                <p class="text-white text-sm font-semibold">@legit_check</p>
+                <p class="text-[#6A6E76] text-xs">Наш Telegram-канал</p>
+              </div>
+            </div>
+          
+            <!-- Баланс блок -->
+            <div class="flex items-center space-x-2">
+              <div class="flex items-center bg-[#181B20] rounded-full px-4 py-2 shadow-inner">
+                <p class="text-white font-bold text-sm">128,90 ₽</p>
+                <div class="bg-[#24D2A0] w-6 h-6 flex items-center justify-center rounded-full ml-2">
+                  <!-- Иконка кошелька -->
+                  <span class="text-black text-sm">👛</span>
+                </div>
+              </div>
+              <!-- Аватар -->
+              <img src="avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full object-cover" />
+            </div>
+          </div>
+
+
+      <!-- Две верхние карточки -->
+      <div class="flex gap-3 px-4 mt-4">
+        <a class="flex-1 bg-[#CD661E] rounded-lg p-4 relative hover:brightness-110 transition">Наши гарантии ↗</a>
+        <a class="flex-1 bg-[#9737E3] rounded-lg p-4 relative hover:brightness-110 transition">Как мы работаем? ↗</a>
+      </div>
+      <h3 class="text-sm text-gray-400 px-4 mt-6 mb-2">Кроссовки</h3>
+    <div class="grid grid-cols-4 gap-2 px-4">
+      <div class="bg-[#1A1D24] rounded-md flex items-center justify-center h-12 hover:bg-[#272b33] transition">Nike</div>
+      <div class="bg-[#1A1D24] rounded-md flex items-center justify-center h-12 hover:bg-[#272b33] transition">YEEZY</div>
+      <div class="bg-[#1A1D24] rounded-md flex items-center justify-center h-12 hover:bg-[#272b33] transition">new balance</div>
+      <div class="bg-[#1A1D24] rounded-md flex items-center justify-center h-12 hover:bg-[#272b33] transition">Stone Island</div>
+    </div>
+    <div class="flex gap-3 px-4 mt-4">
+        <a class="flex-1 bg-[#CD661E] rounded-lg p-4 relative hover:brightness-110 transition">Наши гарантии ↗</a>
+        <a class="flex-1 bg-[#9737E3] rounded-lg p-4 relative hover:brightness-110 transition">Как мы работаем? ↗</a>
+      </div>
+      <!-- Популярные бренды (горизонтальный список) -->
+      <h3 class="px-4 mt-4 text-sm text-gray-300">🔥 Самые популярные позиции</h3>
+      <div class="px-4 mt-3">
+        <div class="bg-[#1A1D24] p-3 rounded-lg flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition duration-300 mb-2">
+          <div class="flex items-center">
+            <span class="text-lg font-bold mr-3">#1</span>
+            <img src="shoe1.jpg" class="w-12 h-12 rounded mr-3" alt="Item1">
+            <div>
+              <p class="text-sm font-medium">Balenciaga Track <span class="text-gray-400 text-xs">"White Orange"</span></p>
+              <p class="text-xs text-gray-500">👟 231 проверок</p>
+            </div>
+          </div>
+          <div class="text-xs text-right">
+            <p class="text-green-400 font-semibold">43% ✔</p>
+            <p class="text-red-500 font-semibold">57% ✘</p>
+          </div>
+        </div>
+        <div class="bg-[#1A1D24] p-3 rounded-lg flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition duration-300 mb-2">
+          <!-- #2 Stone Island Hoodie ... аналогично первому -->
+        </div>
+        <!-- ... другие позиции ... -->
+      </div>
+      <!-- Нижняя навигация (активен "Вердикт") -->
+      <div class="fixed bottom-0 inset-x-0 bg-[#1A1D24] rounded-t-2xl h-16 px-8 flex justify-between items-center">
+        <a href="#" class="text-gray-400 text-xs flex flex-col items-center">...Главная...</a>
+        <button class="bg-teal-500 text-white rounded-full w-12 h-12 shadow-lg -mt-6">GO</button>
+        <a href="#" class="text-teal-400 text-xs flex flex-col items-center">...Вердикт...</a>
+      </div>
+    </div>
+  </body>
+  

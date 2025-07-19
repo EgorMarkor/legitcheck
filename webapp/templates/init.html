@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Инициализация...</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+  <script>
+    Telegram.WebApp.ready();
+    const initData = Telegram.WebApp.initData;
+    if (initData) {
+      // генерируем URL по имени маршрута 'home'
+      const homeUrl = "{% url 'home' %}";
+      // редиректим на /home/?init_data=…
+      window.location.replace(homeUrl + "?init_data=" + encodeURIComponent(initData));
+    } else {
+      document.body.innerHTML = '<p>Не удалось получить initData</p>';
+    }
+  </script>
+</body>
+</html>

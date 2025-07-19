@@ -1,0 +1,105 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <title>Политика конфиденциальности</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
+    <style>
+      * {
+        -webkit-overflow-scrolling: touch;
+        
+        /* 2. Скрыть полосу в Edge/IE */
+        -ms-overflow-style: none;
+        
+        /* 3. Скрыть полосу в Firefox */
+        scrollbar-width: none;
+      }
+
+      /* 4. Скрыть полосу в WebKit-браузерах (Chrome, Safari, Opera) */
+      *::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+  
+      html {
+        font-size: 3.3vw;
+        margin-bottom: 2rem;
+      }
+  
+      body { font-family: 'Google Sans', sans-serif;
+        padding-bottom: 2rem;
+      }
+      .bg_black {
+        background: linear-gradient(180deg, #171C24 0%, #11151A 100%);
+      }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        /* для старых Safari: */
+        padding-bottom: constant(safe-area-inset-bottom);
+        /* для современных: */
+        padding-bottom: env(safe-area-inset-bottom);
+        /* фон страницы должен совпадать с вашим дизайном */
+        background-color: #0c0f16; /* или любой другой ваш цвет */
+      }
+
+  
+      .lg_check_text {
+        font-family: Google Sans;
+        font-weight: 700;
+        font-size: 1rem;
+        line-height: 13.73px;
+        letter-spacing: 0%;
+      }
+  
+      .our_tg {
+        font-family: Google Sans;
+        font-weight: 400;
+        font-size: 0.8rem;
+        line-height: 10.3px;
+        letter-spacing: 0%;
+        vertical-align: middle;
+        color: #464F5D;
+      }
+  
+      .text_pol_confident {
+        font-family: Google Sans;
+        font-weight: 500;
+        font-size: 1.2rem;
+        line-height: 100%;
+        letter-spacing: 0%;
+        text-align: justify;
+  
+      }
+  
+      .balance {
+        font-size: 1.2rem;
+        font-weight: 700;
+        line-height: 100%;
+        letter-spacing: 0%;
+        text-align: justify;
+  
+      }
+    </style>
+
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // сообщаем Telegram, что приложение готово к взаимодействию
+        Telegram.WebApp.ready();
+        // отключаем вертикальные свайпы для сворачивания/закрытия
+        Telegram.WebApp.disableVerticalSwipes();
+      });
+      Telegram.WebApp.themeParams.bg_color = "#0c0f16";
+      Telegram.WebApp.themeParams.secondary_bg_color = "#0c0f16";
+
+      Telegram.WebApp.expand();
+
+      Telegram.WebApp.setHeaderColor(Telegram.WebApp.themeParams.bg_color);
+      Telegram.WebApp.setBottomBarColor(Telegram.WebApp.themeParams.bg_color);
+    </script>
+  </head>

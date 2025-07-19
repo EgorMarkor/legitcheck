@@ -1,0 +1,21 @@
+{% load static %}
+<div class="flex items-center justify-between px-4 py-2 mt-4">
+    <div onclick="Telegram.WebApp.openTelegramLink('https://t.me/legitcheck')" class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-3 rounded-full">
+      <img src="{% static 'telegram.svg' %}" alt="User Avatar" class="w-10 h-10">
+      <div>
+        <div class="lg_check_text">@legit_check</div>
+        <div class="our_tg mt-1">Наш Telegram-канал</div>
+      </div>
+    </div>
+        <div class="flex items-center space-x-3">
+            <a href="/payment">
+                <div class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-2 rounded-full">
+                    <span class="balance">{{ tg_user.balance }} ₽</span>
+                    <img src="{% static 'balance.svg' %}" alt="User Avatar" class="w-14 h-10">
+                </div>
+            </a>
+            <a href="/account">
+                <img src="{{ tg_user.img }}" alt="User Avatar" class="w-12 h-12 rounded-full object-cover">
+            </a>
+        </div>
+  </div>
