@@ -45,7 +45,6 @@ MEDIA_URL = "/media/"
 # Application definition
 
 INSTALLED_APPS = [
-    'pcwebapp',
     'webapp',
     'unfold',
     'django.contrib.admin',
@@ -59,7 +58,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'webapp.middleware.WebappAuthMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
