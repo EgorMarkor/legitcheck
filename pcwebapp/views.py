@@ -3,9 +3,7 @@ import hashlib
 import hmac
 import time
 from django.conf import settings
-from django.contrib.auth import login
 from django.shortcuts import redirect
-from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest
 from webapp.models import User  # ваша модель webapp.User
 from .decorators import webapp_login_required
@@ -97,10 +95,9 @@ def telegram_login(request):
         user.username = username
         user.save()
 
-    # **Ключевой момент**: НЕ django.contrib.auth.login!
     request.session['webapp_user_tgId'] = user.tgId
 
-    return redirect('webapp:dashboard')  # куда угодно внутри webapp
+    return redirect('account')  # куда угодно внутри webapp
 
 def telegram_logout(request):
     request.session.pop('webapp_user_tgId', None)
