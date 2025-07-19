@@ -59,8 +59,15 @@ def verify_telegram_auth(request):
     if not hash_received:
         return False, None
 
+    # Telegram формирует подпись только из своих параметров. Если в URL
+    # присутствуют дополнительные параметры (например `next`), то их нужно
+    # исключить из расчёта подписи, иначе сравнение всегда будет неверным.
+    allowed_fields = {
+        'id', 'first_name', 'last_name', 'username', 'photo_url', 'auth_date'
+    }
+
     items = []
-    for key in sorted(data.keys()):
+    for key in sorted(k for k in data.keys() if k in allowed_fields):
         for val in data.getlist(key):
             items.append(f"{key}={val}")
     data_check_string = "\n".join(items)
