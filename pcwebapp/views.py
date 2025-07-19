@@ -8,13 +8,18 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from webapp.models import User, LoginToken  # ваша модель webapp.User
+from webapp.models import User  # ваша модель webapp.User
 from django.contrib.sessions.backends.db import SessionStore
 import secrets
 from .decorators import webapp_login_required
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.http import url_has_allowed_host_and_scheme
+
+from django.views.decorators.http import require_POST, require_GET
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.utils import timezone
+from .models import LoginToken
 
 import time
 import hmac
@@ -30,6 +35,13 @@ from django.http import (
 )
 
 TELEGRAM_LOGIN_MAX_AGE = 300  # секунд
+
+def get_or_create_user(telegram_id):
+    user, created = User.objects.get_or_create(
+        telegram_id=telegram_id,
+        defaults={'username': f'tg_{telegram_id}'}
+    )
+    return user
 
 # Create your views here.
 def home(request):
@@ -82,14 +94,23 @@ def home_page(request):
 
 
 
+from .models import LoginToken
+
+@require_POST
 def telegram_request_login(request):
-    """Generate a one-time token and return bot start link."""
     if not request.session.session_key:
         request.session.create()
-    token = secrets.token_hex(16)
-    LoginToken.objects.create(token=token, session_key=request.session.session_key)
-    start_link = f"https://t.me/LegitLogisticsBot?start=login_{token}"
-    return JsonResponse({"token": token, "start_link": start_link})
+    # Rate limit (простая версия)
+    recent = LoginToken.objects.filter(
+        session_key=request.session.session_key,
+        created_at__gt=timezone.now()-timezone.timedelta(seconds=10)
+    ).count()
+    if recent > 3:
+        return JsonResponse({'error':'rate_limited'}, status=429)
+
+    rec = LoginToken.create_for_session(request.session.session_key)
+    start_link = f"https://t.me/LegitLogisticsBot?start=login_{rec.token}"
+    return JsonResponse({"token": rec.token, "start_link": start_link})
 
 
 @csrf_exempt
@@ -146,12 +167,30 @@ def telegram_bot_login(request):
     return JsonResponse({"status": "ok"})
 
 
-def telegram_check_login(request):
-    token = request.GET.get("token")
-    if not token:
-        return JsonResponse({"logged": False})
-    lt = LoginToken.objects.filter(token=token, used=True, session_key=request.session.session_key).first()
-    return JsonResponse({"logged": bool(lt)})
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+
+@csrf_exempt  # вызвать только с вашего бота (ограничьте по IP / секретному заголовку)
+@require_POST
+def telegram_confirm_token(request):
+    import json
+    data = json.loads(request.body.decode())
+    token = data.get('token')
+    tg_id = data.get('telegram_id')
+    if not token or not tg_id:
+        return HttpResponseBadRequest("missing fields")
+    with transaction.atomic():
+        try:
+            rec = LoginToken.objects.select_for_update().get(pk=token, used=False)
+        except LoginToken.DoesNotExist:
+            return JsonResponse({'ok': False, 'reason':'not_found'})
+        if rec.expires_at < timezone.now():
+            return JsonResponse({'ok': False, 'reason':'expired'})
+        rec.used = True
+        rec.telegram_id = tg_id
+        rec.save(update_fields=['used','telegram_id'])
+    return JsonResponse({'ok': True})
+
 
 def telegram_login(request):
     """
@@ -307,3 +346,25 @@ button {{ padding: .6rem 1.2rem; border-radius:6px; background:#2d8cff; color:#f
 <small>Можно закрыть это окно.</small>
 </body></html>
     """)
+    
+    
+@require_GET
+def telegram_check_login(request):
+    token = request.GET.get('token')
+    if not token:
+        return HttpResponseBadRequest("missing token")
+    try:
+        rec = LoginToken.objects.get(pk=token)
+    except LoginToken.DoesNotExist:
+        return JsonResponse({'status':'invalid'})
+    # Привязка к текущей сессии
+    if rec.session_key != request.session.session_key:
+        return JsonResponse({'status':'forbidden'}, status=403)
+    if rec.expires_at < timezone.now():
+        return JsonResponse({'status':'expired'})
+    if rec.used and rec.telegram_id:
+        user = get_or_create_user(rec.telegram_id)
+        if not request.user.is_authenticated:
+            login(request, user)
+        return JsonResponse({'logged': True})
+    return JsonResponse({'logged': False, 'status':'pending'})

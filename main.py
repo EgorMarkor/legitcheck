@@ -1,98 +1,197 @@
+#!/usr/bin/env python3
+"""
+Telegram Login Bot: deep-link /start login_<token>
+Подтверждает токен на backend, помечает его использованным.
+Работает с backend endpoint: POST /internal/telegram/confirm/
+JSON: { token: <hex>, telegram_id: <int> }
+Ответы backend:
+  {"ok": true, "username": "..."}                    # успех
+  {"ok": false, "reason": "expired|not_found|used|forbidden"}  # ошибка
+"""
+
 import os
-import django
+import re
+import logging
+import asyncio
+from dataclasses import dataclass
+import json
 import requests
-import telebot
-from telebot import types
+from typing import Optional
 
-# --- Django initialization ---
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
-django.setup()
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler,
+    MessageHandler, ContextTypes, filters
+)
 
-from webapp.models import Verdict
+try:
+    # Optional: load .env
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
-API_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
-SERVER_URL = "https://legitcheck.one"
+# --- Config ----------------------------------------------------------------
 
-bot = telebot.TeleBot(API_TOKEN, parse_mode="HTML")
+BOT_TOKEN: str = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+BACKEND_BASE_URL: str = "https://legitcheck.one/"
+BOT_BACKEND_SECRET: Optional[str] = os.environ.get("BOT_BACKEND_SECRET") or None
+
+if not BACKEND_BASE_URL:
+    raise RuntimeError("BACKEND_BASE_URL env empty")
 
 
-def fetch_verdict_by_code(code):
-    """Return Verdict instance and first photo path for given code."""
+TOKEN_PREFIX = "login_"
+TOKEN_RE = re.compile(rf"^{TOKEN_PREFIX}([a-f0-9]{{32,64}})$")  # hex 128–256 бит
+
+CONFIRM_ENDPOINT = f"{BACKEND_BASE_URL}/internal/telegram/confirm/"
+
+# --- Exceptions -------------------------------------------------------------
+
+class BackendError(Exception):
+    pass
+
+# --- HTTP helper ------------------------------------------------------------
+
+def backend_confirm(token_hex: str, telegram_id: int) -> dict:
+    """POST confirm to backend. Raises BackendError on any failure."""
+    payload = {"token": token_hex, "telegram_id": telegram_id}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "TGLoginBot/1.0"
+    }
+    if BOT_BACKEND_SECRET:
+        headers["X-Bot-Secret"] = BOT_BACKEND_SECRET
     try:
-        verdict = Verdict.objects.prefetch_related("photos").get(code__iexact=code)
-    except Verdict.DoesNotExist:
-        return None, None
+        r = requests.post(CONFIRM_ENDPOINT, json=payload, headers=headers, timeout=6)
+    except requests.RequestException as e:
+        raise BackendError(f"net: {e}") from e
 
-    first = verdict.photos.first()
-    photo_path = first.image.path if first else None
-    return verdict, photo_path
+    try:
+        data = r.json()
+    except ValueError:
+        raise BackendError(f"bad-json status={r.status_code} body={r.text[:200]!r}")
 
+    if r.status_code != 200:
+        raise BackendError(f"http {r.status_code} body={data}")
+    return data
 
-@bot.message_handler(commands=["start"])
-def handle_start(message: telebot.types.Message):
-    """Handle /start with either a verdict code or login token."""
-    parts = message.text.split(maxsplit=1)
-    args = parts[1].strip() if len(parts) > 1 else ""
+# --- Handlers ---------------------------------------------------------------
 
-    if not args:
-        bot.reply_to(
-            message,
-            "❗️ Пожалуйста, запускайте бота по ссылке вида https://t.me/YourBot?start=<token>.",
-        )
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /start [login_<token>] — подтверждаем токен, иначе показываем подсказку.
+    """
+    user = update.effective_user
+    args = context.args
+
+    if args:
+        raw = args[0]
+        m = TOKEN_RE.match(raw)
+        if m:
+            token_hex = m.group(1)
+            await confirm_token_flow(update, token_hex)
+            return
+
+    # /start без токена
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔐 Как войти на сайте", url=f"{BACKEND_BASE_URL}/pc/telegram/help/")]
+    ])
+    text = (
+        "👋 Отправьте мне ссылку (кнопку), сгенерированную на сайте при входе.\n\n"
+        "Алгоритм:\n"
+        "1. На сайте нажмите «Войти через Telegram».\n"
+        "2. Откроется чат — появится /start login_... (или нажмите START).\n"
+        "3. Я подтвержу токен.\n"
+        "4. Вернитесь в браузер — страница обновится."
+    )
+    await safe_reply(update, text, reply_markup=keyboard)
+
+async def confirm_token_flow(update: Update, token_hex: str):
+    msg = update.effective_message
+    user = update.effective_user
+
+    await safe_reply(update, f"⏳ Проверяю токен…")
+
+    try:
+        data = await asyncio.to_thread(backend_confirm, token_hex, user.id)
+    except BackendError as e:
+        log.warning("confirm error token=%s.. tg=%s: %s", token_hex[:8], user.id, e)
+        await safe_reply(update, "⚠️ Сервер недоступен. Попробуйте ещё раз через минуту.")
         return
 
-    if args.startswith("login_"):
-        token = args[len("login_"):]
-        payload = {
-            "token": token,
-            "user": {
-                "id": message.from_user.id,
-                "first_name": message.from_user.first_name or "",
-                "last_name": message.from_user.last_name or "",
-                "username": message.from_user.username or "",
-            },
+    if not data.get("ok"):
+        reason = data.get("reason")
+        msg_map = {
+            "expired": "⌛ Токен истёк. Сформируйте новый на сайте.",
+            "not_found": "❓ Токен не найден. Сгенерируйте новый.",
+            "used": "🔁 Токен уже использован. Повторите вход.",
+            "forbidden": "🚫 Токен привязан к другой сессии. Сгенерируйте новый."
         }
-        try:
-            r = requests.post(f"{SERVER_URL}/pc/telegram/bot-login/", json=payload, timeout=5)
-            if r.ok:
-                bot.reply_to(message, "Вы успешно авторизованы на сайте.")
-            else:
-                bot.reply_to(message, f"Ошибка авторизации: {r.text}")
-        except Exception:
-            bot.reply_to(message, "Не удалось связаться с сервером.")
+        txt = msg_map.get(reason, "❌ Не удалось подтвердить токен.")
+        await safe_reply(update, txt)
         return
 
-    code = args
-    verdict, photo_path = fetch_verdict_by_code(code)
-    if not verdict:
-        bot.reply_to(message, f"❌ Вердикт с кодом <b>{code}</b> не найден.")
-        return
-
-    webapp_url = f"{SERVER_URL}/verdict?code={code}"
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text="🔗 Открыть веб-приложение", web_app=types.WebAppInfo(url=webapp_url)))
-
-    caption = (
-        f"<b>Код:</b> {verdict.code}\n"
-        f"<b>Категория вещи:</b> {verdict.get_category_display()}\n"
-        f"<b>Бренд:</b> {verdict.brand}\n"
-        f"<b>Модель:</b> {verdict.item_model}\n"
-        f"<b>Статус проверки:</b> {verdict.get_status_display()}\n"
-        f"<b>Дата:</b> {verdict.created_at:%Y-%m-%d %H:%M}\n"
-        f"<b>Комментарий:</b> {verdict.comment}\n"
-        f"<b>Комментарий пользователя:</b> {verdict.comment_from_user}"
+    username = data.get("username")
+    extra = f"\nСайт-профиль: *{username}*" if username else ""
+    await safe_reply(
+        update,
+        "✅ Авторизация подтверждена." + extra +
+        "\nВернитесь в браузер — логин завершится автоматически.",
+        parse_mode="Markdown"
     )
 
-    if photo_path and os.path.exists(photo_path):
-        with open(photo_path, "rb") as f:
-            bot.send_photo(message.chat.id, f, caption=caption, reply_markup=markup)
-    else:
-        bot.send_message(message.chat.id, caption, reply_markup=markup)
+async def unlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Заглушка — настоящий unlink можно реализовать аналогично confirm (отдельный endpoint)
+    await safe_reply(update, "ℹ️ Функция отвязки пока не реализована. Напишите, если нужна — я дам код.")
 
+async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await safe_reply(update,
+        "Инструкция:\n"
+        "1. На сайте — «Войти через Telegram».\n"
+        "2. Открылся чат со мной → /start login_<token>.\n"
+        "3. Я подтверждаю.\n"
+        "4. Сайт увидит вход (poll) и авторизует.\n\n"
+        "Если долго висит «Ожидание» — сгенерируйте новый токен."
+    )
+
+async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (update.message.text or "").strip()
+    if text.startswith("/start login_"):
+        await safe_reply(update, "⚠️ Формат токена неверный или токен слишком короткий. Сформируйте новый на сайте.")
+    else:
+        await safe_reply(update, "Отправьте ссылку /start login_<token> или используйте /help.")
+
+# --- Utility reply wrapper --------------------------------------------------
+
+async def safe_reply(update: Update, text: str, **kwargs):
+    """
+    Безопасно отвечает либо reply, либо sendMessage (если сообщение удалено).
+    """
+    msg = update.effective_message
+    try:
+        if msg:
+            await msg.reply_text(text, **kwargs)
+        else:
+            await update.effective_chat.send_message(text, **kwargs)
+    except Exception as e:
+        log.debug("reply failed: %s", e)
+
+# --- Main -------------------------------------------------------------------
 
 def main():
-    bot.infinity_polling()
+    log.info(
+        "Starting bot (secret=%s)...",
+        "set" if BOT_BACKEND_SECRET else "NOT SET (INSECURE MODE)"
+    )
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("unlink", unlink))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback))
+
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()

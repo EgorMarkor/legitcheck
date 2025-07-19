@@ -310,42 +310,97 @@
 
 <div class="header__frame-1948754034">
   <div class="header__custom-tg-btn" id="tgAuthBtn">
-      <button id="tg-login-btn" class="header__frame-1948754034">Войти через Telegram</button>
-      <script>
-      (function(){
-          const btn = document.getElementById('tg-login-btn');
-          let currentToken = null;
-          btn.addEventListener('click', () => {
-              fetch('{% url 'pc_telegram_request_login' %}', {credentials:'same-origin'})
-                .then(r => r.json())
-                .then(d => {
-                    currentToken = d.token;
-                    window.open(d.start_link, '_blank');
-                    poll();
-                })
-                .catch(() => showStatus('Ошибка запроса', 'err'));
-          });
+      <button id="tg-login-btn" class="tg-btn">Войти через Telegram</button>
+<div class="tg-auth-status" id="tgAuthStatus"></div>
 
-          function poll(){
-              if(!currentToken) return;
-              fetch('{% url 'pc_telegram_check_login' %}?token=' + encodeURIComponent(currentToken))
-                .then(r => r.json())
-                .then(d => {
-                    if(d.logged){
-                        location.reload();
-                    } else {
-                        setTimeout(poll, 2000);
-                    }
-                });
-          }
-          function showStatus(text, cls){
-              const box = document.getElementById('tgAuthStatus');
-              box.textContent = text;
-              box.className = 'tg-auth-status show ' + cls;
-              setTimeout(() => box.classList.remove('show'), 4000);
-          }
-      })();
-      </script>
+<script>
+(function(){
+  const btn = document.getElementById('tg-login-btn');
+  const statusBox = document.getElementById('tgAuthStatus');
+  let currentToken = null;
+  let pollTimer = null;
+  let startedAt = 0;
+  const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+  btn.addEventListener('click', startLogin);
+
+  function startLogin(){
+    if(btn.disabled) return;
+    btn.disabled = true;
+    showStatus('Генерация токена...', 'info');
+    fetch("{% url 'pc_telegram_request_login' %}", {
+      method: 'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: '{}',
+      credentials: 'same-origin'
+    })
+    .then(checkHttp)
+    .then(r => r.json())
+    .then(d => {
+      if(!d.token || !d.start_link) throw new Error('Bad response');
+      currentToken = d.token;
+      startedAt = Date.now();
+      showStatus('Открыл бота, отправьте /start', 'info');
+      window.open(d.start_link, '_blank', 'noopener');
+      startPolling();
+    })
+    .catch(e => {
+      console.error(e);
+      showStatus('Ошибка запроса', 'err');
+      btn.disabled = false;
+    });
+  }
+
+  function startPolling(){
+    pollTimer = setInterval(async ()=>{
+      if(Date.now() - startedAt > POLL_TIMEOUT_MS){
+        clearInterval(pollTimer);
+        showStatus('Истекло время. Повторите.', 'err');
+        btn.disabled = false;
+        return;
+      }
+      try {
+        const r = await fetch("{% url 'pc_telegram_check_login' %}?token="+encodeURIComponent(currentToken),
+          {credentials:'same-origin'});
+        if(!r.ok){
+            console.warn('poll status', r.status);
+            return;
+        }
+        const d = await r.json();
+        if(d.logged){
+          showStatus('Успешный вход', 'ok');
+          clearInterval(pollTimer);
+          setTimeout(()=>location.reload(), 400);
+        } else if (d.status === 'expired'){
+          showStatus('Токен истёк', 'err');
+          clearInterval(pollTimer);
+          btn.disabled = false;
+        }
+      } catch(e){
+        console.warn('poll error', e);
+      }
+    }, 2000);
+  }
+
+  function checkHttp(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r;
+  }
+
+  function showStatus(text, cls){
+    statusBox.textContent = text;
+    statusBox.className = 'tg-auth-status '+cls;
+  }
+
+  function getCookie(name){
+     const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+     return m ? m.pop() : '';
+  }
+})();
+</script>
 
   </div>
 </div>
@@ -365,12 +420,3 @@
 
   </div>
 </div>
-
-<!-- Статус всплывашка -->
-<div class="tg-auth-status" id="tgAuthStatus"></div>
-
-<script>
-  window.onTelegramAuth = function(user) {
-     alert('Logged in as ' + user.first_name);
-  };
-</script>
