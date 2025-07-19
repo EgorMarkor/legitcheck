@@ -11,4 +11,5 @@ urlpatterns = [
     path('verdicts/', views.verdicts, name='verdicts'),      # Главная страница
     path('home/', views.home_page, name="home_page"),
     path('telegram/login/', views.telegram_login, name='telegram_login'),
+    path('telegram/logout/', views.telegram_logout, name='telegram_logout'),
 ]
