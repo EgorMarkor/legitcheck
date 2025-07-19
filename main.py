@@ -2,7 +2,12 @@ import os
 import django
 from aiogram import Bot, Dispatcher, executor, types
 from asgiref.sync import sync_to_async
-from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    WebAppInfo,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
+import aiohttp
 
 # --- Инициализация Django ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
@@ -13,6 +18,27 @@ from webapp.models import Verdict
 API_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 bot = Bot(token=API_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot)
+
+
+# --- Helpers ---
+async def send_login_token(token: str, user: types.User) -> bool:
+    """Send login token to the website."""
+    payload = {
+        "token": token,
+        "user": {
+            "id": user.id,
+            "first_name": user.first_name or "",
+            "last_name": user.last_name or "",
+            "username": user.username or "",
+        },
+    }
+    url = "https://legitcheck.one/telegram/bot-login/"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as resp:
+                return resp.status == 200
+    except Exception:
+        return False
 
 
 # Синхронный доступ к одному Verdict по коду + первая фотография
@@ -37,7 +63,19 @@ async def cmd_start(message: types.Message):
     """
     args = message.get_args().strip()
     if not args:
-        await message.reply("❗️ Пожалуйста, запускайте бота по специальной ссылке вида `https://t.me/YourBot?start=<code>`.")
+        await message.reply(
+            "❗️ Пожалуйста, запускайте бота по специальной ссылке вида `https://t.me/YourBot?start=<code>`."
+        )
+        return
+
+    # Handle login tokens from the website
+    if args.startswith("login_"):
+        token = args.split("login_", 1)[1]
+        success = await send_login_token(token, message.from_user)
+        if success:
+            await message.answer("✅ Авторизация успешно завершена. Вернитесь на сайт.")
+        else:
+            await message.answer("❌ Не удалось подтвердить авторизацию. Попробуйте ещё раз.")
         return
 
     code = args
