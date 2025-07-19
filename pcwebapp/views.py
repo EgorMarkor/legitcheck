@@ -29,7 +29,11 @@ def pay(request):
 @webapp_login_required
 def account(request):
     user = request.webapp_user
-    return render(request, 'account.html',  {'user': user})
+    verdicts = user.verdicts.all().order_by('-created_at')
+    return render(request, 'account.html', {
+        'user': user,
+        'verdicts': verdicts,
+    })
 
 
 def user_agree(request):
