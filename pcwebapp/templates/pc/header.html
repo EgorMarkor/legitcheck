@@ -307,13 +307,48 @@
           </a>
         </div>
       {% else %}
-        <!-- НЕ авторизован: кастомная кнопка Telegram -->
-        <div class="header__frame-1948754034">
-          <div class="header__custom-tg-btn" id="tgAuthBtn">
-              <div class="header__frame-1948754034">
-                  <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="LegitLogisticsBot" data-size="large" data-userpic="false" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
-              </div>
-          </div>
+
+<div class="header__frame-1948754034">
+  <div class="header__custom-tg-btn" id="tgAuthBtn">
+      <button id="tg-login-btn" class="header__frame-1948754034">Войти через Telegram</button>
+      <script>
+      (function(){
+          const btn = document.getElementById('tg-login-btn');
+          let currentToken = null;
+          btn.addEventListener('click', () => {
+              fetch('{% url 'pc_telegram_request_login' %}', {credentials:'same-origin'})
+                .then(r => r.json())
+                .then(d => {
+                    currentToken = d.token;
+                    window.open(d.start_link, '_blank');
+                    poll();
+                })
+                .catch(() => showStatus('Ошибка запроса', 'err'));
+          });
+
+          function poll(){
+              if(!currentToken) return;
+              fetch('{% url 'pc_telegram_check_login' %}?token=' + encodeURIComponent(currentToken))
+                .then(r => r.json())
+                .then(d => {
+                    if(d.logged){
+                        location.reload();
+                    } else {
+                        setTimeout(poll, 2000);
+                    }
+                });
+          }
+          function showStatus(text, cls){
+              const box = document.getElementById('tgAuthStatus');
+              box.textContent = text;
+              box.className = 'tg-auth-status show ' + cls;
+              setTimeout(() => box.classList.remove('show'), 4000);
+          }
+      })();
+      </script>
+
+  </div>
+</div>
         </div>
       {% endif %}
     </div>

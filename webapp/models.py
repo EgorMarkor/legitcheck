@@ -136,3 +136,22 @@ class Payment(models.Model):
     
     class Meta:
         verbose_name = "Платежи"
+
+
+class LoginToken(models.Model):
+    """One-time tokens for login via Telegram bot."""
+    token = models.CharField(max_length=32, unique=True)
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="login_tokens",
+    )
+
+    def __str__(self):
+        return f"Token {self.token}"
+
