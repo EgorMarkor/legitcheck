@@ -6,7 +6,11 @@ import json
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponseBadRequest, JsonResponse
-from webapp.models import User  # ваша модель webapp.User
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from webapp.models import User, LoginToken  # ваша модель webapp.User
+from django.contrib.sessions.backends.db import SessionStore
+import secrets
 from .decorators import webapp_login_required
 
 TELEGRAM_LOGIN_MAX_AGE = 300  # секунд
@@ -59,6 +63,78 @@ def verdicts(request):
 
 def home_page(request):
     return render(request, 'pc/home_page.html')
+
+
+def telegram_request_login(request):
+    """Generate a one-time token and return bot start link."""
+    if not request.session.session_key:
+        request.session.create()
+    token = secrets.token_hex(16)
+    LoginToken.objects.create(token=token, session_key=request.session.session_key)
+    start_link = f"https://t.me/LegitLogisticsBot?start=login_{token}"
+    return JsonResponse({"token": token, "start_link": start_link})
+
+
+@csrf_exempt
+@require_POST
+def telegram_bot_login(request):
+    """Endpoint called by Telegram bot to complete login."""
+    try:
+        data = json.loads(request.body.decode())
+    except Exception:
+        return JsonResponse({"error": "invalid json"}, status=400)
+
+    token = data.get("token")
+    user_data = data.get("user") or {}
+    if not token or "id" not in user_data:
+        return JsonResponse({"error": "missing params"}, status=400)
+
+    login_token = LoginToken.objects.filter(token=token, used=False).first()
+    if not login_token:
+        return JsonResponse({"error": "bad token"}, status=400)
+
+    tg_id = str(user_data["id"])
+    full_name = (user_data.get("first_name", "") + " " + user_data.get("last_name", "")).strip()
+    username = user_data.get("username") or ""
+    photo_url = user_data.get("photo_url", "")
+
+    user, created = User.objects.get_or_create(
+        tgId=tg_id,
+        defaults={"name": full_name, "username": username, "img": photo_url},
+    )
+    if not created:
+        changed = False
+        if full_name and user.name != full_name:
+            user.name = full_name
+            changed = True
+        if username and user.username != username:
+            user.username = username
+            changed = True
+        if photo_url and user.img != photo_url:
+            user.img = photo_url
+            changed = True
+        if changed:
+            user.save()
+
+    # update session referenced by token
+    if login_token.session_key:
+        store = SessionStore(session_key=login_token.session_key)
+        store["webapp_user_tgId"] = tg_id
+        store.save()
+
+    login_token.user = user
+    login_token.used = True
+    login_token.save()
+
+    return JsonResponse({"status": "ok"})
+
+
+def telegram_check_login(request):
+    token = request.GET.get("token")
+    if not token:
+        return JsonResponse({"logged": False})
+    lt = LoginToken.objects.filter(token=token, used=True, session_key=request.session.session_key).first()
+    return JsonResponse({"logged": bool(lt)})
 
 
 def telegram_login(request):

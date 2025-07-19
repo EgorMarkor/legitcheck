@@ -10,6 +10,9 @@ urlpatterns = [
     path('privacy_policy/', views.privacy_policy, name='pc_privacy_policy'),      # Главная страница
     path('verdicts/', views.verdicts, name='pc_verdicts'),      # Главная страница
     path('home/', views.home_page, name="pc_home_page"),
+    path('telegram/request-login/', views.telegram_request_login, name='pc_telegram_request_login'),
+    path('telegram/bot-login/', views.telegram_bot_login, name='pc_telegram_bot_login'),
+    path('telegram/check-login/', views.telegram_check_login, name='pc_telegram_check_login'),
     path('telegram/login/', views.telegram_login, name='pc_telegram_login'),
     path('telegram/logout/', views.telegram_logout, name='pc_telegram_logout'),
 ]
