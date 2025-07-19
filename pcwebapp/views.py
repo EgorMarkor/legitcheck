@@ -1,11 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import hashlib
 import hmac
 import time
+import json
 from django.conf import settings
-from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from webapp.models import User  # ваша модель webapp.User
 from .decorators import webapp_login_required
 
@@ -153,38 +153,6 @@ def verify_telegram_auth_dict(data: dict, max_age=300):
     return True, data
 
 
-def telegram_login(request):
-    ok, data = verify_telegram_auth(request)
-    if not ok:
-        return HttpResponseBadRequest("Неверная подпись Telegram")
-
-    tg_id     = int(data['id'])
-    img_url   = data.get('photo_url', '')
-    full_name = (data.get('first_name','') + ' ' + data.get('last_name','')).strip()
-    username  = data.get('username')
-
-    user, created = User.objects.get_or_create(
-        tgId=tg_id,
-        defaults={
-            'img':      img_url,
-            'name':     full_name,
-            'username': username,
-        }
-    )
-    if not created:
-        # обновляем данные на всякий случай
-        user.img      = img_url
-        user.name     = full_name
-        user.username = username
-        user.save()
-
-    request.session['webapp_user_tgId'] = user.tgId
-
-    next_url = request.GET.get('next')
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        return redirect(next_url)
-
-    return redirect('pc_account')  # куда угодно внутри webapp
 
 def telegram_logout(request):
     request.session.pop('webapp_user_tgId', None)
