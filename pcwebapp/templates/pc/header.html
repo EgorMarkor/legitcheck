@@ -1,533 +1,434 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'font/stylesheet.css' %}">
 <style>
-  * {
-    font-family: 'Google Sans' !important;
-  }
-</style>
-<div class="header__frame-2131329207">
-        <div class="header__frame-2131329236">
-          <div class="header__border">
-            <div class="header__frame-3">
-              <div class="header__frame-2">
-                <div class="header__link">
-                  <div class="header__div">О нас</div>
-                </div>
-                <div class="header__link2">
-                  <div class="header__div2">Цены</div>
-                </div>
-                <div class="header__link3">
-                  <div class="header__div3">Этапы работы</div>
-                </div>
-                <div class="header__link4">
-                  <div class="header__div4">Статьи</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% load static %}
-          <div class="header__frame-1948754033">
-          {% if webapp_user %}
-          <style>
-            .header2__frame-1948754033 {
-  display: flex;
-  flex-direction: row;
-  gap: 1.8579999999999999rem;
-  align-items: center;
-  justify-content: flex-start;
-  position: absolute;
-  top: 0rem;
-  left: 9.5rem;
-}
-.header2__frame-1000006148 {
-  background: var(
-    --bek-plashek-temnyj,
-    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
-  );
-  border-radius: 185.84300000000002rem;
-  border-width: 0.186rem;
-  
-  border-image: var(
-    --obvodka-temnaya-versiya,
-    linear-gradient(
-      180deg,
-      rgba(179, 214, 255, 0.03) 0%,
-      rgba(179, 214, 255, 0) 100%
-    )
-  );
-  border-image-slice: 1;
-  padding: 0.743rem 0.743rem 0.743rem 2.788rem;
-  display: flex;
-  flex-direction: row;
-  gap: 0.558rem;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 15rem;
-  height: 6.8rem;
-  position: relative;
-  overflow: hidden;
-}
-.header2___128-90 {
-  color: #ffffff;
-  text-align: justified;
-  font-family: "GoogleSans-Bold", sans-serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  position: relative;
-  width: 5.86rem;
-  height: 1.8030000000000002rem;
-}
-.header2__frame-1948754032 {
-  background: rgba(19, 205, 144, 0.12);
-  border-radius: 112.69800000000001rem;
-  border-width: 0.11299999999999999rem;
-  
-  border-image: var(
-    --obvodka-temnaya-versiya,
-    linear-gradient(
-      180deg,
-      rgba(179, 214, 255, 0.03) 0%,
-      rgba(179, 214, 255, 0) 100%
-    )
-  );
-  border-image-slice: 1;
-  flex-shrink: 0;
-  width: 4.17rem;
-  height: 2.93rem;
-  position: relative;
-  overflow: hidden;
-}
-.header2__frame-1948754050 {
-  width: 1.8780000000000001rem;
-  height: 1.597rem;
-  position: absolute;
-  left: 1.24rem;
-  top: 0.6759999999999999rem;
-  overflow: visible;
-}
-.header2__frame-1000006062 {
-  background: #171b22;
-  border-radius: 139.544rem;
-  flex-shrink: 0;
-  width: 4.696rem;
-  height: 4.696rem;
-  position: relative;
-  overflow: hidden;
-}
-.header2__image-12 {
-  width: 5.26rem;
-  height: 5.26rem;
-  position: absolute;
-  left: -0.072rem;
-  top: 0rem;
-  object-fit: cover;
-}
-          </style>
-            <div class="header2__frame-1948754033">
-              <div class="header2__frame-1000006148">
-                <div class="header2___128-90">{{ webapp_user.balance }} ₽</div>
-                <div class="header2__frame-1948754032">
-                  <img class="header2__frame-1948754050" src="/static/pay/frame-19487540500.svg">
-                </div>
-              </div>
-              <a href="{% url 'pc_account' %}" class="header2__frame-1000006062">
-                <img class="header2__image-12" src="{{ webapp_user.img }}">
-              </a>
-            </div>
-          {% else %}
-            <div class="header__frame-1948754034">
-              <div class="header__frame-1948754049">
-                <div class="header__frame-19487540492">
-                  <script
-                      async
-                      src="https://telegram.org/js/telegram-widget.js?15"
-                      data-telegram-login="LegitLogisticsBot"
-                      data-size="large"
-                      data-userpic="false"
-                      data-radius="5"
-                      data-auth-url="{% url 'pc_telegram_login' %}"
-                      data-request-access="write"
-                      data-lang="ru"
-                    ></script>
-                  <img class="header__svg" src="{% static 'head_page/svg0.svg' %}" />
-                  <div class="header__frame-1948754048">
-                    <div class="header__div5">Авторизируйтесь</div>
-                    <div class="header__telegram">Через Telegram</div>
-                  </div>
-                </div>
-                <img class="header__svg2" src="{% static 'head_page/svg1.svg' %}" />
-              </div>
-            </div>
-          {% endif %}
-          </div>
+  * { font-family: 'Google Sans', sans-serif !important; }
 
-          <div class="header__frame-1948754032">
-            <div class="header__frame-19487540493">
-              <img class="header__svg3" src="{% static 'head_page/svg2.svg' %}" />
-              <div class="header__frame-19487540482">
-                <div class="header__legit-check">@legit_check</div>
-                <div class="header__telegram2">Наш Telegram-канал</div>
-              </div>
+  /* ====== ОСНОВНАЯ ВЕРСТКА ХЕДЕРА (оставил вашу) ====== */
+  .header__frame-2131329207 {
+    align-self: stretch;
+    flex-shrink: 0;
+    height: 11.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header__frame-2131329236 {
+    width: 150.896rem;
+    height: 6.8rem;
+    position: absolute;
+    left: 20.5rem;
+    top: 2.8rem;
+  }
+  .header__border {
+    background: linear-gradient(180deg, #171c24 0%, #11151a 100%);
+    border-radius: 100rem;
+    border-width: 0.2rem;
+    border-image: linear-gradient(180deg, rgba(179,214,255,0.03) 0%, rgba(179,214,255,0) 100%);
+    border-image-slice: 1;
+    padding: 2.3rem 2.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 45.4rem;
+    height: 6.8rem;
+    position: absolute;
+    left: 52.8rem;
+    top: 0;
+    overflow: hidden;
+  }
+  .header__frame-3 {
+    padding: .9rem 0;
+    flex-shrink: 0;
+    width: 35.8rem;
+    height: 5.2rem;
+    position: relative;
+  }
+  .header__frame-2 {
+    display: flex;
+    flex-direction: row;
+    gap: 2.5rem;
+    align-items: center;
+    width: 35.4rem;
+    position: absolute;
+    left: -.05rem;
+    top: .95rem;
+  }
+  .header__link,
+  .header__link2,
+  .header__link3,
+  .header__link4 {
+    border-radius: .8rem;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .header__link { width: 5.7rem; height: 2.8rem; }
+  .header__link2 { width: 5.2rem; height: 2.8rem; }
+  .header__link3 { width: 10.6rem; height: 2.8rem; }
+  .header__link4 { width: 7.8rem; height: 2.8rem; }
+  .header__div,
+  .header__div2,
+  .header__div3,
+  .header__div4 {
+    color: #fff;
+    font-family: "GoogleSans-Medium";
+    font-size: 1.4rem;
+    line-height: 2rem;
+    font-weight: 500;
+    position: absolute;
+  }
+  .header__div { left: .8rem; top: .6rem; width: 4.1rem; }
+  .header__div2 { left: .75rem; top: .55rem; width: 3.8rem; }
+  .header__div3 { left: .4rem; top: .5rem; width: 9.8rem; }
+  .header__div4 { left: 1.4rem; top: .6rem; width: 5rem; }
+
+  .header__frame-1948754033 {
+    display: flex;
+    flex-direction: row;
+    gap: 1.858rem;
+    align-items: center;
+    justify-content: flex-start;
+    width: 31.1rem;
+    position: absolute;
+    left: 119.8rem;
+    top: 0;
+  }
+
+  /* ====== БЛОК НЕАВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ (кастомная кнопка) ====== */
+  .header__frame-1948754034 {
+    background: linear-gradient(180deg, #171c24 0%, #11151a 100%);
+    border-radius: 100rem;
+    padding: .6rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 31.1rem;
+    height: 7.3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header__custom-tg-btn {
+    display: flex;
+    flex-direction: row;
+    gap: .95rem;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+  }
+  .header__custom-tg-icon {
+    width: 4.49rem;
+    height: 4.49rem;
+    position: relative;
+  }
+  .header__custom-tg-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .header__frame-1948754048 {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .header__div5 {
+    color: #fff;
+    font-family: "GoogleSans-Bold";
+    font-size: 1.6rem;
+    line-height: 2.569rem;
+    font-weight: 700;
+  }
+  .header__telegram {
+    color: #464f5d;
+    font-family: "GoogleSans-Regular";
+    font-size: 1.2rem;
+    line-height: 1.927rem;
+  }
+
+  /* ====== БАЛАНС + АВАТАР АВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ ====== */
+  .header2__frame-1948754033 {
+    display: flex;
+    flex-direction: row;
+    gap: 1.858rem;
+    align-items: center;
+    justify-content: flex-start;
+    position: absolute;
+    top: 0;
+    left: 9.5rem;
+  }
+  .header2__frame-1000006148 {
+    background: linear-gradient(180deg, #171c24 0%, #11151a 100%);
+    border-radius: 185.843rem;
+    border-width: .186rem;
+    border-image: linear-gradient(180deg, rgba(179,214,255,.03) 0%, rgba(179,214,255,0) 100%);
+    border-image-slice: 1;
+    padding: .743rem .743rem .743rem 2.788rem;
+    display: flex;
+    flex-direction: row;
+    gap: .558rem;
+    align-items: center;
+    width: 15rem;
+    height: 6.8rem;
+    overflow: hidden;
+  }
+  .header2___128-90 {
+    color: #fff;
+    font-family: "GoogleSans-Bold";
+    font-size: 1.4rem;
+    font-weight: 700;
+    width: 5.86rem;
+  }
+  .header2__frame-1948754032 {
+    background: rgba(19,205,144,.12);
+    border-radius: 112.698rem;
+    width: 4.17rem;
+    height: 2.93rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header2__frame-1948754050 {
+    width: 1.878rem;
+    height: 1.597rem;
+    position: absolute;
+    left: 1.24rem;
+    top: .676rem;
+    overflow: visible;
+  }
+  .header2__frame-1000006062 {
+    background: #171b22;
+    border-radius: 139.544rem;
+    width: 4.696rem;
+    height: 4.696rem;
+    position: relative;
+    overflow: hidden;
+    display: block;
+  }
+  .header2__image-12 {
+    width: 5.26rem;
+    height: 5.26rem;
+    position: absolute;
+    left: -.072rem;
+    top: 0;
+    object-fit: cover;
+  }
+
+  /* ====== КАНАЛ СПРАВА ====== */
+  .header__frame-1948754032 {
+    background: linear-gradient(180deg,#171c24 0%, #11151a 100%);
+    border-radius: 185.843rem;
+    border-width: .186rem;
+    border-image: linear-gradient(180deg, rgba(179,214,255,.03) 0%, rgba(179,214,255,0) 100%);
+    border-image-slice: 1;
+    padding: 1.115rem 2.416rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.858rem;
+    align-items: center;
+    justify-content: center;
+    width: 25.8rem;
+    height: 6.8rem;
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+  }
+  .header__frame-19487540493 {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+  }
+  .header__legit-check {
+    color: #fff;
+    font-family: "GoogleSans-Bold";
+    font-size: 1.6rem;
+    line-height: 2.157rem;
+    font-weight: 700;
+  }
+  .header__telegram2 {
+    color: #464f5d;
+    font-family: "GoogleSans-Regular";
+    font-size: 1.2rem;
+    line-height: 1.618rem;
+  }
+
+  /* ====== СОСТОЯНИЕ / СООБЩЕНИЯ АВТОРИЗАЦИИ ====== */
+  .tg-auth-status {
+    position: fixed;
+    z-index: 9999;
+    right: 1rem;
+    bottom: 1rem;
+    background: #1e2530;
+    color: #fff;
+    padding: 1rem 1.4rem;
+    border-radius: .8rem;
+    font-size: 1.3rem;
+    line-height: 1.4;
+    max-width: 28rem;
+    box-shadow: 0 4px 18px rgba(0,0,0,.4);
+    display: none;
+  }
+  .tg-auth-status.show { display: block; }
+  .tg-auth-status.ok { border-left: .4rem solid #15c780; }
+  .tg-auth-status.err { border-left: .4rem solid #ff5252; }
+</style>
+
+<div class="header__frame-2131329207">
+  <div class="header__frame-2131329236">
+    <div class="header__border">
+      <div class="header__frame-3">
+        <div class="header__frame-2">
+          <div class="header__link"><div class="header__div">О нас</div></div>
+            <div class="header__link2"><div class="header__div2">Цены</div></div>
+            <div class="header__link3"><div class="header__div3">Этапы работы</div></div>
+            <div class="header__link4"><div class="header__div4">Статьи</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header__frame-1948754033">
+      {% if webapp_user %}
+        <!-- Пользователь авторизован -->
+        <div class="header2__frame-1948754033">
+          <div class="header2__frame-1000006148">
+            <div class="header2___128-90">{{ webapp_user.balance }} ₽</div>
+            <div class="header2__frame-1948754032">
+              <img class="header2__frame-1948754050" src="{% static 'head_page/money.svg' %}" alt="">
+            </div>
+          </div>
+          <a href="{% url 'pc_account' %}" class="header2__frame-1000006062">
+            <img class="header2__image-12" src="{{ webapp_user.img|default:'/static/img/default-avatar.png' }}" alt="avatar">
+          </a>
+        </div>
+      {% else %}
+        <!-- НЕ авторизован: кастомная кнопка Telegram -->
+        <div class="header__frame-1948754034">
+          <div class="header__custom-tg-btn" id="tgAuthBtn"
+               data-bot-id="{{ TELEGRAM_BOT_ID }}"
+               data-auth-url="{% url 'pc_telegram_login' %}"
+               data-request-access="write">
+            <div class="header__custom-tg-icon">
+              <img src="{% static 'head_page/svg0.svg' %}" alt="tg icon">
+            </div>
+            <div class="header__frame-1948754048">
+              <div class="header__div5">Авторизируйтесь</div>
+              <div class="header__telegram">Через Telegram</div>
             </div>
           </div>
         </div>
+      {% endif %}
+    </div>
+
+    <div class="header__frame-1948754032" style="left:0; top:0;">
+      <div class="header__frame-19487540493">
+        <img class="header__svg3" src="{% static 'head_page/svg2.svg' %}" alt="">
+        <div class="header__frame-19487540482">
+          <div class="header__legit-check">@legit_check</div>
+          <div class="header__telegram2">Наш Telegram-канал</div>
+        </div>
       </div>
+    </div>
 
-<style>
-  .header__frame-19487540492 > iframe,
-.header__frame-19487540492 > .telegram-login-button {
-  display: none !important;
-}
+  </div>
+</div>
 
-    .header__frame-2131329207 {
-  align-self: stretch;
-  flex-shrink: 0;
-  height: 11.1rem;
-  position: relative;
-  overflow: hidden;
-}
-.header__frame-2131329236 {
-  width: 150.89600000000002rem;
-  height: 6.8rem;
-  position: absolute;
-  left: 20.5rem;
-  top: 2.8rem;
-}
-.header__border {
-  background: var(
-    --bek-plashek-temnyj,
-    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
-  );
-  border-radius: 100rem;
-  border-width: 0.2rem;
-  
-  border-image: var(
-    --obvodka-temnaya-versiya,
-    linear-gradient(
-      180deg,
-      rgba(179, 214, 255, 0.03) 0%,
-      rgba(179, 214, 255, 0) 100%
-    )
-  );
-  border-image-slice: 1;
-  padding: 2.3rem 2.6rem 2.3rem 2.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-  justify-content: center;
-  width: 45.4rem;
-  height: 6.8rem;
-  position: absolute;
-  left: 52.8rem;
-  top: 0rem;
-  overflow: hidden;
-}
-.header__frame-3 {
-  padding: 0.9rem 0rem 0.9rem 0rem;
-  flex-shrink: 0;
-  width: 35.8rem;
-  height: 5.2rem;
-  position: relative;
-}
-.header__frame-2 {
-  display: flex;
-  flex-direction: row;
-  gap: 2.5rem;
-  align-items: center;
-  justify-content: flex-start;
-  width: 35.4rem;
-  position: absolute;
-  left: -0.05rem;
-  top: 0.95rem;
-}
-.header__link {
-  border-radius: 0.8rem;
-  flex-shrink: 0;
-  width: 5.7rem;
-  height: 2.8rem;
-  position: relative;
-}
-.header__div {
-  color: #ffffff;
-  text-align: left;
-  font-family: "GoogleSans-Medium", sans-serif;
-  font-size: 1.4rem;
-  line-height: 2rem;
-  font-weight: 500;
-  position: absolute;
-  left: 0.8rem;
-  top: 0.6rem;
-  width: 4.1rem;
-  height: 1.7rem;
-}
-.header__link2 {
-  border-radius: 0.8rem;
-  flex-shrink: 0;
-  width: 5.2rem;
-  height: 2.8rem;
-  position: relative;
-}
-.header__div2 {
-  color: #ffffff;
-  text-align: left;
-  font-family: "GoogleSans-Medium", sans-serif;
-  font-size: 1.4rem;
-  line-height: 2rem;
-  font-weight: 500;
-  position: absolute;
-  left: 0.75rem;
-  top: 0.55rem;
-  width: 3.8rem;
-  height: 1.7rem;
-}
-.header__link3 {
-  border-radius: 0.8rem;
-  flex-shrink: 0;
-  width: 10.6rem;
-  height: 2.8rem;
-  position: relative;
-}
-.header__div3 {
-  color: #ffffff;
-  text-align: left;
-  font-family: "GoogleSans-Medium", sans-serif;
-  font-size: 1.4rem;
-  line-height: 2rem;
-  font-weight: 500;
-  position: absolute;
-  left: 0.4rem;
-  top: 0.5rem;
-  width: 9.8rem;
-}
-.header__link4 {
-  border-radius: 0.8rem;
-  flex-shrink: 0;
-  width: 7.8rem;
-  height: 2.8rem;
-  position: relative;
-}
-.header__div4 {
-  color: #ffffff;
-  text-align: left;
-  font-family: "GoogleSans-Medium", sans-serif;
-  font-size: 1.4rem;
-  line-height: 2rem;
-  font-weight: 500;
-  position: absolute;
-  left: 1.4rem;
-  top: 0.6rem;
-  width: 5rem;
-  height: 1.7rem;
-}
-.header__frame-1948754033 {
-  display: flex;
-  flex-direction: row;
-  gap: 1.8579999999999999rem;
-  align-items: center;
-  justify-content: flex-start;
-  width: 31.1rem;
-  position: absolute;
-  left: 119.8rem;
-  top: 0rem;
-}
-.header__frame-1948754034 {
-  background: var(
-    --bek-plashek-temnyj,
-    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
-  );
-  border-radius: 100rem;
-  padding: 0.6rem 1.3rem 0.6rem 1.3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 31.1rem;
-  height: 7.3rem;
-  position: relative;
-  overflow: hidden;
-}
-.header__frame-1948754049 {
-  display: flex;
-  flex-direction: row;
-  gap: 1.342rem;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 25.381rem;
-  position: relative;
-}
-.header__frame-19487540492 {
-  display: flex;
-  flex-direction: row;
-  gap: 0.9349999999999999rem;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 19.829rem;
-  position: relative;
-}
-.header__svg {
-  flex-shrink: 0;
-  width: 4.49rem;
-  height: 4.49rem;
-  position: relative;
-  overflow: visible;
-}
-.header__frame-1948754048 {
-  display: flex;
-  flex-direction: column;
-  gap: 0rem;
-  align-items: flex-start;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 14.591rem;
-  position: relative;
-}
-.header__div5 {
-  color: #ffffff;
-  text-align: center;
-  font-family: "GoogleSans-Bold", sans-serif;
-  font-size: 1.6rem;
-  line-height: 2.569rem;
-  font-weight: 700;
-  position: relative;
-  width: 14rem;
-  height: 1.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.header__telegram {
-  color: #464f5d;
-  text-align: center;
-  font-family: "GoogleSans-Regular", sans-serif;
-  font-size: 1.2rem;
-  line-height: 1.927rem;
-  font-weight: 400;
-  position: relative;
-  width: 8.8rem;
-  height: 1.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.header__svg2 {
-  flex-shrink: 0;
-  width: 4.149rem;
-  height: 4.149rem;
-  position: relative;
-  overflow: visible;
-}
-.header__frame-1948754032 {
-  background: var(
-    --bek-plashek-temnyj,
-    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
-  );
-  border-radius: 185.84300000000002rem;
-  border-width: 0.186rem;
-  
-  border-image: var(
-    --obvodka-temnaya-versiya,
-    linear-gradient(
-      180deg,
-      rgba(179, 214, 255, 0.03) 0%,
-      rgba(179, 214, 255, 0) 100%
-    )
-  );
-  border-image-slice: 1;
-  padding: 1.115rem 2.416rem 1.115rem 2.416rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.8579999999999999rem;
-  align-items: center;
-  justify-content: center;
-  width: 25.8rem;
-  height: 6.8rem;
-  position: absolute;
-  left: 0rem;
-  top: 0rem;
-  overflow: hidden;
-}
-.header__frame-19487540493 {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 17.753999999999998rem;
-  position: relative;
-}
-.header__svg3 {
-  flex-shrink: 0;
-  width: 3.771rem;
-  height: 3.771rem;
-  position: relative;
-  overflow: visible;
-}
-.header__frame-19487540482 {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  align-items: flex-start;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 12.254999999999999rem;
-  position: relative;
-}
-.header__legit-check {
-  color: #ffffff;
-  text-align: center;
-  font-family: "GoogleSans-Bold", sans-serif;
-  font-size: 1.6rem;
-  line-height: 2.157rem;
-  font-weight: 700;
-  position: relative;
-  width: 10.4rem;
-  height: 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.header__telegram2 {
-  color: #464f5d;
-  text-align: center;
-  font-family: "GoogleSans-Regular", sans-serif;
-  font-size: 1.2rem;
-  line-height: 1.6179999999999999rem;
-  font-weight: 400;
-  position: relative;
-  width: 11.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
+<!-- Статус всплывашка -->
+<div class="tg-auth-status" id="tgAuthStatus"></div>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-  const btnContainer = document.querySelector('.header__frame-19487540492');
-  if (!btnContainer) return;
+/*
+  ЛОГИКА:
+  1. По клику на кастомную кнопку строим URL:
+     https://oauth.telegram.org/auth?bot_id=XXXXX&origin=<origin>&return_to=<full_return_url>&request_access=write
+  2. Telegram редиректит обратно на return_to с query params.
+  3. На странице, если видим набор Telegram параметров + hash — отправляем их POST на ваш backend (pc_telegram_login).
+  4. Backend проверяет подпись, создаёт / обновляет пользователя, устанавливает сессию и редиректит дальше.
+*/
 
-  btnContainer.addEventListener('click', () => {
-    // Здесь явно указываем ваш BOT_ID и origin
-    const BOT_ID = '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU';      // передайте через контекст шаблона
-    const origin = window.location.origin;       // например, https://example.com
+(function() {
+  const statusBox = document.getElementById('tgAuthStatus');
+  function showStatus(msg, ok=false) {
+    if (!statusBox) return;
+    statusBox.textContent = msg;
+    statusBox.className = 'tg-auth-status show ' + (ok ? 'ok':'err');
+    setTimeout(()=> statusBox.classList.remove('show'), 6000);
+  }
 
-    const params = new URLSearchParams({
-      bot_id: BOT_ID,
-      return_to: 'https://legitcheck.one/pc/telegram/login/',
-      origin: origin,
-      request_access: 'write'
+  // 1. Кнопка авторизации
+  const btn = document.getElementById('tgAuthBtn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const botId = 7620197633;    // ТОЛЬКО число (без ":<rest>")
+      if (!botId) {
+        showStatus('Не задан TELEGRAM_BOT_ID', false);
+        return;
+      }
+      const authUrl = btn.dataset.authUrl; // наш Django endpoint
+      const reqAccess = btn.dataset.requestAccess || 'write';
+
+      // Полный абсолютный URL для return_to
+      const base = new URL(authUrl, window.location.origin).toString();
+
+      const params = new URLSearchParams({
+        bot_id: botId,
+        origin: window.location.origin,
+        return_to: base,
+        request_access: reqAccess
+      });
+
+      window.location.href = 'https://oauth.telegram.org/auth?' + params.toString();
     });
+  }
 
-    // редирект на OAuth-страницу Telegram
-    window.location.href = `https://oauth.telegram.org/auth?${params.toString()}`;
-  });
-});
+  // 2. Если Telegram уже вернул параметры (проверяем наличие обязательных)
+  const tgFields = ['id','first_name','auth_date','hash'];
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasTg = tgFields.every(f => urlParams.has(f));
+  if (hasTg) {
+    // Собираем все возможные поля (включая опциональные)
+    const payload = {};
+    ['id','first_name','last_name','username','photo_url','auth_date','hash']
+      .forEach(k => { if (urlParams.has(k)) payload[k] = urlParams.get(k); });
 
+    // Отправляем POST (JSON) на backend для проверки подписи и создания сессии
+    fetch(new URL(btn ? btn.dataset.authUrl : '{% url "pc_telegram_login" %}', window.location.origin), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(payload),
+      credentials: 'same-origin'
+    }).then(async (r) => {
+      if (r.redirected) {
+        // сервер сам решил куда отправить
+        window.location = r.url;
+        return;
+      }
+      const text = await r.text();
+      if (r.ok) {
+        showStatus('Авторизация Telegram успешна', true);
+        // Можно форс-обновить страницу, чтобы блок с балансом появился
+        setTimeout(()=> window.location.reload(), 800);
+      } else {
+        showStatus('Ошибка авторизации: ' + text, false);
+      }
+    }).catch(err => {
+      console.error(err);
+      showStatus('Сетевая ошибка Telegram авторизации', false);
+    });
+  }
+
+  // 3. Вспомогательная функция поиска cookie
+  function getCookie(name) {
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+})();
 </script>
