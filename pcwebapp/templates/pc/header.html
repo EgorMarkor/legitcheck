@@ -311,48 +311,7 @@
         <div class="header__frame-1948754034">
           <div class="header__custom-tg-btn" id="tgAuthBtn">
               <div class="header__frame-1948754034">
-                  <div id="tg-login-box"></div>
-
-                  <script>
-                  (function(){
-                    const WIDGET_URL = "https://telegram.org/js/telegram-widget.js?22&v=1";
-                    const AUTH_URL   = "https://legitcheck.one/pc/telegram/login/";  // ваш endpoint
-                    const BOT_NAME   = "LegitLogisticsBot";                          // имя бота без @
-
-                    // Если хотите вернуть юзера на текущую страницу после логина:
-                    const nextValue = encodeURIComponent(location.pathname + location.search);
-
-                    const s = document.createElement('script');
-                    s.async = true;
-                    s.src = WIDGET_URL;
-                    s.setAttribute('data-telegram-login', BOT_NAME);
-                    s.setAttribute('data-size', 'large');
-                    s.setAttribute('data-userpic', 'false');
-                    s.setAttribute('data-request-access', 'write');
-                    s.setAttribute('data-radius', '8');
-                    s.setAttribute('data-lang', 'ru');
-                    // передаем next как query к auth-url, чтобы Telegram его вернул
-                    s.setAttribute('data-auth-url', AUTH_URL + '?next=' + nextValue);
-                    s.setAttribute('data-onauth', 'onTelegramAuth(user)');
-                    document.getElementById('tg-login-box').appendChild(s);
-                  })();
-
-                  function onTelegramAuth(user){
-                    // Срабатывает если пользователь уже авторизован у бота (виджет не делает redirect).
-                    const params = new URLSearchParams();
-                    ['id','first_name','last_name','username','photo_url','auth_date','hash']
-                      .forEach(k => { if (user[k] !== undefined && user[k] !== null) params.append(k, user[k]); });
-
-                    // Возьмём next из data-auth-url (если был)
-                    const authScript = document.querySelector('script[src*="telegram-widget.js"]');
-                    const authAttr = authScript.getAttribute('data-auth-url');
-                    const nextMatch = authAttr.match(/[?&]next=([^&]+)/);
-                    if (nextMatch) params.append('next', nextMatch[1]);
-
-                    window.location = "https://legitcheck.one/pc/telegram/login/?" + params.toString();
-                  }
-                  </script>
-
+                  <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="LegitLogisticsBot" data-size="large" data-userpic="false" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
               </div>
           </div>
         </div>
@@ -374,3 +333,9 @@
 
 <!-- Статус всплывашка -->
 <div class="tg-auth-status" id="tgAuthStatus"></div>
+
+<script>
+  window.onTelegramAuth = function(user) {
+     alert('Logged in as ' + user.first_name);
+  };
+</script>
