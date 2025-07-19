@@ -307,6 +307,7 @@
           </a>
         </div>
       {% else %}
+
 <div class="header__frame-1948754034">
   <div class="header__custom-tg-btn" id="tgAuthBtn">
       <button id="tg-login-btn" class="header__frame-1948754034">Войти через Telegram</button>
@@ -367,3 +368,9 @@
 
 <!-- Статус всплывашка -->
 <div class="tg-auth-status" id="tgAuthStatus"></div>
+
+<script>
+  window.onTelegramAuth = function(user) {
+     alert('Logged in as ' + user.first_name);
+  };
+</script>

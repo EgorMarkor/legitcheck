@@ -12,6 +12,22 @@ from webapp.models import User, LoginToken  # ваша модель webapp.User
 from django.contrib.sessions.backends.db import SessionStore
 import secrets
 from .decorators import webapp_login_required
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.http import url_has_allowed_host_and_scheme
+
+import time
+import hmac
+import hashlib
+import logging
+from urllib.parse import unquote
+
+from django.conf import settings
+from django.http import (
+    JsonResponse,
+    HttpResponseBadRequest,
+    HttpResponse
+)
 
 TELEGRAM_LOGIN_MAX_AGE = 300  # секунд
 
@@ -63,6 +79,7 @@ def verdicts(request):
 
 def home_page(request):
     return render(request, 'pc/home_page.html')
+
 
 
 def telegram_request_login(request):
@@ -136,62 +153,92 @@ def telegram_check_login(request):
     lt = LoginToken.objects.filter(token=token, used=True, session_key=request.session.session_key).first()
     return JsonResponse({"logged": bool(lt)})
 
-
 def telegram_login(request):
-    # Параметры должны прийти в GET (redirect или callback onAuth)
+    """
+    Обрабатывает callback Telegram Login Widget.
+    НЕТ ни одного redirect на главную.
+    Только:
+      - redirect на next (если валидно)
+      - redirect на pc_account (успех)
+      - HTTP 4xx/5xx ответы (ошибки)
+    """
+    if request.method != "GET":
+        return HttpResponseBadRequest("Неверный метод (ожидается GET)")
+
     if 'hash' not in request.GET:
+        logger.warning("Telegram login: нет параметров hash. GET=%s", dict(request.GET))
         return HttpResponseBadRequest("Нет параметров Telegram")
 
     ok, data, reason = verify_telegram_auth(request.GET, max_age=TELEGRAM_LOGIN_MAX_AGE)
     if not ok:
-        return HttpResponseBadRequest(f"Ошибка Telegram: {reason}")
+        logger.warning("Telegram login: verify FAILED: %s | raw=%s", reason, dict(request.GET))
+        return HttpResponseBadRequest(f"Ошибка Telegram верификации: {reason}")
 
-    tg_id = str(data['id'])  # строкой, чтобы не путаться с типами
-    full_name = (data.get('first_name','') + ' ' + data.get('last_name','')).strip()
-    username  = data.get('username') or ''
-    photo_url = data.get('photo_url','')
+    tg_id = str(data['id'])
+    full_name = (data.get('first_name', '') + ' ' + data.get('last_name', '')).strip()
+    username = data.get('username') or ''
+    photo_url = data.get('photo_url', '')
 
     user, created = User.objects.get_or_create(
         tgId=tg_id,
         defaults={'name': full_name, 'username': username, 'img': photo_url}
     )
-    if not created:
-        # обновляем при наличии новых данных
-        changed = False
-        if full_name and user.name != full_name: user.name = full_name; changed = True
-        if username and user.username != username: user.username = username; changed = True
-        if photo_url and user.img != photo_url: user.img = photo_url; changed = True
-        if changed: user.save()
 
+    if not created:
+        changed = False
+        if full_name and user.name != full_name:
+            user.name = full_name; changed = True
+        if username and user.username != username:
+            user.username = username; changed = True
+        if photo_url and user.img != photo_url:
+            user.img = photo_url; changed = True
+        if changed:
+            user.save()
+
+    # Сохраняем идентификатор авторизованного пользователя в сессии
     request.session['webapp_user_tgId'] = tg_id
 
-    # next (безопасно)
+    # Обработка next
     next_url = request.GET.get('next')
     if next_url:
-        # Декодируем если URL‑encoded (виджет уже закодировал)
-        from urllib.parse import unquote
         next_url = unquote(next_url)
-        from django.utils.http import url_has_allowed_host_and_scheme
-        if url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            logger.info("Telegram login success (user=%s). Redirect to next=%s", user.pk, next_url)
             return redirect(next_url)
+        else:
+            logger.warning("Telegram login: отклонён небезопасный next=%s", next_url)
 
-    return redirect('pc_account')  # или куда нужно
+    logger.info("Telegram login success (user=%s). Redirect to pc_account", user.pk)
+    return redirect('pc_account')
+
 
 def telegram_logout(request):
+    """
+    Выход из Telegram сессии.
+    Здесь ТАКЖЕ не редиректим на главную.
+    Можешь поменять поведение на JsonResponse.
+    """
     request.session.pop('webapp_user_tgId', None)
-    return redirect('pc_home')
+    # Можно вернуть пользователя к странице аккаунта (где увидит, что не авторизован)
+    return HttpResponse("Вы вышли из Telegram-сессии.")
+
 
 def verify_telegram_auth(params, max_age=86400):
     """
-    params: QueryDict / dict с параметрами Telegram.
-    Возвращает (ok, cleaned_dict, reason)
+    Проверка подписи Telegram.
+    Возвращает (ok: bool, cleaned_dict | None, reason: str | None)
+    Никаких редиректов внутри — только логика.
     """
-    data = dict(params.items())
+    try:
+        data = dict(params.items())
+    except Exception as e:
+        return False, None, f"ошибка чтения параметров: {e}"
+
     hash_received = data.pop('hash', None)
     if not hash_received:
         return False, None, "hash отсутствует"
 
-    # формируем data_check_string
+    # Составляем строку в формате k=v (отсортировано по ключу)
     check_pairs = [f"{k}={data[k]}" for k in sorted(data.keys())]
     data_check_string = "\n".join(check_pairs)
 
@@ -203,12 +250,60 @@ def verify_telegram_auth(params, max_age=86400):
 
     try:
         auth_date = int(data.get('auth_date', 0))
-    except ValueError:
+    except (ValueError, TypeError):
         return False, None, "auth_date не число"
 
-    if time.time() - auth_date > max_age:
+    now_ts = int(time.time())
+    if now_ts - auth_date > max_age:
         return False, None, "истёк срок auth_date"
 
-    # возвращаем dict снова включая hash (если нужно)
+    # (не обязательно) проверка на слишком будущую дату
+    if auth_date > now_ts + 300:
+        return False, None, "auth_date из будущего"
+
     data['hash'] = hash_received
     return True, data, None
+
+
+def tg_auth(request):
+    return render(request, 'pc/tg_auth.html')
+
+
+
+def tg_auth_finish(request):
+    # Просто отобразим параметры (GET)
+    # Список ключей может быть расширен, но берём стандартные
+    data = {k: request.GET.get(k) for k in [
+        'id','first_name','last_name','username','photo_url','auth_date','hash'
+    ] if request.GET.get(k) is not None}
+
+    # НЕ проверяем здесь — проверим уже после postMessage на основном окне (или можете здесь же)
+    json_data = json.dumps(data, ensure_ascii=False)
+
+    return HttpResponse(f"""
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Telegram Auth Finish</title>
+<style>
+body {{ font-family: sans-serif; background:#111; color:#eee; text-align:center; padding:30px; }}
+small {{ display:block; opacity:.6; margin-top:1rem; }}
+button {{ padding: .6rem 1.2rem; border-radius:6px; background:#2d8cff; color:#fff; border:none; cursor:pointer; }}
+</style>
+</head>
+<body>
+<h3>Авторизация Telegram...</h3>
+<script>
+  (function() {{
+    var data = {json_data};
+    if (window.opener && !window.opener.closed) {{
+      window.opener.postMessage({{ source:'telegram-auth', user:data }}, window.location.origin);
+      // Подождём чуть-чуть и закроем
+      setTimeout(function() {{ window.close(); }}, 1200);
+    }} else {{
+      document.write('<p>Главное окно закрыто. Скопируйте данные вручную.</p>');
+      document.write('<pre>'+JSON.stringify(data,null,2)+'</pre>');
+    }}
+  }})();
+</script>
+<small>Можно закрыть это окно.</small>
+</body></html>
+    """)

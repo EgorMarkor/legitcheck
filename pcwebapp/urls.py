@@ -15,4 +15,6 @@ urlpatterns = [
     path('telegram/check-login/', views.telegram_check_login, name='pc_telegram_check_login'),
     path('telegram/login/', views.telegram_login, name='pc_telegram_login'),
     path('telegram/logout/', views.telegram_logout, name='pc_telegram_logout'),
+    path('tg_auth/', views.tg_auth, name="tgauth"),
+    path('pc_tg_auth_finish/', views.tg_auth_finish, name="pc_tg_auth_finish"),
 ]
