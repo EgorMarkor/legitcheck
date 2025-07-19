@@ -16,6 +16,12 @@ def home(request):
     """
     Главная страница.
     """
+    tg_id = request.session.get('webapp_user_tgId')
+    print("TGID", tg_id)
+    if tg_id:
+        request.webapp_user = User.objects.get(tgId=tg_id)
+    else:
+        request.webapp_user = None
     return render(request, 'pc/index.html')
 
 
@@ -56,104 +62,77 @@ def home_page(request):
 
 
 def telegram_login(request):
-    """
-    Принимает либо GET параметры (классический redirect),
-    либо POST JSON (ваш кастомный фронтенд).
-    """
-    # 1. Собираем входные данные
-    if request.method == 'POST' and request.content_type.startswith('application/json'):
-        try:
-            raw = request.body.decode('utf-8')
-            data = json.loads(raw)
-        except Exception:
-            return HttpResponseBadRequest('Некорректный JSON')
-    else:
-        # QueryDict -> обычный dict (последнее значение каждого ключа)
-        data = request.GET.dict()
+    # Параметры должны прийти в GET (redirect или callback onAuth)
+    if 'hash' not in request.GET:
+        return HttpResponseBadRequest("Нет параметров Telegram")
 
-    # 2. Проверка подписи
-    ok, cleaned = verify_telegram_auth_dict(data, max_age=TELEGRAM_LOGIN_MAX_AGE)
+    ok, data, reason = verify_telegram_auth(request.GET, max_age=TELEGRAM_LOGIN_MAX_AGE)
     if not ok:
-        if request.method == 'POST':
-            return HttpResponseBadRequest("Неверная подпись Telegram")
-        return HttpResponseBadRequest("Неверная подпись Telegram")
+        return HttpResponseBadRequest(f"Ошибка Telegram: {reason}")
 
-    # 3. Извлекаем данные
-    tg_id = int(cleaned['id'])
-    img_url = cleaned.get('photo_url', '')
-    full_name = (cleaned.get('first_name', '') + ' ' + cleaned.get('last_name', '')).strip()
-    username = cleaned.get('username') or ''
+    tg_id = str(data['id'])  # строкой, чтобы не путаться с типами
+    full_name = (data.get('first_name','') + ' ' + data.get('last_name','')).strip()
+    username  = data.get('username') or ''
+    photo_url = data.get('photo_url','')
 
     user, created = User.objects.get_or_create(
         tgId=tg_id,
-        defaults={
-            'img': img_url,
-            'name': full_name,
-            'username': username,
-        }
+        defaults={'name': full_name, 'username': username, 'img': photo_url}
     )
     if not created:
-        # обновляем (опционально можно делать через update_fields)
-        if img_url:
-            user.img = img_url
-        if full_name:
-            user.name = full_name
-        if username:
-            user.username = username
-        user.save()
+        # обновляем при наличии новых данных
+        changed = False
+        if full_name and user.name != full_name: user.name = full_name; changed = True
+        if username and user.username != username: user.username = username; changed = True
+        if photo_url and user.img != photo_url: user.img = photo_url; changed = True
+        if changed: user.save()
 
-    # 4. Сессия
-    request.session['webapp_user_tgId'] = user.tgId
+    request.session['webapp_user_tgId'] = tg_id
 
-    # 5. next (только если он пришёл в query — в POST логично передавать тоже query строкой)
+    # next (безопасно)
     next_url = request.GET.get('next')
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        if request.method == 'POST':
-            return JsonResponse({'status': 'ok', 'redirect': next_url})
-        return redirect(next_url)
+    if next_url:
+        # Декодируем если URL‑encoded (виджет уже закодировал)
+        from urllib.parse import unquote
+        next_url = unquote(next_url)
+        from django.utils.http import url_has_allowed_host_and_scheme
+        if url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
+            return redirect(next_url)
 
-    # 6. Ответ
-    if request.method == 'POST':
-        return JsonResponse({'status': 'ok'})
-    return redirect('pc_account')
-
-def verify_telegram_auth_dict(data: dict, max_age=300):
-    """
-    Проверяет словарь параметров Telegram Login.
-    Ожидает presence hash. Возвращает (bool, cleaned_data).
-    """
-    hash_received = data.get('hash')
-    if not hash_received:
-        return False, None
-
-    # формируем список key=value для всех, кроме hash
-    items = []
-    for key in sorted(k for k in data.keys() if k != 'hash'):
-        # все значения приводим к str
-        items.append(f"{key}={data[key]}")
-
-    data_check_string = "\n".join(items)
-
-    # секрет = sha256(BOT_TOKEN)
-    secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
-    calc_hash = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
-
-    if not hmac.compare_digest(calc_hash, hash_received):
-        return False, None
-
-    # проверка времени
-    try:
-        auth_date = int(data.get('auth_date', 0))
-    except ValueError:
-        return False, None
-
-    if time.time() - auth_date > max_age:
-        return False, None
-
-    return True, data
-
-
+    return redirect('pc_account')  # или куда нужно
 
 def telegram_logout(request):
     request.session.pop('webapp_user_tgId', None)
     return redirect('pc_home')
+
+def verify_telegram_auth(params, max_age=86400):
+    """
+    params: QueryDict / dict с параметрами Telegram.
+    Возвращает (ok, cleaned_dict, reason)
+    """
+    data = dict(params.items())
+    hash_received = data.pop('hash', None)
+    if not hash_received:
+        return False, None, "hash отсутствует"
+
+    # формируем data_check_string
+    check_pairs = [f"{k}={data[k]}" for k in sorted(data.keys())]
+    data_check_string = "\n".join(check_pairs)
+
+    secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
+    calc_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(calc_hash, hash_received):
+        return False, None, "подпись не совпала"
+
+    try:
+        auth_date = int(data.get('auth_date', 0))
+    except ValueError:
+        return False, None, "auth_date не число"
+
+    if time.time() - auth_date > max_age:
+        return False, None, "истёк срок auth_date"
+
+    # возвращаем dict снова включая hash (если нужно)
+    data['hash'] = hash_received
+    return True, data, None

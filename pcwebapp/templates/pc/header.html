@@ -309,17 +309,51 @@
       {% else %}
         <!-- НЕ авторизован: кастомная кнопка Telegram -->
         <div class="header__frame-1948754034">
-          <div class="header__custom-tg-btn" id="tgAuthBtn"
-               data-bot-id="{{ TELEGRAM_BOT_ID }}"
-               data-auth-url="{% url 'pc_telegram_login' %}"
-               data-request-access="write">
-            <div class="header__custom-tg-icon">
-              <img src="{% static 'head_page/svg0.svg' %}" alt="tg icon">
-            </div>
-            <div class="header__frame-1948754048">
-              <div class="header__div5">Авторизируйтесь</div>
-              <div class="header__telegram">Через Telegram</div>
-            </div>
+          <div class="header__custom-tg-btn" id="tgAuthBtn">
+              <div class="header__frame-1948754034">
+                  <div id="tg-login-box"></div>
+
+                  <script>
+                  (function(){
+                    const WIDGET_URL = "https://telegram.org/js/telegram-widget.js?22&v=1";
+                    const AUTH_URL   = "https://legitcheck.one/pc/telegram/login/";  // ваш endpoint
+                    const BOT_NAME   = "LegitLogisticsBot";                          // имя бота без @
+
+                    // Если хотите вернуть юзера на текущую страницу после логина:
+                    const nextValue = encodeURIComponent(location.pathname + location.search);
+
+                    const s = document.createElement('script');
+                    s.async = true;
+                    s.src = WIDGET_URL;
+                    s.setAttribute('data-telegram-login', BOT_NAME);
+                    s.setAttribute('data-size', 'large');
+                    s.setAttribute('data-userpic', 'false');
+                    s.setAttribute('data-request-access', 'write');
+                    s.setAttribute('data-radius', '8');
+                    s.setAttribute('data-lang', 'ru');
+                    // передаем next как query к auth-url, чтобы Telegram его вернул
+                    s.setAttribute('data-auth-url', AUTH_URL + '?next=' + nextValue);
+                    s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+                    document.getElementById('tg-login-box').appendChild(s);
+                  })();
+
+                  function onTelegramAuth(user){
+                    // Срабатывает если пользователь уже авторизован у бота (виджет не делает redirect).
+                    const params = new URLSearchParams();
+                    ['id','first_name','last_name','username','photo_url','auth_date','hash']
+                      .forEach(k => { if (user[k] !== undefined && user[k] !== null) params.append(k, user[k]); });
+
+                    // Возьмём next из data-auth-url (если был)
+                    const authScript = document.querySelector('script[src*="telegram-widget.js"]');
+                    const authAttr = authScript.getAttribute('data-auth-url');
+                    const nextMatch = authAttr.match(/[?&]next=([^&]+)/);
+                    if (nextMatch) params.append('next', nextMatch[1]);
+
+                    window.location = "https://legitcheck.one/pc/telegram/login/?" + params.toString();
+                  }
+                  </script>
+
+              </div>
           </div>
         </div>
       {% endif %}
@@ -340,95 +374,3 @@
 
 <!-- Статус всплывашка -->
 <div class="tg-auth-status" id="tgAuthStatus"></div>
-
-<script>
-/*
-  ЛОГИКА:
-  1. По клику на кастомную кнопку строим URL:
-     https://oauth.telegram.org/auth?bot_id=XXXXX&origin=<origin>&return_to=<full_return_url>&request_access=write
-  2. Telegram редиректит обратно на return_to с query params.
-  3. На странице, если видим набор Telegram параметров + hash — отправляем их POST на ваш backend (pc_telegram_login).
-  4. Backend проверяет подпись, создаёт / обновляет пользователя, устанавливает сессию и редиректит дальше.
-*/
-
-(function() {
-  const statusBox = document.getElementById('tgAuthStatus');
-  function showStatus(msg, ok=false) {
-    if (!statusBox) return;
-    statusBox.textContent = msg;
-    statusBox.className = 'tg-auth-status show ' + (ok ? 'ok':'err');
-    setTimeout(()=> statusBox.classList.remove('show'), 6000);
-  }
-
-  // 1. Кнопка авторизации
-  const btn = document.getElementById('tgAuthBtn');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const botId = 7620197633;    // ТОЛЬКО число (без ":<rest>")
-      if (!botId) {
-        showStatus('Не задан TELEGRAM_BOT_ID', false);
-        return;
-      }
-      const authUrl = btn.dataset.authUrl; // наш Django endpoint
-      const reqAccess = btn.dataset.requestAccess || 'write';
-
-      // Полный абсолютный URL для return_to
-      const base = new URL(authUrl, window.location.origin).toString();
-
-      const params = new URLSearchParams({
-        bot_id: botId,
-        origin: window.location.origin,
-        return_to: base,
-        request_access: reqAccess
-      });
-
-      window.location.href = 'https://oauth.telegram.org/auth?' + params.toString();
-    });
-  }
-
-  // 2. Если Telegram уже вернул параметры (проверяем наличие обязательных)
-  const tgFields = ['id','first_name','auth_date','hash'];
-  const urlParams = new URLSearchParams(window.location.search);
-  const hasTg = tgFields.every(f => urlParams.has(f));
-  if (hasTg) {
-    // Собираем все возможные поля (включая опциональные)
-    const payload = {};
-    ['id','first_name','last_name','username','photo_url','auth_date','hash']
-      .forEach(k => { if (urlParams.has(k)) payload[k] = urlParams.get(k); });
-
-    // Отправляем POST (JSON) на backend для проверки подписи и создания сессии
-    fetch(new URL(btn ? btn.dataset.authUrl : '{% url "pc_telegram_login" %}', window.location.origin), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify(payload),
-      credentials: 'same-origin'
-    }).then(async (r) => {
-      if (r.redirected) {
-        // сервер сам решил куда отправить
-        window.location = r.url;
-        return;
-      }
-      const text = await r.text();
-      if (r.ok) {
-        showStatus('Авторизация Telegram успешна', true);
-        // Можно форс-обновить страницу, чтобы блок с балансом появился
-        setTimeout(()=> window.location.reload(), 800);
-      } else {
-        showStatus('Ошибка авторизации: ' + text, false);
-      }
-    }).catch(err => {
-      console.error(err);
-      showStatus('Сетевая ошибка Telegram авторизации', false);
-    });
-  }
-
-  // 3. Вспомогательная функция поиска cookie
-  function getCookie(name) {
-    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-    return m ? m.pop() : '';
-  }
-})();
-</script>
