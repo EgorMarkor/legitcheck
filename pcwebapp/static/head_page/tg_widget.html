@@ -39,7 +39,7 @@ document.querySelector('.custom-telegram-btn').addEventListener('click', functio
       // data = { id, first_name, last_name, username, photo_url, auth_date, hash }
       // перенаправим на бэкенд для проверки и логина:
       const params = new URLSearchParams(data).toString();
-      window.location.href = `/telegram-login/?${params}`;
+      window.location.href = `/pc/telegram/login/?${params}`;
     }
   );
 });
