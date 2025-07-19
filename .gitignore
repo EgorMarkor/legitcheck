@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+
+# Django collects static
+static/
+media/
+
