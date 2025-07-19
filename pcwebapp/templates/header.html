@@ -21,18 +21,33 @@
           </div>
           {% load static %}
           <div class="_1-hi__frame-1948754033">
+          {% if webapp_user %}
+            <div class="_1-hi__frame-1948754034">
+              <div class="_1-hi__frame-1948754049">
+                <div class="_1-hi__frame-19487540492">
+                  <img class="_1-hi__svg" src="{{ webapp_user.img }}" />
+                  <div class="_1-hi__frame-1948754048">
+                    <div class="_1-hi__div5">{{ webapp_user.name }}</div>
+                  </div>
+                </div>
+                <a href="{% url 'telegram_logout' %}">
+                  <img class="_1-hi__svg2" src="{% static 'head_page/svg1.svg' %}" />
+                </a>
+              </div>
+            </div>
+          {% else %}
             <div class="_1-hi__frame-1948754034">
               <div class="_1-hi__frame-1948754049">
                 <div class="_1-hi__frame-19487540492">
                   <script
                       async
                       src="https://telegram.org/js/telegram-widget.js?15"
-                      data-telegram-login="LegitLogisticsBot"    <!-- юзернейм вашего бота -->
-                      data-size="large"                         <!-- размер кнопки -->
-                      data-userpic="false"                      <!-- скрыть аватар -->
-                      data-radius="5"                           <!-- скругление -->
-                      data-auth-url="{% url 'telegram_login' %}"<!-- URL для обработки логина -->
-                      data-request-access="write"               <!-- права (optional) -->
+                      data-telegram-login="LegitLogisticsBot"
+                      data-size="large"
+                      data-userpic="false"
+                      data-radius="5"
+                      data-auth-url="{% url 'telegram_login' %}"
+                      data-request-access="write"
                       data-lang="ru"
                     ></script>
                   <img class="_1-hi__svg" src="{% static 'head_page/svg0.svg' %}" />
@@ -44,6 +59,7 @@
                 <img class="_1-hi__svg2" src="{% static 'head_page/svg1.svg' %}" />
               </div>
             </div>
+          {% endif %}
           </div>
 
           <div class="_1-hi__frame-1948754032">
