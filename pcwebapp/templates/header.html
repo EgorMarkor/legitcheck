@@ -1,44 +1,144 @@
 {% load static %}
-<div class="_1-hi__frame-2131329207">
-        <div class="_1-hi__frame-2131329236">
-          <div class="_1-hi__border">
-            <div class="_1-hi__frame-3">
-              <div class="_1-hi__frame-2">
-                <div class="_1-hi__link">
-                  <div class="_1-hi__div">О нас</div>
+<link rel="stylesheet" href="{% static 'font/stylesheet.css' %}">
+<style>
+  * {
+    font-family: 'Google Sans' !important;
+  }
+</style>
+<div class="header__frame-2131329207">
+        <div class="header__frame-2131329236">
+          <div class="header__border">
+            <div class="header__frame-3">
+              <div class="header__frame-2">
+                <div class="header__link">
+                  <div class="header__div">О нас</div>
                 </div>
-                <div class="_1-hi__link2">
-                  <div class="_1-hi__div2">Цены</div>
+                <div class="header__link2">
+                  <div class="header__div2">Цены</div>
                 </div>
-                <div class="_1-hi__link3">
-                  <div class="_1-hi__div3">Этапы работы</div>
+                <div class="header__link3">
+                  <div class="header__div3">Этапы работы</div>
                 </div>
-                <div class="_1-hi__link4">
-                  <div class="_1-hi__div4">Статьи</div>
+                <div class="header__link4">
+                  <div class="header__div4">Статьи</div>
                 </div>
               </div>
             </div>
           </div>
           {% load static %}
-          <div class="_1-hi__frame-1948754033">
+          <div class="header__frame-1948754033">
           {% if webapp_user %}
-            <div class="_1-hi__frame-1948754034">
-              <div class="_1-hi__frame-1948754049">
-                <div class="_1-hi__frame-19487540492">
-                  <img class="_1-hi__svg" src="{{ webapp_user.img }}" />
-                  <div class="_1-hi__frame-1948754048">
-                    <div class="_1-hi__div5">{{ webapp_user.name }}</div>
-                  </div>
+          <style>
+            .header2__frame-1948754033 {
+  display: flex;
+  flex-direction: row;
+  gap: 1.8579999999999999rem;
+  align-items: center;
+  justify-content: flex-start;
+  position: absolute;
+  top: 0rem;
+  left: 9.5rem;
+}
+.header2__frame-1000006148 {
+  background: var(
+    --bek-plashek-temnyj,
+    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
+  );
+  border-radius: 185.84300000000002rem;
+  border-width: 0.186rem;
+  
+  border-image: var(
+    --obvodka-temnaya-versiya,
+    linear-gradient(
+      180deg,
+      rgba(179, 214, 255, 0.03) 0%,
+      rgba(179, 214, 255, 0) 100%
+    )
+  );
+  border-image-slice: 1;
+  padding: 0.743rem 0.743rem 0.743rem 2.788rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.558rem;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 15rem;
+  height: 6.8rem;
+  position: relative;
+  overflow: hidden;
+}
+.header2___128-90 {
+  color: #ffffff;
+  text-align: justified;
+  font-family: "GoogleSans-Bold", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  position: relative;
+  width: 5.86rem;
+  height: 1.8030000000000002rem;
+}
+.header2__frame-1948754032 {
+  background: rgba(19, 205, 144, 0.12);
+  border-radius: 112.69800000000001rem;
+  border-width: 0.11299999999999999rem;
+  
+  border-image: var(
+    --obvodka-temnaya-versiya,
+    linear-gradient(
+      180deg,
+      rgba(179, 214, 255, 0.03) 0%,
+      rgba(179, 214, 255, 0) 100%
+    )
+  );
+  border-image-slice: 1;
+  flex-shrink: 0;
+  width: 4.17rem;
+  height: 2.93rem;
+  position: relative;
+  overflow: hidden;
+}
+.header2__frame-1948754050 {
+  width: 1.8780000000000001rem;
+  height: 1.597rem;
+  position: absolute;
+  left: 1.24rem;
+  top: 0.6759999999999999rem;
+  overflow: visible;
+}
+.header2__frame-1000006062 {
+  background: #171b22;
+  border-radius: 139.544rem;
+  flex-shrink: 0;
+  width: 4.696rem;
+  height: 4.696rem;
+  position: relative;
+  overflow: hidden;
+}
+.header2__image-12 {
+  width: 5.26rem;
+  height: 5.26rem;
+  position: absolute;
+  left: -0.072rem;
+  top: 0rem;
+  object-fit: cover;
+}
+          </style>
+            <div class="header2__frame-1948754033">
+              <div class="header2__frame-1000006148">
+                <div class="header2___128-90">{{ webapp_user.balance }} ₽</div>
+                <div class="header2__frame-1948754032">
+                  <img class="header2__frame-1948754050" src="/static/pay/frame-19487540500.svg">
                 </div>
-                <a href="{% url 'telegram_logout' %}">
-                  <img class="_1-hi__svg2" src="{% static 'head_page/svg1.svg' %}" />
-                </a>
               </div>
+              <a href="{% url 'account' %}" class="header2__frame-1000006062">
+                <img class="header2__image-12" src="{{ webapp_user.img }}">
+              </a>
             </div>
           {% else %}
-            <div class="_1-hi__frame-1948754034">
-              <div class="_1-hi__frame-1948754049">
-                <div class="_1-hi__frame-19487540492">
+            <div class="header__frame-1948754034">
+              <div class="header__frame-1948754049">
+                <div class="header__frame-19487540492">
                   <script
                       async
                       src="https://telegram.org/js/telegram-widget.js?15"
@@ -50,24 +150,24 @@
                       data-request-access="write"
                       data-lang="ru"
                     ></script>
-                  <img class="_1-hi__svg" src="{% static 'head_page/svg0.svg' %}" />
-                  <div class="_1-hi__frame-1948754048">
-                    <div class="_1-hi__div5">Авторизируйтесь</div>
-                    <div class="_1-hi__telegram">Через Telegram</div>
+                  <img class="header__svg" src="{% static 'head_page/svg0.svg' %}" />
+                  <div class="header__frame-1948754048">
+                    <div class="header__div5">Авторизируйтесь</div>
+                    <div class="header__telegram">Через Telegram</div>
                   </div>
                 </div>
-                <img class="_1-hi__svg2" src="{% static 'head_page/svg1.svg' %}" />
+                <img class="header__svg2" src="{% static 'head_page/svg1.svg' %}" />
               </div>
             </div>
           {% endif %}
           </div>
 
-          <div class="_1-hi__frame-1948754032">
-            <div class="_1-hi__frame-19487540493">
-              <img class="_1-hi__svg3" src="{% static 'head_page/svg2.svg' %}" />
-              <div class="_1-hi__frame-19487540482">
-                <div class="_1-hi__legit-check">@legit_check</div>
-                <div class="_1-hi__telegram2">Наш Telegram-канал</div>
+          <div class="header__frame-1948754032">
+            <div class="header__frame-19487540493">
+              <img class="header__svg3" src="{% static 'head_page/svg2.svg' %}" />
+              <div class="header__frame-19487540482">
+                <div class="header__legit-check">@legit_check</div>
+                <div class="header__telegram2">Наш Telegram-канал</div>
               </div>
             </div>
           </div>
@@ -75,26 +175,26 @@
       </div>
 
 <style>
-  ._1-hi__frame-19487540492 > iframe,
-._1-hi__frame-19487540492 > .telegram-login-button {
+  .header__frame-19487540492 > iframe,
+.header__frame-19487540492 > .telegram-login-button {
   display: none !important;
 }
 
-    ._1-hi__frame-2131329207 {
+    .header__frame-2131329207 {
   align-self: stretch;
   flex-shrink: 0;
   height: 11.1rem;
   position: relative;
   overflow: hidden;
 }
-._1-hi__frame-2131329236 {
+.header__frame-2131329236 {
   width: 150.89600000000002rem;
   height: 6.8rem;
   position: absolute;
   left: 20.5rem;
   top: 2.8rem;
 }
-._1-hi__border {
+.header__border {
   background: var(
     --bek-plashek-temnyj,
     linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
@@ -124,14 +224,14 @@
   top: 0rem;
   overflow: hidden;
 }
-._1-hi__frame-3 {
+.header__frame-3 {
   padding: 0.9rem 0rem 0.9rem 0rem;
   flex-shrink: 0;
   width: 35.8rem;
   height: 5.2rem;
   position: relative;
 }
-._1-hi__frame-2 {
+.header__frame-2 {
   display: flex;
   flex-direction: row;
   gap: 2.5rem;
@@ -142,14 +242,14 @@
   left: -0.05rem;
   top: 0.95rem;
 }
-._1-hi__link {
+.header__link {
   border-radius: 0.8rem;
   flex-shrink: 0;
   width: 5.7rem;
   height: 2.8rem;
   position: relative;
 }
-._1-hi__div {
+.header__div {
   color: #ffffff;
   text-align: left;
   font-family: "GoogleSans-Medium", sans-serif;
@@ -162,14 +262,14 @@
   width: 4.1rem;
   height: 1.7rem;
 }
-._1-hi__link2 {
+.header__link2 {
   border-radius: 0.8rem;
   flex-shrink: 0;
   width: 5.2rem;
   height: 2.8rem;
   position: relative;
 }
-._1-hi__div2 {
+.header__div2 {
   color: #ffffff;
   text-align: left;
   font-family: "GoogleSans-Medium", sans-serif;
@@ -182,14 +282,14 @@
   width: 3.8rem;
   height: 1.7rem;
 }
-._1-hi__link3 {
+.header__link3 {
   border-radius: 0.8rem;
   flex-shrink: 0;
   width: 10.6rem;
   height: 2.8rem;
   position: relative;
 }
-._1-hi__div3 {
+.header__div3 {
   color: #ffffff;
   text-align: left;
   font-family: "GoogleSans-Medium", sans-serif;
@@ -201,14 +301,14 @@
   top: 0.5rem;
   width: 9.8rem;
 }
-._1-hi__link4 {
+.header__link4 {
   border-radius: 0.8rem;
   flex-shrink: 0;
   width: 7.8rem;
   height: 2.8rem;
   position: relative;
 }
-._1-hi__div4 {
+.header__div4 {
   color: #ffffff;
   text-align: left;
   font-family: "GoogleSans-Medium", sans-serif;
@@ -221,7 +321,7 @@
   width: 5rem;
   height: 1.7rem;
 }
-._1-hi__frame-1948754033 {
+.header__frame-1948754033 {
   display: flex;
   flex-direction: row;
   gap: 1.8579999999999999rem;
@@ -232,7 +332,7 @@
   left: 119.8rem;
   top: 0rem;
 }
-._1-hi__frame-1948754034 {
+.header__frame-1948754034 {
   background: var(
     --bek-plashek-temnyj,
     linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
@@ -250,7 +350,7 @@
   position: relative;
   overflow: hidden;
 }
-._1-hi__frame-1948754049 {
+.header__frame-1948754049 {
   display: flex;
   flex-direction: row;
   gap: 1.342rem;
@@ -260,7 +360,7 @@
   width: 25.381rem;
   position: relative;
 }
-._1-hi__frame-19487540492 {
+.header__frame-19487540492 {
   display: flex;
   flex-direction: row;
   gap: 0.9349999999999999rem;
@@ -270,14 +370,14 @@
   width: 19.829rem;
   position: relative;
 }
-._1-hi__svg {
+.header__svg {
   flex-shrink: 0;
   width: 4.49rem;
   height: 4.49rem;
   position: relative;
   overflow: visible;
 }
-._1-hi__frame-1948754048 {
+.header__frame-1948754048 {
   display: flex;
   flex-direction: column;
   gap: 0rem;
@@ -287,7 +387,7 @@
   width: 14.591rem;
   position: relative;
 }
-._1-hi__div5 {
+.header__div5 {
   color: #ffffff;
   text-align: center;
   font-family: "GoogleSans-Bold", sans-serif;
@@ -301,7 +401,7 @@
   align-items: center;
   justify-content: center;
 }
-._1-hi__telegram {
+.header__telegram {
   color: #464f5d;
   text-align: center;
   font-family: "GoogleSans-Regular", sans-serif;
@@ -315,14 +415,14 @@
   align-items: center;
   justify-content: center;
 }
-._1-hi__svg2 {
+.header__svg2 {
   flex-shrink: 0;
   width: 4.149rem;
   height: 4.149rem;
   position: relative;
   overflow: visible;
 }
-._1-hi__frame-1948754032 {
+.header__frame-1948754032 {
   background: var(
     --bek-plashek-temnyj,
     linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
@@ -352,7 +452,7 @@
   top: 0rem;
   overflow: hidden;
 }
-._1-hi__frame-19487540493 {
+.header__frame-19487540493 {
   display: flex;
   flex-direction: row;
   gap: 1rem;
@@ -362,14 +462,14 @@
   width: 17.753999999999998rem;
   position: relative;
 }
-._1-hi__svg3 {
+.header__svg3 {
   flex-shrink: 0;
   width: 3.771rem;
   height: 3.771rem;
   position: relative;
   overflow: visible;
 }
-._1-hi__frame-19487540482 {
+.header__frame-19487540482 {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -379,7 +479,7 @@
   width: 12.254999999999999rem;
   position: relative;
 }
-._1-hi__legit-check {
+.header__legit-check {
   color: #ffffff;
   text-align: center;
   font-family: "GoogleSans-Bold", sans-serif;
@@ -393,7 +493,7 @@
   align-items: center;
   justify-content: center;
 }
-._1-hi__telegram2 {
+.header__telegram2 {
   color: #464f5d;
   text-align: center;
   font-family: "GoogleSans-Regular", sans-serif;
@@ -410,7 +510,7 @@
 </style>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-  const btnContainer = document.querySelector('._1-hi__frame-19487540492');
+  const btnContainer = document.querySelector('.header__frame-19487540492');
   if (!btnContainer) return;
 
   btnContainer.addEventListener('click', () => {

@@ -53,7 +53,7 @@
                 <img class="_3-account__image-13" src="{{ user.img }}" />
                 <img class="_3-account__image-122" src="{% static 'account/image-121.png' %}" />
                 <div class="_3-account__frame-10000060622">
-                  <img class="_3-account__image-123" src="{% static 'account/image-122.png' %}" />
+                  <img class="_3-account__image-123" src="{{ webapp_user.img }}" />
                 </div>
                 <div class="_3-account__gefzyyy">{{ user.name }}</div>
               </div>
@@ -166,13 +166,35 @@
               </div>
               </div>
               <div class="_3-account__frame-10000060692">
-                <ul>
                 {% for verdict in verdicts %}
-                  <li>{{ verdict.created_at|date:"d.m.Y" }} - {{ verdict.get_status_display }} - {{ verdict.code }}</li>
+                  <div class="_3-account__frame-140">
+                    <div class="_3-account__frame-1342">
+                      <img class="_3-account__image2" src="{{ verdict.photo1.url }}" />
+                      <div class="_3-account__image-16"></div>
+                      <div class="_3-account__frame-19487540692">
+                        <div class="_3-account__div12">{{ verdict.get_status_display }}</div>
+                      </div>
+                    </div>
+                    <div class="_3-account__frame-19487540712">
+                      <div class="_3-account__frame-1948754068">
+                        <div class="_3-account__frame-19487540702">
+                          <img
+                            class="_3-account__frame-194875406220"
+                            src="{% static 'account/frame-194875406219.svg' %}"
+                          />
+                          <div class="_3-account___21-03-20252">{{ verdict.created_at|date:"d.m.Y" }}</div>
+                        </div>
+                      </div>
+                      <div class="_3-account__frame-19487540703">
+                        <div class="_3-account__frame-19487540704">
+                          <div class="_3-account__nsdfw">{{ verdict.code }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 {% empty %}
-                  <li>У вас нет вердиктов.</li>
+                  У вас нет вердиктов.
                 {% endfor %}
-                </ul>
               </div>
             </div>
       <div class="_3-account__frame-2131329238">

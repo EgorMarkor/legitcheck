@@ -1015,6 +1015,9 @@
   overflow: hidden;
 }
 ._3-account__frame-10000060692 {
+  display: flex;
+  gap: 1.5rem;
+  
   background: linear-gradient(
     180deg,
     rgba(23, 28, 36, 0.75) 0%,
@@ -1608,7 +1611,6 @@
   width: 150.9rem;
   height: 27rem;
   position: absolute;
-  left: 20.5rem;
   top: 3rem;
   overflow: hidden;
 }
