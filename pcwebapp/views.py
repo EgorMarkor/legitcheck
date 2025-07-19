@@ -14,43 +14,43 @@ def home(request):
     """
     Главная страница.
     """
-    return render(request, 'index.html')
+    return render(request, 'pc/index.html')
 
 
 def start_check(request):
     """
     Главная страница.
     """
-    return render(request, 'check.html')
+    return render(request, 'pc/check.html')
 
 
 def pay(request):
-    return render(request, 'pay.html')
+    return render(request, 'pc/pay.html')
 
 @webapp_login_required
 def account(request):
     user = request.webapp_user
     verdicts = user.verdicts.all().order_by('-created_at')
-    return render(request, 'account.html', {
+    return render(request, 'pc/account.html', {
         'user': user,
         'verdicts': verdicts,
     })
 
 
 def user_agree(request):
-    return render(request, 'user_agree.html')
+    return render(request, 'pc/user_agree.html')
 
 
 def privacy_policy(request):
-    return render(request, 'privacy_policy.html')
+    return render(request, 'pc/privacy_policy.html')
 
 
 def verdicts(request):
-    return render(request, 'verdicts.html')
+    return render(request, 'pc/verdicts.html')
 
 
 def home_page(request):
-    return render(request, 'home_page.html')
+    return render(request, 'pc/home_page.html')
 
 
 def verify_telegram_auth(request):
@@ -106,8 +106,8 @@ def telegram_login(request):
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
 
-    return redirect('account')  # куда угодно внутри webapp
+    return redirect('pc_account')  # куда угодно внутри webapp
 
 def telegram_logout(request):
     request.session.pop('webapp_user_tgId', None)
-    return redirect('home')
+    return redirect('pc_home')

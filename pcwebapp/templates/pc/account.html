@@ -44,7 +44,7 @@
 <body>
   <div class="_3-account">
     <div class="_3-account__frame-2131329239">
-      {% include 'header.html' %}
+      {% include 'pc/header.html' %}
       <div class="_3-account__frame-1948754060">
         <div class="_3-account__frame-2131329282">
           <div class="_3-account__frame-2131329281">
@@ -75,7 +75,7 @@
                 <div class="_3-account__frame-1000006069">
                   <div class="_3-account__frame-1948754066">
                     <div class="_3-account___128-902">{{ user.balance }} ₽</div>
-                    <a class="_3-account__frame-19487540323 button" href="{% url 'pay' %}">
+                    <a class="_3-account__frame-19487540323 button" href="{% url 'pc_pay' %}">
                       <img
                         class="_3-account__frame-19487540502"
                         src="{% static 'account/frame-19487540501.svg' %}"
@@ -123,7 +123,7 @@
                   <div class="_3-account__div5">Документация приложения</div>
                 </div>
                 <div class="_3-account__frame-1948754077">
-                  <a class="_3-account__frame-1000006078" href="{% url 'user_agree' %}">
+                  <a class="_3-account__frame-1000006078" href="{% url 'pc_user_agree' %}">
                     <div class="_3-account__div9">
                       Пользовательское соглашение
                     </div>
@@ -132,7 +132,7 @@
                       <img class="_3-account__svg2" src="{% static 'account/svg1.svg' %}" />
                     </div>
                   </a>
-                  <a class="_3-account__frame-1000006079" href="{% url 'user_agree' %}">
+                  <a class="_3-account__frame-1000006079" href="{% url 'pc_user_agree' %}">
                     <div class="_3-account__div9">
                       Политика конфиденциональности
                     </div>
@@ -245,7 +245,7 @@
         </div>
       </div>
     </div>
-    {% include 'sidebar.html' %}
+    {% include 'pc/sidebar.html' %}
   </div>
   
 </body>

@@ -7,12 +7,12 @@ def webapp_login_required(view_func):
     def _wrapped(request, *args, **kwargs):
         tg_id = request.session.get('webapp_user_tgId')
         if not tg_id:
-            return redirect('home')  # редирект на страницу логина, если не в сессии
+            return redirect('pc_home')  # редирект на страницу логина, если не в сессии
 
         try:
             request.webapp_user = WebUser.objects.get(tgId=tg_id)
         except WebUser.DoesNotExist:
-            return redirect('home')
+            return redirect('pc_home')
 
         return view_func(request, *args, **kwargs)
     return _wrapped

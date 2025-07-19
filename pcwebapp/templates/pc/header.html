@@ -131,7 +131,7 @@
                   <img class="header2__frame-1948754050" src="/static/pay/frame-19487540500.svg">
                 </div>
               </div>
-              <a href="{% url 'account' %}" class="header2__frame-1000006062">
+              <a href="{% url 'pc_account' %}" class="header2__frame-1000006062">
                 <img class="header2__image-12" src="{{ webapp_user.img }}">
               </a>
             </div>
@@ -146,7 +146,7 @@
                       data-size="large"
                       data-userpic="false"
                       data-radius="5"
-                      data-auth-url="{% url 'telegram_login' %}?next={{ request.get_full_path }}"
+                      data-auth-url="{% url 'pc_telegram_login' %}"
                       data-request-access="write"
                       data-lang="ru"
                     ></script>
@@ -520,6 +520,7 @@
 
     const params = new URLSearchParams({
       bot_id: BOT_ID,
+      return_to: 'https://legitcheck.one/pc/telegram/login/',
       origin: origin,
       request_access: 'write'
     });
