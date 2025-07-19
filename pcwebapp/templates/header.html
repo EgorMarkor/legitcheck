@@ -46,7 +46,7 @@
                       data-size="large"
                       data-userpic="false"
                       data-radius="5"
-                      data-auth-url="{% url 'telegram_login' %}"
+                      data-auth-url="{% url 'telegram_login' %}?next={{ request.get_full_path }}"
                       data-request-access="write"
                       data-lang="ru"
                     ></script>
@@ -416,7 +416,7 @@
   btnContainer.addEventListener('click', () => {
     // Здесь явно указываем ваш BOT_ID и origin
     const BOT_ID = '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU';      // передайте через контекст шаблона
-    const origin = window.location.origin + '/pc/';       // например, https://example.com
+    const origin = window.location.origin;       // например, https://example.com
 
     const params = new URLSearchParams({
       bot_id: BOT_ID,

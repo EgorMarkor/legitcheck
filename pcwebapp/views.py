@@ -4,6 +4,7 @@ import hmac
 import time
 from django.conf import settings
 from django.shortcuts import redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponseBadRequest
 from webapp.models import User  # ваша модель webapp.User
 from .decorators import webapp_login_required
@@ -100,6 +101,10 @@ def telegram_login(request):
         user.save()
 
     request.session['webapp_user_tgId'] = user.tgId
+
+    next_url = request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
 
     return redirect('account')  # куда угодно внутри webapp
 
