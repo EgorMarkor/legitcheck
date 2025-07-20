@@ -1,32 +1,430 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Telegram Login</title>
+  <meta charset="UTF-8" />
+  <title>Авторизация через Telegram</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-root: #0A0D13;
+      --bg-card-from:#171C24;
+      --bg-card-to:#11151A;
+      --accent:#13CD90;
+      --accent-alt:#0ABA6F;
+      --text-main:#FFFFFF;
+      --text-sub:#5B6674;
+      --radius-xl:2rem;
+      --radius-lg:1.2rem;
+      --transition:0.35s cubic-bezier(.45,.1,.15,1);
+      --font-sans: "GoogleSans", system-ui, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      margin:0;
+      padding:0;
+    }
+    html { font-size: 0.52vw; }
+    @media (max-width: 1200px){ html{ font-size: 0.9vw; } }
+    @media (max-width: 900px){ html{ font-size: 1.2vw; } }
+    @media (max-width: 640px){ html{ font-size: 14px; } }
+    body {
+      min-height:100dvh;
+      background: var(--bg-root);
+      font-family: var(--font-sans);
+      color: var(--text-main);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:2rem;
+    }
+    .login-wrapper {
+      width:100%;
+      max-width:52rem;
+      animation: fadeIn .6s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(12px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+    h1 {
+      font-size:2.6rem;
+      font-weight:700;
+      line-height:1.15;
+      margin-bottom:1.2rem;
+      letter-spacing: .5px;
+    }
+    p.lead {
+      font-size:1.4rem;
+      color: var(--text-sub);
+      line-height:1.5;
+      margin-bottom:2.4rem;
+    }
+
+    .card {
+      background: linear-gradient(180deg,var(--bg-card-from) 0%, var(--bg-card-to) 100%);
+      border-radius: var(--radius-xl);
+      padding:3rem 3.2rem 3.2rem;
+      position:relative;
+      box-shadow: 0 4px 24px -8px rgba(0,0,0,0.55);
+      display:flex;
+      flex-direction:column;
+      gap:2.4rem;
+    }
+
+    .code-block {
+      position:relative;
+      background:#0C0F14;
+      border-radius: var(--radius-lg);
+      padding:1.6rem 5.2rem 1.6rem 2rem;
+      font-size:2rem;
+      font-weight:600;
+      letter-spacing: .08em;
+      display:flex;
+      align-items:center;
+      min-height:6.4rem;
+      overflow:hidden;
+    }
+    .code-block::before {
+      content: \"\"; position:absolute; inset:0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(19,205,144,0.15), transparent 60%),
+        radial-gradient(circle at 85% 80%, rgba(19,205,144,0.08), transparent 70%);
+      pointer-events:none;
+    }
+    .code-value {
+      user-select:all;
+      word-break:break-all;
+    }
+    .btn-copy {
+      position:absolute;
+      top:50%; right:1.2rem; transform:translateY(-50%);
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent-alt) 100%);
+      border:none;
+      color:#fff;
+      font-size:1.2rem;
+      font-weight:600;
+      padding:.9rem 1.6rem;
+      border-radius: 1rem;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      transition:var(--transition);
+    }
+    .btn-copy:hover { filter:brightness(1.06); }
+    .btn-copy:active { transform: translateY(-50%) scale(.95); }
+
+    .status-row {
+      display:flex;
+      align-items:center;
+      gap:1.2rem;
+      font-size:1.3rem;
+      color: var(--text-sub);
+    }
+    .status-dot {
+      width:1.1rem; height:1.1rem; border-radius:50%;
+      background: var(--accent);
+      position:relative;
+    }
+    .status-dot::after {
+      content:\"\"; position:absolute; inset:0;
+      border-radius:inherit;
+      background: var(--accent);
+      animation:pulse 1.6s ease-in-out infinite;
+      opacity:.7;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity:.7; }
+      50% { transform: scale(1.7); opacity:0; }
+      100% { transform: scale(1); opacity:0; }
+    }
+
+    .status-success {
+      color:#38d39f;
+    }
+    .status-error {
+      color:#ff5e5e;
+    }
+    .status-error .status-dot,
+    .status-error .status-dot::after {
+      background:#ff5e5e;
+    }
+    .status-error .status-dot::after {
+      animation:none;
+      opacity:1;
+    }
+
+    .bot-link a {
+      color: var(--accent);
+      text-decoration:none;
+      font-weight:600;
+      position:relative;
+      transition:color .3s;
+    }
+    .bot-link a::after {
+      content:\"\"; position:absolute; left:0; bottom:-2px; width:100%; height:2px;
+      background:linear-gradient(90deg,var(--accent),var(--accent-alt));
+      transform:scaleX(0);
+      transform-origin:left;
+      transition:transform .35s;
+    }
+    .bot-link a:hover { color:#17e3a1; }
+    .bot-link a:hover::after { transform:scaleX(1); }
+
+    .actions {
+      display:flex;
+      gap:1rem;
+      flex-wrap:wrap;
+    }
+    .btn-outline {
+      flex:1;
+      min-width:14rem;
+      text-align:center;
+      background:#0C0F14;
+      border:1px solid #1E252D;
+      border-radius: var(--radius-lg);
+      color:#fff;
+      font-size:1.3rem;
+      font-weight:600;
+      padding:1.2rem 1.6rem;
+      cursor:pointer;
+      transition:var(--transition);
+    }
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .footer-note {
+      text-align:center;
+      margin-top:2.2rem;
+      font-size:1.1rem;
+      color: #3d4752;
+      letter-spacing:.4px;
+    }
+
+    /* Прогрессовая тонкая полоска сверху */
+    .top-progress {
+      position:absolute;
+      top:0; left:0; height:4px; width:100%;
+      background:#0C0F14;
+      border-radius: 0 0 4px 4px;
+      overflow:hidden;
+      margin-bottom:1rem;
+    }
+    .top-progress span {
+      position:absolute; left:0; top:0; bottom:0;
+      width:0;
+      background:linear-gradient(90deg,var(--accent),var(--accent-alt));
+      animation: loadWidth 2.4s ease forwards;
+    }
+    @keyframes loadWidth {
+      0% { width:0; }
+      60% { width:70%; }
+      100% { width:100%; }
+    }
+
+    /* Кнопка обновления статуса (перезапуск polling вручную) */
+    .btn-refresh {
+      background:linear-gradient(90deg,var(--accent),var(--accent-alt));
+      border:none;
+      border-radius: var(--radius-lg);
+      color:#fff;
+      padding:1.1rem 1.8rem;
+      font-size:1.3rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--transition);
+      display:flex;
+      align-items:center;
+      gap:.7rem;
+    }
+    .btn-refresh:hover { filter:brightness(1.07); }
+    .btn-refresh:active { transform:scale(.95); }
+
+    /* Тонкая полоска копии */
+    .copied-hint {
+      position:absolute;
+      top:-1.6rem;
+      right:1.2rem;
+      background:#0C0F14;
+      color:#fff;
+      font-size:1rem;
+      padding:.4rem .8rem;
+      border-radius:.7rem;
+      opacity:0;
+      transform:translateY(-6px);
+      pointer-events:none;
+      transition:.35s;
+      box-shadow:0 2px 8px -4px rgba(0,0,0,.5);
+      letter-spacing:.5px;
+    }
+    .copied-hint--show {
+      opacity:1;
+      transform:translateY(0);
+    }
+  </style>
 </head>
 <body>
-  <h1>Login via Telegram</h1>
-  <p>Open <a href="https://t.me/YourBot">@YourBot</a> and send this code:</p>
-  <pre>{{ token }}</pre>
-  <p id="status">Waiting for confirmation...</p>
+  <main class="login-wrapper">
+
+    <div class="card" role="region" aria-labelledby="login-title">
+      <div class="top-progress" aria-hidden="true"><span></span></div>
+
+      <header>
+        <h1 id="login-title">Вход через Telegram</h1>
+        <p class="lead bot-link">
+          Откройте бота <a href="https://t.me/LegitLogisticsBot" target="_blank" rel="noopener">@LegitLogisticsBot</a> и отправьте ему этот код для подтверждения входа.
+        </p>
+      </header>
+
+      <div class="code-block" aria-live="polite">
+        <code class="code-value" id="login-code">{{ token }}</code>
+        <button class="btn-copy" id="copy-btn" type="button" aria-label="Скопировать код">
+          <!-- Иконка -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4
+                     a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Копировать
+        </button>
+        <span class="copied-hint" id="copied-hint">Скопировано</span>
+      </div>
+
+      <div class="status-row" id="status-row">
+        <span class="status-dot" id="status-dot" aria-hidden="true"></span>
+        <p id="status-text">Ожидание подтверждения…</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn-refresh" id="refresh-btn" type="button" aria-label="Проверить статус снова">
+          <!-- Иконка обновления -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path>
+            <path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"></path>
+          </svg>
+          Обновить
+        </button>
+        <button class="btn-outline" type="button" id="open-bot-btn">
+          Открыть бота
+        </button>
+      </div>
+
+      <div class="footer-note">
+        Код действителен ограниченное время. Не закрывайте вкладку.
+      </div>
+    </div>
+
+  </main>
+
   <script>
-    async function poll() {
-      const resp = await fetch('{% url "pc_login_poll" token %}');
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.authenticated) {
-          location.href = '{% url "pc_home_page" %}';
-          return;
+    (function(){
+      const statusText  = document.getElementById('status-text');
+      const statusRow   = document.getElementById('status-row');
+      const statusDot   = document.getElementById('status-dot');
+      const copyBtn     = document.getElementById('copy-btn');
+      const codeEl      = document.getElementById('login-code');
+      const copiedHint  = document.getElementById('copied-hint');
+      const refreshBtn  = document.getElementById('refresh-btn');
+      const openBotBtn  = document.getElementById('open-bot-btn');
+
+      let expired = false;
+      let pollingActive = true;
+      let pollTimeout;
+
+      async function poll() {
+        if (!pollingActive) return;
+        try {
+          const resp = await fetch('{% url "pc_login_poll" token %}', { cache: 'no-store' });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.authenticated) {
+              setSuccess();
+              return;
+            }
+            if (data.expired) {
+              setExpired();
+              return;
+            }
+          }
+        } catch (e) {
+          // Можно показать transient ошибку
+          console.error(e);
         }
-        if (data.expired) {
-          document.getElementById('status').textContent = 'Token expired';
-          return;
+        pollTimeout = setTimeout(poll, 3000);
+      }
+
+      function setSuccess() {
+        pollingActive = false;
+        clearTimeout(pollTimeout);
+        statusText.textContent = 'Успешно! Перенаправляем…';
+        statusRow.classList.add('status-success');
+        statusDot.classList.remove('status-dot'); // Для смены анимации можно иначе
+        statusDot.style.background = '#13CD90';
+        statusDot.style.width = statusDot.style.height = '1.1rem';
+        // Мгновенная редирекция
+        setTimeout(()=> {
+          window.location.href = '{% url "pc_home_page" %}';
+        }, 500);
+      }
+
+      function setExpired() {
+        pollingActive = false;
+        expired = true;
+        statusText.textContent = 'Код истёк. Сгенерируйте новый.';
+        statusRow.classList.add('status-error');
+      }
+
+      function copyCode() {
+        const text = codeEl.textContent.trim();
+        if (!text) return;
+        try {
+          navigator.clipboard.writeText(text);
+          showCopiedHint();
+        } catch {
+          // fallback
+          const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); showCopiedHint(); } catch(e){}
+            document.body.removeChild(ta);
         }
       }
-      setTimeout(poll, 3000);
-    }
-    poll();
+
+      function showCopiedHint() {
+        copiedHint.classList.add('copied-hint--show');
+        setTimeout(()=>copiedHint.classList.remove('copied-hint--show'), 1600);
+      }
+
+      copyBtn.addEventListener('click', copyCode);
+      refreshBtn.addEventListener('click', () => {
+        if (expired) {
+          // Можно инициировать запрос на обновление токена (если реализуете).
+          window.location.reload();
+          return;
+        }
+        // Форсируем немедленную проверку
+        if (!pollingActive) {
+          pollingActive = true;
+        }
+        poll();
+      });
+
+      openBotBtn.addEventListener('click', () => {
+        window.open('https://t.me/LegitLogisticsBot', '_blank', 'noopener');
+      });
+
+      // Автостарт
+      poll();
+    })();
   </script>
 </body>
 </html>

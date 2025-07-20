@@ -19,7 +19,120 @@
               </div>
             </div>
           </div>
-          <div class="_1-hi__frame-1948754033">
+          {% if tg_user %}
+            <style>
+
+._2-home__frame-1948754033 {
+  display: flex;
+  flex-direction: row;
+  gap: 1.8579999999999999rem;
+  align-items: center;
+  justify-content: flex-start;
+  position: absolute;
+  left: 129.3rem;
+  top: 0rem;
+}
+._2-home__frame-1000006148 {
+  background: var(
+    --bek-plashek-temnyj,
+    linear-gradient(180deg, rgba(23, 28, 36, 1) 0%, rgba(17, 21, 26, 1) 100%)
+  );
+  border-radius: 185.84300000000002rem;
+  border-width: 0.186rem;
+  
+  border-image: var(
+    --obvodka-temnaya-versiya,
+    linear-gradient(
+      180deg,
+      rgba(179, 214, 255, 0.03) 0%,
+      rgba(179, 214, 255, 0) 100%
+    )
+  );
+  border-image-slice: 1;
+  padding: 0.743rem 0.743rem 0.743rem 2.788rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.558rem;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 15rem;
+  height: 6.8rem;
+  position: relative;
+  overflow: hidden;
+}
+._2-home___128-90 {
+  color: #ffffff;
+  text-align: justified;
+  font-family: "GoogleSans-Bold", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  position: relative;
+  width: 5.86rem;
+  height: 1.8030000000000002rem;
+}
+._2-home__frame-1948754032 {
+  background: rgba(19, 205, 144, 0.12);
+  border-radius: 112.69800000000001rem;
+  border-width: 0.11299999999999999rem;
+  
+  border-image: var(
+    --obvodka-temnaya-versiya,
+    linear-gradient(
+      180deg,
+      rgba(179, 214, 255, 0.03) 0%,
+      rgba(179, 214, 255, 0) 100%
+    )
+  );
+  border-image-slice: 1;
+  flex-shrink: 0;
+  width: 4.17rem;
+  height: 2.93rem;
+  position: relative;
+  overflow: hidden;
+}
+._2-home__frame-1948754050 {
+  width: 1.8780000000000001rem;
+  height: 1.597rem;
+  position: absolute;
+  left: 1.24rem;
+  top: 0.6759999999999999rem;
+  overflow: visible;
+}
+._2-home__frame-1000006062 {
+  background: #171b22;
+  border-radius: 139.544rem;
+  flex-shrink: 0;
+  width: 4.696rem;
+  height: 4.696rem;
+  position: relative;
+  overflow: hidden;
+}
+._2-home__image-12 {
+  width: 5.26rem;
+  height: 5.26rem;
+  position: absolute;
+  left: -0.072rem;
+  top: 0rem;
+  object-fit: cover;
+}
+            </style>
+            <div class="_2-home__frame-1948754033">
+            <div class="_2-home__frame-1000006148">
+              <div class="_2-home___128-90">{{ tg_user.balance }} ₽</div>
+              <div class="_2-home__frame-1948754032">
+                <img
+                  class="_2-home__frame-1948754050"
+                  src="{% static 'home_page/frame-19487540500.svg' %}"
+                />
+              </div>
+            </div>
+            <div class="_2-home__frame-1000006062">
+              <img class="_2-home__image-12" src="{{ tg_user.img }}" />
+            </div>
+          </div>
+          {% else %}
+          <a class="_1-hi__frame-1948754033" href="{% url 'pc_login' %}">
             <div class="_1-hi__frame-1948754034">
               <div class="_1-hi__frame-1948754049">
                 <div class="_1-hi__frame-19487540492">
@@ -32,8 +145,9 @@
                 <img class="_1-hi__svg2" src="{% static 'head_page/svg1.svg' %}" />
               </div>
             </div>
-          </div>
-          <div class="_1-hi__frame-1948754032">
+          </a>
+      {% endif %}
+                    <div class="_1-hi__frame-1948754032">
             <div class="_1-hi__frame-19487540493">
               <img class="_1-hi__svg3" src="{% static 'head_page/svg2.svg' %}" />
               <div class="_1-hi__frame-19487540482">
@@ -44,7 +158,6 @@
           </div>
         </div>
       </div>
-
 <style>
     ._1-hi__frame-2131329207 {
   align-self: stretch;

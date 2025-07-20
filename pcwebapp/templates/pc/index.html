@@ -10,6 +10,23 @@
   
   
   <style>
+    .clickable-login {
+  position: relative;
+  cursor: pointer;
+}
+
+.clickable-login::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.clickable-login:hover {
+  filter: brightness(1.05);
+  transition: filter .25s ease;
+}
+
+
     html {
         font-size: 0.52vw;
     }

@@ -1,0 +1,263 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'verdicts/vars.css' %}">
+  <link rel="stylesheet" href="{% static 'verdicts/style.css' %}">
+  
+  
+  <style>
+    html {
+        font-size: 0.52vw;
+    }
+   a,
+   button,
+   input,
+   select,
+   h1,
+   h2,
+   h3,
+   h4,
+   h5,
+   * {
+       box-sizing: border-box;
+       margin: 0;
+       padding: 0;
+       border: none;
+       text-decoration: none;
+       background: none;
+   
+       -webkit-font-smoothing: antialiased;
+   }
+   
+   menu, ol, ul {
+       list-style-type: none;
+       margin: 0;
+       padding: 0;
+   }
+   </style>
+  <title>Document</title>
+</head>
+<body>
+  <div class="_2-verdict">
+    <div class="_2-verdict__frame-2131329239">
+      {% include 'pc/header.html' %}
+      <div class="_2-verdict__frame-1948754060">
+        <div class="_2-verdict__frame-2131329258">
+          <div class="_2-verdict__frame-2131329255">
+            <div class="_2-verdict__frame-2131329257">
+              <div class="_2-verdict__frame-1948754039">
+                <div class="_2-verdict__frame-1000006072">
+                  <div class="_2-verdict__div5">Вердикты</div>
+                  <div class="_2-verdict__div6">
+                    Введите код вердикта, чтобы проверить
+                    <br />
+                    оригинальностьизделия
+                  </div>
+                </div>
+              </div>
+              <div class="_2-verdict__frame-1948754078">
+                <div class="_2-verdict__frame-1948754079">
+                    <input type="text" maxlength="1" class="_2-verdict__n" />
+                </div>
+                <div class="_2-verdict__frame-1948754080">
+                    <input type="text" maxlength="1" class="_2-verdict__s" />
+                </div>
+                <div class="_2-verdict__frame-1948754081">
+                    <input type="text" maxlength="1" class="_2-verdict__j" />
+                </div>
+                <div class="_2-verdict__frame-1948754083">
+                    <input type="text" maxlength="1" class="_2-verdict__f" />
+                </div>
+                <div class="_2-verdict__frame-1948754083">
+                    <input type="text" maxlength="1" class="_2-verdict__f" />
+                </div>
+              </div>
+              <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const inputs = Array.from(document.querySelectorAll('._2-verdict__frame-1948754078 input'));
+
+                    // Helper: check if all inputs are filled
+                    function checkAllFilled() {
+                    return inputs.every(input => input.value.length === input.maxLength);
+                    }
+                    
+                    // Callback when all are filled
+                    function onAllFilled() {
+                    console.log('All inputs filled:', inputs.map(i => i.value).join(''));
+                        document.querySelector('._2-verdict__div7').style.color = "white";
+                        document.getElementById('check_but').style.background = "var(--zelenyj-plashka, linear-gradient(247.01deg,rgba(12, 200, 139, 1) 0%,rgba(29, 120, 91, 1) 100%))";
+                    }
+
+                    // Callback when any input is erased
+                    function onAnyErased() {
+                    console.log('An input was erased');
+                        document.querySelector('._2-verdict__div7').style.color = "";
+                        document.getElementById('check_but').style.background = "";
+                    }
+
+                    inputs.forEach((input, idx) => {
+                    // On character input, move to next and check for all-filled
+                    input.addEventListener('input', () => {
+                        if (input.value.length === input.maxLength) {
+                        const nextInput = inputs[idx + 1];
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                        }
+                        if (checkAllFilled()) {
+                        onAllFilled();
+                        }
+                    });
+                    
+                    // On keydown, handle backspace and check for erase
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace') {
+                        if (input.value === '') {
+                            const prevInput = inputs[idx - 1];
+                            if (prevInput) {
+                            prevInput.value = '';
+                            prevInput.focus();
+                            e.preventDefault();
+                            onAnyErased();
+                            }
+                        } else {
+                            // if deleting a character in current field
+                            onAnyErased();
+                        }
+                        }
+                    });
+                    });
+                });
+                </script>
+
+              <div class="_2-verdict__frame-1948754085" id="check_but">
+                <div class="_2-verdict__div7">Проверить</div>
+              </div>
+            </div>
+            <div class="_2-verdict__frame-1000006069">
+              <div class="_2-verdict__frame-1948754090">
+                <div class="_2-verdict__frame-1948754088">
+                  <div class="_2-verdict__frame-1000006071">
+                    <div class="_2-verdict__div8">Категория</div>
+                    <div class="_2-verdict__div9">{{ verdict.get_category_display }}</div>
+                  </div>
+                  <div class="_2-verdict__frame-10000060722">
+                    <div class="_2-verdict__div8">Бренд</div>
+                    <div class="_2-verdict__balenciaga">{{ verdict.brand }}</div>
+                  </div>
+                  <div class="_2-verdict__frame-1000006073">
+                    <div class="_2-verdict__div8">Модель</div>
+                    <div class="_2-verdict__track">{{ verdict.item_model }}</div>
+                  </div>
+                </div>
+                <div class="_2-verdict__frame-134">
+                  <img class="_2-verdict__image" src="https://legitcheck.one/media/{{ first_photo.image }}" />
+                  <div class="_2-verdict__image-16"></div>
+                  <div class="_2-verdict__frame-1948754069">
+                    <div class="_2-verdict__div10">{{ verdict.get_status_display }}</div>
+                  </div>
+                  <div class="_2-verdict__frame-1000006063">
+                    <div class="_2-verdict__frame-1948754070">
+                      <img
+                        class="_2-verdict__frame-1948754062"
+                        src="{% static 'verdicts/frame-19487540620.svg' %}"
+                      />
+                      <div class="_2-verdict___21-03-2025">{{ verdict.created_at|date:"d.m.Y" }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="_2-verdict__frame-1948754040">
+            <div class="_2-verdict__frame-1948754038">
+              {% for photo in photos %}
+                <div class="_2-verdict__frame-1948754034">
+                  <img class="_2-verdict__image2" src="{{ photo.image.url }}" />
+                  <img class="_2-verdict___1" src="{% static 'verdicts/_10.png' %}" />
+              </div>
+              {% endfor %}
+            </div>
+            <div class="_2-verdict__frame-10000060712">
+              <div class="_2-verdict__div11">Фотографии в отчете</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="_2-verdict__frame-2131329238">
+        <div class="_2-verdict__frame-2131329181">
+          <div class="_2-verdict__frame-2131329243">
+            <div class="_2-verdict__frame-2131329242">
+              <div class="_2-verdict__frame-1000002421">
+                <div class="_2-verdict__frame-2131328953">
+                  <img class="_2-verdict__group-9001" src="{% static 'verdicts/group-90010.svg' %}" />
+                  <div class="_2-verdict__frame-1948754082">
+                    <div class="_2-verdict__checker">
+                      <span>
+                        <span class="checker-span">Check</span>
+                        <span class="checker-span2">er</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="_2-verdict__headline">
+                  Legit Check - это профессиональный сервис с помощью которого вы
+                  сможете проверить любую вещь на оригинальность.
+                </div>
+              </div>
+              <div class="_2-verdict__headline2">
+                © 2019- 2025 LEGIT CHECK. Все права защищены.
+              </div>
+            </div>
+            <div class="_2-verdict__frame-2131329241">
+              <div class="_2-verdict__frame-1948754013">
+                <div class="_2-verdict__frame-1948753974">
+                  <div class="_2-verdict__qr-code-1">
+                    <img class="_2-verdict__vector" src="{% static 'verdicts/vector0.svg' %}" />
+                    <img class="_2-verdict__group" src="{% static 'verdicts/group0.svg' %}" />
+                    <div class="_2-verdict__qr-code-1-1">
+                      <img class="_2-verdict__vector2" src="{% static 'verdicts/vector1.svg' %}" />
+                      <img class="_2-verdict__group2" src="{% static 'verdicts/group1.svg' %}" />
+                    </div>
+                  </div>
+                  <div class="_2-verdict__frame-1948753973">
+                    <div class="_2-verdict__frame-1948753972"></div>
+                    <div class="_2-verdict__frame-1948753971"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="_2-verdict__headline3">Политика конфиденциальности</div>
+              <div class="_2-verdict__headline4">Пользовательское соглашение</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="_2-verdict__border2">
+      <div class="_2-verdict__frame-1948754056">
+        <a class="_2-verdict__frame-1948754055" href="{% url 'home' %}">
+          <div class="_2-verdict__frame-1948754052">
+            <img class="_2-verdict__group-8745" src="{% static 'verdicts/group-87450.svg' %}" />
+            <div class="_2-verdict__div12">Главная</div>
+          </div>
+          <div class="_2-verdict__bt"></div>
+        </a>
+        <a class="_2-verdict__frame-1948754076">
+          <div class="_2-verdict__frame-1948754054">
+            <div class="_2-verdict__go">GO</div>
+          </div>
+        </a>
+        <a class="_2-verdict__frame-1948754053">
+          <img class="_2-verdict__group-87452" src="{% static 'verdicts/group-87451.svg' %}" />
+          <div class="_2-verdict__div13">Вердикты</div>
+        </a>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

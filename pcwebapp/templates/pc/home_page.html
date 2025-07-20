@@ -66,7 +66,7 @@
           </div>
           <div class="_2-home__frame-1948754033">
             <div class="_2-home__frame-1000006148">
-              <div class="_2-home___128-90">128,90 ₽</div>
+              <div class="_2-home___128-90">{{ tg_user.balance }} ₽</div>
               <div class="_2-home__frame-1948754032">
                 <img
                   class="_2-home__frame-1948754050"
@@ -75,7 +75,7 @@
               </div>
             </div>
             <div class="_2-home__frame-1000006062">
-              <img class="_2-home__image-12" src="{% static 'home_page/image-120.png' %}" />
+              <img class="_2-home__image-12" src="{{ tg_user.img }}" />
             </div>
           </div>
           <a href="https://t.me/legitcheck" class="_2-home__frame-19487540322 button">
@@ -124,7 +124,7 @@
           <div class="_2-home__frame-1948754047">
             <div class="_2-home__frame-1948754046">
               <div class="_2-home__gradient-blur"></div>
-              <a href="{% url 'startcheck' %}" class="_2-home__frame-1000006149 button">
+              <a href="{% url 'pc_startcheck' %}" class="_2-home__frame-1000006149 button">
                 <img class="_2-home__mask-group" src="{% static 'home_page/mask-group0.svg' %}" />
                 <div class="_2-home__background">
                   <img class="_2-home__svg2" src="{% static 'home_page/svg1.svg' %}" />
@@ -487,33 +487,14 @@
                   </div>
                 </div>
               </div>
-              <a href="{% url 'privacy_policy' %}" class="_2-home__headline3 button">Политика конфиденциальности</a>
-              <a href="{% url 'user_agree' %}" class="_2-home__headline4 button">Пользовательское соглашение</a>
+              <a href="{% url 'pc_privacy_policy' %}" class="_2-home__headline3 button">Политика конфиденциальности</a>
+              <a href="{% url 'pc_user_agree' %}" class="_2-home__headline4 button">Пользовательское соглашение</a>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="_2-home__border2">
-      <div class="_2-home__frame-19487540562">
-        <div class="_2-home__frame-19487540552">
-          <div class="_2-home__frame-19487540522">
-            <img class="_2-home__group-8745" src="{% static 'home_page/group-87450.svg' %}" />
-            <div class="_2-home__div15">Главная</div>
-          </div>
-          <div class="_2-home__bt"></div>
-        </div>
-        <div class="_2-home__frame-1948754076">
-          <div class="_2-home__frame-19487540542">
-            <div class="_2-home__go">GO</div>
-          </div>
-        </div>
-        <div class="_2-home__frame-19487540532">
-          <img class="_2-home__group-87452" src="{% static 'home_page/group-87451.svg' %}" />
-          <div class="_2-home__div16">Вердикты</div>
-        </div>
-      </div>
-    </div>
+    {% include 'pc/sidebar.html' %}
   </div>
   
 </body>
