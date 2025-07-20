@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Telegram Login</title>
+</head>
+<body>
+  <h1>Login via Telegram</h1>
+  <p>Open <a href="https://t.me/YourBot">@YourBot</a> and send this code:</p>
+  <pre>{{ token }}</pre>
+  <p id="status">Waiting for confirmation...</p>
+  <script>
+    async function poll() {
+      const resp = await fetch('{% url "pc_login_poll" token %}');
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.authenticated) {
+          location.href = '{% url "pc_home_page" %}';
+          return;
+        }
+        if (data.expired) {
+          document.getElementById('status').textContent = 'Token expired';
+          return;
+        }
+      }
+      setTimeout(poll, 3000);
+    }
+    poll();
+  </script>
+</body>
+</html>
