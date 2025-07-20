@@ -27,7 +27,7 @@ TELEGRAM_BOT_TOKEN = '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one']
+ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com']
 
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'legitcheck.host_routing_middleware.DomainRoutingMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
