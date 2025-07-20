@@ -123,7 +123,7 @@
                 <div id="verdict-model" class="text-white text-lg font-semibold">{{ verdict.item_model }}</div>
               </div>
               <!-- Картинка: первая из загруженных -->
-              <img id="verdict-photo" src="https://legitcheck.one/media/{{ first_photo.image }}" alt="Sneaker" class="w-32 h-auto rounded-lg object-cover" />
+              <img id="verdict-photo" src="{{ first_photo.image.url }}" alt="Sneaker" class="w-32 h-auto rounded-lg object-cover" />
               <!-- Текстовые данные -->
             </div>
           </div>
