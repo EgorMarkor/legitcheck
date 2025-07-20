@@ -22,7 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-%7t^@^hct!d*e2*-ss7((0wy#+5^ne^=oe)ku_cy4e(c35ta=b'
 
-TELEGRAM_BOT_TOKEN = '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU'
+import os
+
+TELEGRAM_BOT_TOKEN = os.environ.get(
+    'TELEGRAM_BOT_TOKEN',
+    '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

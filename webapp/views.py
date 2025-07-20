@@ -2,13 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from telebot.util import parse_web_app_data
 from .models import User, Verdict, VerdictPhoto
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse
 
-TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+import os
+
+TELEGRAM_BOT_TOKEN = os.environ.get(
+    "TELEGRAM_BOT_TOKEN",
+    "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU",
+)
 
 def init(request):
     # Точка входа: показываем кнопку Telegram WebApp

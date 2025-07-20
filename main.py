@@ -33,7 +33,10 @@ except Exception:
 
 # --- Config ----------------------------------------------------------------
 
-BOT_TOKEN: str = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+BOT_TOKEN: str = os.environ.get(
+    "BOT_TOKEN",
+    "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU",
+)
 BACKEND_BASE_URL: str = "https://legitcheck.one/"
 BOT_BACKEND_SECRET: Optional[str] = os.environ.get("BOT_BACKEND_SECRET") or None
 
@@ -42,7 +45,7 @@ if not BACKEND_BASE_URL:
 
 
 TOKEN_PREFIX = "login_"
-TOKEN_RE = re.compile(rf"^{TOKEN_PREFIX}([a-f0-9]{{32,64}})$")  # hex 128–256 бит
+TOKEN_RE = re.compile(rf"^{TOKEN_PREFIX}([a-f0-9]{16})$")  # 16 hex chars token
 
 CONFIRM_ENDPOINT = f"{BACKEND_BASE_URL}/internal/telegram/confirm/"
 

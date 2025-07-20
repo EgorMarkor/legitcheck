@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("token", models.CharField(max_length=32, unique=True)),
+                ("token", models.CharField(max_length=16, unique=True)),
                 ("session_key", models.CharField(blank=True, max_length=40, null=True)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("used", models.BooleanField(default=False)),

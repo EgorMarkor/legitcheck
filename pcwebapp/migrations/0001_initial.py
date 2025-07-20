@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LoginToken',
             fields=[
-                ('token', models.CharField(max_length=64, primary_key=True, serialize=False)),
+                ('token', models.CharField(max_length=16, primary_key=True, serialize=False)),
                 ('session_key', models.CharField(db_index=True, max_length=40)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('expires_at', models.DateTimeField()),

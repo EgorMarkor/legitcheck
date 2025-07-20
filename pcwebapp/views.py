@@ -1,38 +1,25 @@
-from django.shortcuts import render, redirect
 import hashlib
 import hmac
-import time
 import json
-from django.conf import settings
-from django.utils.http import url_has_allowed_host_and_scheme
-from django.http import HttpResponseBadRequest, JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from webapp.models import User  # ваша модель webapp.User
-from django.contrib.sessions.backends.db import SessionStore
-import secrets
-from .decorators import webapp_login_required
-from django.shortcuts import redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.http import url_has_allowed_host_and_scheme
-
-from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.utils import timezone
-from .models import LoginToken
-
-import time
-import hmac
-import hashlib
 import logging
+import time
 from urllib.parse import unquote
 
 from django.conf import settings
-from django.http import (
-    JsonResponse,
-    HttpResponseBadRequest,
-    HttpResponse
-)
+from django.contrib.sessions.backends.db import SessionStore
+from django.contrib.auth import login
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+
+from webapp.models import User  # ваша модель webapp.User
+from .decorators import webapp_login_required
+from .models import LoginToken
+
+logger = logging.getLogger(__name__)
 
 TELEGRAM_LOGIN_MAX_AGE = 300  # секунд
 
@@ -93,8 +80,6 @@ def home_page(request):
     return render(request, 'pc/home_page.html')
 
 
-
-from .models import LoginToken
 
 @require_POST
 def telegram_request_login(request):

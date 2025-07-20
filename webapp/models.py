@@ -140,7 +140,7 @@ class Payment(models.Model):
 
 class LoginToken(models.Model):
     """One-time tokens for login via Telegram bot."""
-    token = models.CharField(max_length=32, unique=True)
+    token = models.CharField(max_length=16, unique=True)
     session_key = models.CharField(max_length=40, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     used = models.BooleanField(default=False)
