@@ -9,6 +9,5 @@ urlpatterns = [
     path('user_agree/', views.user_agree, name='user_agree'),      # Главная страница
     path('privacy_policy/', views.privacy_policy, name='privacy_policy'),      # Главная страница
     path('verdicts/', views.verdicts, name='verdicts'),      # Главная страница
-    path('home/', views.home_page, name="home_page"),
-    path('telegram/login/', views.telegram_login, name='telegram_login'),
+    path('home/', views.home_page, name="home_page")
 ]

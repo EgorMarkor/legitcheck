@@ -771,6 +771,7 @@
   flex-shrink: 0;
   height: 79.7rem;
   position: relative;
+  overflow: hidden;
 }
 ._1-hi__frame-1948754039 {
   width: 150.9rem;
@@ -780,8 +781,6 @@
   top: 0rem;
 }
 ._1-hi__frame-1948754038 {
-  overflow-x: auto;
-  width: 150.9rem;
   display: flex;
   flex-direction: row;
   gap: 1.3rem;
@@ -1836,20 +1835,7 @@
   left: 0rem;
   top: 61.5rem;
 }
-
-* {
-  scrollbar-width: none;    /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-/* WebKit‑браузеры (Chrome, Safari) */
-*::-webkit-scrollbar {
-  display: none;
-}
-
 ._1-hi__frame-19487540384 {
-  width: 150.9rem;
-  overflow-x: auto;
   display: flex;
   flex-direction: row;
   gap: 1.3rem;

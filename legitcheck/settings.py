@@ -45,7 +45,6 @@ MEDIA_URL = "/media/"
 # Application definition
 
 INSTALLED_APPS = [
-    'pcwebapp',
     'webapp',
     'unfold',
     'django.contrib.admin',
