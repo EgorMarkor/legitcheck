@@ -7,15 +7,91 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseBadRequest
+import random
 
 TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 
 # URL аватарки по умолчанию на случай отсутствия фото у пользователя
 DEFAULT_AVATAR_URL = "/static/avatar.png"
 
+def _generate_device_id():
+    """Генерирует уникальный отрицательный ID для аккаунта устройства."""
+    while True:
+        device_id = -random.randint(1, 2_147_483_647)
+        if not User.objects.filter(tgId=device_id).exists():
+            return device_id
+
+
 def init(request):
-    # Точка входа: показываем кнопку Telegram WebApp
-    return render(request, 'init.html')
+    raw_init_data = request.GET.get('init_data')
+    device_flag = request.GET.get('device')
+
+    # Если не переданы параметры, но в сессии уже есть пользователь — сразу показываем главную
+    if not raw_init_data and device_flag is None:
+        tg_id_session = request.session.get('tg_id')
+        if tg_id_session:
+            try:
+                tg_user = User.objects.get(tgId=tg_id_session)
+                return render(request, 'index.html', {'tg_user': tg_user})
+            except User.DoesNotExist:
+                pass
+        return render(request, 'init.html')
+
+    tg_user = None
+    if raw_init_data:
+        # Инициализация через Telegram WebApp
+        webapp_data = parse_web_app_data(TELEGRAM_BOT_TOKEN, raw_init_data)
+        tg_user_data = webapp_data.get('user', {})
+
+        tg_id = tg_user_data.get('id')
+        name = tg_user_data.get('first_name', '')
+        username = tg_user_data.get('username', '')
+        photo = tg_user_data.get('photo_url') or DEFAULT_AVATAR_URL
+
+        if tg_id:
+            tg_user, created = User.objects.get_or_create(
+                tgId=tg_id,
+                defaults={
+                    'name': name,
+                    'username': username,
+                    'img': photo,
+                    'balance': '0',
+                }
+            )
+
+            if not created and not tg_user.img:
+                tg_user.img = photo
+                tg_user.save(update_fields=['img'])
+
+            request.session['tg_id'] = tg_id
+            response = render(request, 'index.html', {'tg_user': tg_user})
+            response.set_cookie('device_user_id', tg_id, max_age=60 * 60 * 24 * 365 * 10)
+            return response
+
+    # Инициализация без Telegram – по устройству
+    device_cookie = request.COOKIES.get('device_user_id')
+    if device_cookie:
+        try:
+            tg_user = User.objects.get(tgId=int(device_cookie))
+        except (ValueError, User.DoesNotExist):
+            tg_user = None
+
+    if tg_user is None:
+        device_id = _generate_device_id()
+        tg_user = User.objects.create(
+            tgId=device_id,
+            name='Гость',
+            username=None,
+            img=DEFAULT_AVATAR_URL,
+            balance='0',
+        )
+        response = render(request, 'index.html', {'tg_user': tg_user})
+        response.set_cookie('device_user_id', tg_user.tgId, max_age=60 * 60 * 24 * 365 * 10)
+    else:
+        response = render(request, 'index.html', {'tg_user': tg_user})
+
+    request.session['tg_id'] = tg_user.tgId
+    return response
 
 def index(request):
     """
