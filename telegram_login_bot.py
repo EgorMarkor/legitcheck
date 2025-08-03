@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 
 TOKEN_PATTERN = re.compile(r"[A-Z0-9]{6}")
 
+# Плейсхолдер аватарки, если у пользователя нет фотографии
+DEFAULT_AVATAR_URL = "/static/avatar.png"
+
 # ========== DB HELPERS ==========
 
 @sync_to_async
@@ -54,7 +57,7 @@ def finalize_token(token_obj, user_data: dict):
     tg_id = user_data['tgId']
     username = user_data.get('username')
     full_name = user_data.get('full_name') or f"tg_{tg_id}"
-    photo_url = user_data.get('photo_url')
+    photo_url = user_data.get('photo_url') or DEFAULT_AVATAR_URL
     default_balance = user_data.get('default_balance', "0")
 
     user, created = User.objects.get_or_create(
@@ -62,7 +65,7 @@ def finalize_token(token_obj, user_data: dict):
         defaults={
             "username": username,
             "name": full_name,
-            "img": photo_url or "",
+            "img": photo_url,
             "balance": default_balance,
         }
     )
@@ -78,7 +81,7 @@ def finalize_token(token_obj, user_data: dict):
         user.name = full_name
         changed = True
 
-    if photo_url and user.img != photo_url:
+    if user.img != photo_url:
         user.img = photo_url
         changed = True
 
@@ -141,7 +144,8 @@ async def fetch_avatar_url(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> 
     except Exception:
         logger.exception("Error get_chat fallback for user=%s", user_id)
 
-    return None
+    # Если аватар не найден, используем плейсхолдер
+    return DEFAULT_AVATAR_URL
 
 
 

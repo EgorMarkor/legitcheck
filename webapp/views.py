@@ -10,6 +10,9 @@ from django.http import JsonResponse, HttpResponseBadRequest
 
 TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 
+# URL аватарки по умолчанию на случай отсутствия фото у пользователя
+DEFAULT_AVATAR_URL = "/static/avatar.png"
+
 def init(request):
     # Точка входа: показываем кнопку Telegram WebApp
     return render(request, 'init.html')
@@ -31,7 +34,7 @@ def index(request):
     tg_id    = tg_user_data.get('id')
     name     = tg_user_data.get('first_name', '')
     username = tg_user_data.get('username', '')
-    photo    = tg_user_data.get('photo_url', '')
+    photo    = tg_user_data.get('photo_url') or DEFAULT_AVATAR_URL
 
     if not tg_id:
         return redirect('init')
@@ -46,6 +49,11 @@ def index(request):
             'balance':  '0',
         }
     )
+
+    # Если пользователь уже существует и у него отсутствует аватар — задаём плейсхолдер
+    if not created and not tg_user.img:
+        tg_user.img = photo
+        tg_user.save(update_fields=['img'])
 
     # Сохраним tg_id в сессии — при присвоении любому ключу сессия будет создана
     request.session['tg_id'] = tg_id
