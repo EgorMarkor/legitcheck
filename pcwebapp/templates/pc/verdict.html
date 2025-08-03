@@ -198,8 +198,7 @@
                   <div class="_2-verdict__frame-1948754082">
                     <div class="_2-verdict__checker">
                       <span>
-                        <span class="checker-span">Check</span>
-                        <span class="checker-span2">er</span>
+                        <span class="checker-span">Check</span><span class="checker-span2">er</span>
                       </span>
                     </div>
                   </div>
@@ -237,26 +236,7 @@
         </div>
       </div>
     </div>
-    <div class="_2-verdict__border2">
-      <div class="_2-verdict__frame-1948754056">
-        <a class="_2-verdict__frame-1948754055" href="{% url 'home' %}">
-          <div class="_2-verdict__frame-1948754052">
-            <img class="_2-verdict__group-8745" src="{% static 'verdicts/group-87450.svg' %}" />
-            <div class="_2-verdict__div12">Главная</div>
-          </div>
-          <div class="_2-verdict__bt"></div>
-        </a>
-        <a class="_2-verdict__frame-1948754076">
-          <div class="_2-verdict__frame-1948754054">
-            <div class="_2-verdict__go">GO</div>
-          </div>
-        </a>
-        <a class="_2-verdict__frame-1948754053">
-          <img class="_2-verdict__group-87452" src="{% static 'verdicts/group-87451.svg' %}" />
-          <div class="_2-verdict__div13">Вердикты</div>
-        </a>
-      </div>
-    </div>
+    {% include 'pc/sidebar.html' %}
   </div>
   
 </body>

@@ -313,7 +313,7 @@
   const paymentText = document.getElementById('payment-text');
 
   let selectedBrand; let type_item; let currentStep = 1;
-  let balance = window.userBalance || 0; // подставьте из backend
+  let balance = {{ tg_user.balance }}; // подставьте из backend
 
   function showStep(step){
     [brandSection,itemSection,obshTypeSection,verdictSection].forEach(s=>{ if(!s) return; s.classList.add('hidden'); s.classList.remove('show'); });
@@ -322,7 +322,7 @@
       case 1: brandSection.classList.remove('hidden'); setTimeout(()=>brandSection.classList.add('show'),10); progressBar.style.width='20%'; formTitle.textContent='Выберите бренд'; break;
       case 2: itemSection.classList.remove('hidden'); setTimeout(()=>itemSection.classList.add('show'),10); progressBar.style.width='40%'; formTitle.textContent='Выберите тип вещи'; break;
       case 3: const sec = document.getElementById('check_'+type_item); if(sec){sec.classList.remove('hidden'); setTimeout(()=>sec.classList.add('show'),10);} obshTypeSection.classList.remove('hidden'); setTimeout(()=>obshTypeSection.classList.add('show'),10); progressBar.style.width='60%'; formTitle.textContent='Загрузите фотографии'; break;
-      case 4: verdictSection.classList.remove('hidden'); setTimeout(()=>verdictSection.classList.add('show'),10); progressBar.style.width='80%'; formTitle.textContent='Оформление вердикта'; break;
+      case 4: document.querySelector('#upload-sections-wrapper').style.display = 'none'; verdictSection.classList.remove('hidden'); setTimeout(()=>verdictSection.classList.add('show'),10); progressBar.style.width='80%'; formTitle.textContent='Оформление вердикта'; break;
     }
   }
   window.addEventListener('load',()=> requestAnimationFrame(()=> progressBar.style.width='20%'));

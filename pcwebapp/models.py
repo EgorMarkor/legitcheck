@@ -19,3 +19,13 @@ class LoginToken(models.Model):
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(minutes=5)
         super().save(*args, **kwargs)
+
+
+class Brand(models.Model):
+    brand = models.CharField(max_length=255)
+    logo_url = models.URLField(max_length=500)
+    brand_id = models.CharField(max_length=255, unique=True)
+    category = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.brand

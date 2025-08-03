@@ -3,11 +3,15 @@ import functools
 from datetime import timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import LoginToken
+from .models import LoginToken, Brand
 from webapp.models import User, Verdict, VerdictPhoto  # если VerdictPhoto используете
 
 # ---------- Mobile detection ----------
@@ -59,7 +63,11 @@ def home(request):
     """
     Главная страница (desktop / уже авторизованные мобильные).
     """
-    return render(request, 'pc/index.html')
+    tg_id = request.session.get('tg_id')
+    if tg_id:
+            return redirect('pc_home_page')
+    sneakers = Brand.objects.filter(category='sneakers')
+    return render(request, 'pc/index.html', {'sneakers': sneakers})
 
 
 @_require_tg_user
@@ -164,3 +172,50 @@ def poll_token(request, token):
         return JsonResponse({'authenticated': True})
 
     return JsonResponse({'authenticated': False})
+
+def _generate_unique_code():
+    # 5 цифр, гарантированно уникально
+    code = get_random_string(5, allowed_chars='0123456789')
+    while Verdict.objects.filter(code=code).exists():
+        code = get_random_string(5, allowed_chars='0123456789')
+    return code
+
+
+@csrf_exempt
+@require_POST
+@_require_tg_user
+def create_verdict(request):
+    user = request.tg_user
+
+    # 2) Обязательные поля
+    category = request.POST.get('category')        # например "sneakers"
+    brand    = request.POST.get('brand')           # "nike", "jordan" и т.д.
+    comment  = request.POST.get('comment', '').strip()
+
+    if not category or not brand:
+        return JsonResponse({'success': False, 'error': 'Не выбрана категория или бренд'}, status=400)
+
+    # 3) Создаём Verdict
+    verdict = Verdict.objects.create(
+        user=user,
+        status='inpending',             # например, сразу «в обработке»
+        category=category,
+        brand=brand,
+        item_model='',                  # можно передавать, если нужно
+        comment='',                     # внутренняя заметка, оставляем пустой
+        comment_from_user=comment,
+        code=_generate_unique_code()
+    )
+
+    # 4) Прикрепляем фото
+    #   * все файлы <input name="photos"> и <input name="additional_photos">
+    for f in request.FILES.getlist('photos'):
+        VerdictPhoto.objects.create(verdict=verdict, image=f)
+    for f in request.FILES.getlist('additional_photos'):
+        VerdictPhoto.objects.create(verdict=verdict, image=f)
+
+    # 5) Всё ок — вернём JSON с редиректом
+    return JsonResponse({
+        'success': True,
+        'redirect_url': reverse('pc_home')  # например, страница с итогом
+    })

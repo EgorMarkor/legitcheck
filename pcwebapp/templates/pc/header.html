@@ -4,18 +4,18 @@
           <div class="_1-hi__border">
             <div class="_1-hi__frame-3">
               <div class="_1-hi__frame-2">
-                <div class="_1-hi__link">
+                <a href="https://legitcheck.info" class="_1-hi__link">
                   <div class="_1-hi__div">О нас</div>
-                </div>
-                <div class="_1-hi__link2">
+                </a>
+                <a href="https://legitcheck.info" class="_1-hi__link2">
                   <div class="_1-hi__div2">Цены</div>
-                </div>
-                <div class="_1-hi__link3">
+                </a>
+                <a href="https://legitcheck.info" class="_1-hi__link3">
                   <div class="_1-hi__div3">Этапы работы</div>
-                </div>
-                <div class="_1-hi__link4">
+                </a>
+                <a href="https://legitcheck.info" class="_1-hi__link4">
                   <div class="_1-hi__div4">Статьи</div>
-                </div>
+                </a>
               </div>
             </div>
           </div>
@@ -120,16 +120,16 @@
             <div class="_2-home__frame-1948754033">
             <div class="_2-home__frame-1000006148">
               <div class="_2-home___128-90">{{ tg_user.balance }} ₽</div>
-              <div class="_2-home__frame-1948754032">
+              <a href="{% url 'pc_pay' %}" class="_2-home__frame-1948754032">
                 <img
                   class="_2-home__frame-1948754050"
                   src="{% static 'home_page/frame-19487540500.svg' %}"
                 />
-              </div>
+              </a>
             </div>
-            <div class="_2-home__frame-1000006062">
+            <a href="{% url 'pc_account' %}" class="_2-home__frame-1000006062">
               <img class="_2-home__image-12" src="{{ tg_user.img }}" />
-            </div>
+            </a>
           </div>
           {% else %}
           <a class="_1-hi__frame-1948754033" href="{% url 'pc_login' %}">
@@ -147,15 +147,15 @@
             </div>
           </a>
       {% endif %}
-                    <div class="_1-hi__frame-1948754032">
+                    <a href="https://t.me/legitcheck" class="_1-hi__frame-1948754032">
             <div class="_1-hi__frame-19487540493">
               <img class="_1-hi__svg3" src="{% static 'head_page/svg2.svg' %}" />
               <div class="_1-hi__frame-19487540482">
-                <div class="_1-hi__legit-check">@legit_check</div>
+                <div class="_1-hi__legit-check">@legitcheck</div>
                 <div class="_1-hi__telegram2">Наш Telegram-канал</div>
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
 <style>

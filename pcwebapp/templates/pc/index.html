@@ -191,61 +191,32 @@
           </div>
           <div class="_1-hi__frame-1948754040">
             <div class="_1-hi__frame-1948754038">
-              <div class="_1-hi__frame-19487540343">
-                <img
-                  class="_1-hi__stone-island-logo-14"
-                  src="{% static 'head_page/stone-island-logo-13.svg' %}"
-                />
-              </div>
-              <div class="_1-hi__frame-1948754035">
-                <img class="_1-hi__bape-1" src="{% static 'head_page/bape-10.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-1948754036">
-                <img class="_1-hi__supreme-logo-1" src="{% static 'head_page/supreme-logo-10.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-1948754037">
-                <img
-                  class="_1-hi__palm-angels-logo-1"
-                  src="{% static 'head_page/palm-angels-logo-10.svg' %}"
-                />
-              </div>
-              <div class="_1-hi__frame-19487540382">
-                <img
-                  class="_1-hi__stone-island-logo-15"
-                  src="{% static 'head_page/stone-island-logo-14.svg' %}"
-                />
-              </div>
-              <div class="_1-hi__frame-19487540392">
-                <img class="_1-hi__bape-12" src="{% static 'head_page/bape-11.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-19487540402">
-                <img class="_1-hi__supreme-logo-12" src="{% static 'head_page/supreme-logo-11.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-1948754041">
-                <img
-                  class="_1-hi__palm-angels-logo-12"
-                  src="{% static 'head_page/palm-angels-logo-11.svg' %}"
-                />
-              </div>
-              <div class="_1-hi__frame-1948754042">
-                <img
-                  class="_1-hi__stone-island-logo-16"
-                  src="{% static 'head_page/stone-island-logo-15.svg' %}"
-                />
-              </div>
-              <div class="_1-hi__frame-1948754043">
-                <img class="_1-hi__bape-13" src="{% static 'head_page/bape-12.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-1948754044">
-                <img class="_1-hi__supreme-logo-13" src="{% static 'head_page/supreme-logo-12.svg' %}" />
-              </div>
-              <div class="_1-hi__frame-19487540452">
-                <img
-                  class="_1-hi__palm-angels-logo-13"
-                  src="{% static 'head_page/palm-angels-logo-12.svg' %}"
-                />
-              </div>
-            </div>
+  {# проходим по всем брендам категории sneakers #}
+  {% for brand in sneakers %}
+  <style>
+    ._1-hi__brand-logo {
+      width: 7rem; height: 7rem;
+    }
+
+    ._1-hi__brand-logo img {
+      width: 7rem; height: 7rem;
+    }
+
+    ._1-hi__frame-1948754035 {
+      display: flex; justify-content: center; align-items: center;
+    }
+  </style>
+    <div class="_1-hi__frame-1948754035">
+      <div class="_1-hi__brand-logo">
+        <img src="{{ brand.logo_url }}"
+             alt="{{ brand.brand }}"
+             title="{{ brand.brand }}"
+             class="_1-hi__logo-img">
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
             <div class="_1-hi__frame-1000006071">
               <div class="_1-hi__div10">Одежда</div>
             </div>

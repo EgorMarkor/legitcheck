@@ -40,55 +40,18 @@
    }
    </style>
   <title>Document</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/swiper/swiper-bundle.min.css"
+  />
+
+  <!-- Swiper JS -->
+  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 </head>
 <body>
   <div class="_2-home">
     <div class="_2-home__frame-2131329239">
-      <div class="_2-home__frame-2131329207">
-        <div class="_2-home__frame-2131329236">
-          <div class="_2-home__border">
-            <div class="_2-home__frame-3">
-              <div class="_2-home__frame-2">
-                <div class="_2-home__link">
-                  <div class="_2-home__div">О нас</div>
-                </div>
-                <div class="_2-home__link2">
-                  <div class="_2-home__div2">Цены</div>
-                </div>
-                <div class="_2-home__link3">
-                  <div class="_2-home__div3">Этапы работы</div>
-                </div>
-                <div class="_2-home__link4">
-                  <div class="_2-home__div4">Статьи</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="_2-home__frame-1948754033">
-            <div class="_2-home__frame-1000006148">
-              <div class="_2-home___128-90">{{ tg_user.balance }} ₽</div>
-              <div class="_2-home__frame-1948754032">
-                <img
-                  class="_2-home__frame-1948754050"
-                  src="{% static 'home_page/frame-19487540500.svg' %}"
-                />
-              </div>
-            </div>
-            <div class="_2-home__frame-1000006062">
-              <img class="_2-home__image-12" src="{{ tg_user.img }}" />
-            </div>
-          </div>
-          <a href="https://t.me/legitcheck" class="_2-home__frame-19487540322 button">
-            <div class="_2-home__frame-1948754049">
-              <img class="_2-home__svg" src="{% static 'home_page/svg0.svg' %}" />
-              <div class="_2-home__frame-1948754048">
-                <div class="_2-home__legit-check">@legit_check</div>
-                <div class="_2-home__telegram">Наш Telegram-канал</div>
-              </div>
-            </div>
-          </a>
-        </div>
-      </div>
+      {% include 'pc/header.html' %}
       <div class="_2-home__frame-2131329235">
         <div class="_2-home__frame-21313292352">
           <div class="_2-home__frame-1948754057">
@@ -114,11 +77,6 @@
               <img class="_2-home___4-3" src="{% static 'home_page/_4-30.png' %}" />
               <img class="_2-home___4-32" src="{% static 'home_page/_4-31.png' %}" />
               <img class="_2-home___4-33" src="{% static 'home_page/_4-32.png' %}" />
-            </div>
-            <div class="_2-home__frame-1000001406">
-              <div class="_2-home__ellipse-43"></div>
-              <div class="_2-home__ellipse-44"></div>
-              <div class="_2-home__ellipse-45"></div>
             </div>
           </div>
           <div class="_2-home__frame-1948754047">
@@ -205,61 +163,35 @@
           <div class="_2-home__frame-1000006071">
             <div class="_2-home__div13">Кроссовки</div>
           </div>
-          <div class="_2-home__frame-1948754038">
-            <img class="_2-home__frame-1948754034" src="{% static 'home_page/frame-19487540340.svg' %}" />
-            <div class="_2-home__frame-1948754035">
-              <div class="_2-home__yeezy-logo-1">
-                <img class="_2-home__group" src="{% static 'home_page/group0.svg' %}" />
-              </div>
-            </div>
-            <div class="_2-home__frame-1948754044">
-              <img
-                class="_2-home__frame-1948754058"
-                src="{% static 'home_page/frame-19487540580.svg' %}"
-              />
-            </div>
-            <div class="_2-home__frame-1948754037">
-              <img
-                class="_2-home__stone-island-logo-1"
-                src="{% static 'home_page/stone-island-logo-10.svg' %}"
-              />
-            </div>
-            <img class="_2-home__frame-1948754045" src="{% static 'home_page/frame-19487540450.svg' %}" />
-            <div class="_2-home__frame-19487540463">
-              <div class="_2-home__yeezy-logo-1">
-                <img class="_2-home__group2" src="{% static 'home_page/group1.svg' %}" />
-              </div>
-            </div>
-            <div class="_2-home__frame-19487540473">
-              <img
-                class="_2-home__frame-19487540582"
-                src="{% static 'home_page/frame-19487540581.svg' %}"
-              />
-            </div>
-            <div class="_2-home__frame-19487540482">
-              <img
-                class="_2-home__stone-island-logo-12"
-                src="{% static 'home_page/stone-island-logo-11.svg' %}"
-              />
-            </div>
-            <img class="_2-home__frame-19487540492" src="{% static 'home_page/frame-19487540491.svg' %}" />
-            <div class="_2-home__frame-19487540502">
-              <div class="_2-home__yeezy-logo-1">
-                <img class="_2-home__group3" src="{% static 'home_page/group2.svg' %}" />
-              </div>
-            </div>
-            <div class="_2-home__frame-1948754051">
-              <img
-                class="_2-home__frame-19487540583"
-                src="{% static 'home_page/frame-19487540582.svg' %}"
-              />
-            </div>
-            <div class="_2-home__frame-1948754052">
-              <img
-                class="_2-home__stone-island-logo-13"
-                src="{% static 'home_page/stone-island-logo-12.svg' %}"
-              />
-            </div>
+          <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+          <div class="flex gap-4 px-4 overflow-x-auto">
+            <style>
+              .brend {
+                width: 13.3rem;
+                height: 13.3rem;
+                cursor: pointer;
+              }
+            </style>
+            <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=yeezy'" />
+            <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=nike'"/>
+            <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=newbalance'"/>
+            <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=stoneisland'"/>
+            <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=yeezy'" />
+            <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=nike'"/>
+            <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=newbalance'"/>
+            <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=stoneisland'"/>
+            <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=yeezy'" />
+            <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=nike'"/>
+            <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=newbalance'"/>
+            <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=stoneisland'"/>
+            <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=yeezy'" />
+            <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=nike'"/>
+            <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=newbalance'"/>
+            <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=stoneisland'"/>
+            <img src="{% static 'yeezy.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=yeezy'" />
+            <img src="{% static 'nike.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=nike'"/>
+            <img src="{% static 'newbalance.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=newbalance'"/>
+            <img src="{% static 'stoneisland.png' %}" class="brend" alt="Scanner" onclick="window.location.href='{% url 'pc_startcheck' %}?brand=stoneisland'"/>
           </div>
         </div>
         <div class="_2-home__frame-1000006070">

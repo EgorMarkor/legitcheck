@@ -44,51 +44,7 @@
 <body>
   <div class="_1-user-agreement">
     <div class="_1-user-agreement__frame-2131329239">
-      <div class="_1-user-agreement__frame-2131329207">
-        <div class="_1-user-agreement__frame-2131329236">
-          <div class="_1-user-agreement__border">
-            <div class="_1-user-agreement__frame-3">
-              <div class="_1-user-agreement__frame-2">
-                <div class="_1-user-agreement__link">
-                  <div class="_1-user-agreement__div">О нас</div>
-                </div>
-                <div class="_1-user-agreement__link2">
-                  <div class="_1-user-agreement__div2">Цены</div>
-                </div>
-                <div class="_1-user-agreement__link3">
-                  <div class="_1-user-agreement__div3">Этапы работы</div>
-                </div>
-                <div class="_1-user-agreement__link4">
-                  <div class="_1-user-agreement__div4">Статьи</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="_1-user-agreement__frame-1948754033">
-            <div class="_1-user-agreement__frame-1000006148">
-              <div class="_1-user-agreement___128-90">128,90 ₽</div>
-              <div class="_1-user-agreement__frame-1948754032">
-                <img
-                  class="_1-user-agreement__frame-1948754050"
-                  src="{% static 'user_agree/frame-19487540500.svg' %}"
-                />
-              </div>
-            </div>
-            <div class="_1-user-agreement__frame-1000006062">
-              <img class="_1-user-agreement__image-12" src="{% static 'user_agree/image-120.png' %}" />
-            </div>
-          </div>
-          <div class="_1-user-agreement__frame-19487540322">
-            <div class="_1-user-agreement__frame-1948754049">
-              <img class="_1-user-agreement__svg" src="{% static 'user_agree/svg0.svg' %}" />
-              <div class="_1-user-agreement__frame-1948754048">
-                <div class="_1-user-agreement__legit-check">@legit_check</div>
-                <div class="_1-user-agreement__telegram">Наш Telegram-канал</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% include 'pc/header.html' %}
       <div class="_1-user-agreement__frame-2131329235">
         <div class="_1-user-agreement__frame-1948754093">
           <div class="_1-user-agreement__frame-1948754092">
@@ -302,26 +258,7 @@
         </div>
       </div>
     </div>
-    <div class="_1-user-agreement__border2">
-      <div class="_1-user-agreement__frame-1948754056">
-        <div class="_1-user-agreement__frame-1948754055">
-          <div class="_1-user-agreement__frame-1948754052">
-            <img class="_1-user-agreement__group-8745" src="{% static 'user_agree/group-87450.svg' %}" />
-            <div class="_1-user-agreement__div6 button">Главная</div>
-          </div>
-          <div class="_1-user-agreement__bt"></div>
-        </div>
-        <div class="_1-user-agreement__frame-1948754076">
-          <div class="_1-user-agreement__frame-1948754054">
-            <div class="_1-user-agreement__go">GO</div>
-          </div>
-        </div>
-        <div class="_1-user-agreement__frame-1948754053">
-          <img class="_1-user-agreement__group-87452" src="{% static 'user_agree/group-87451.svg' %}" />
-          <div class="_1-user-agreement__div7">Вердикты</div>
-        </div>
-      </div>
-    </div>
+    {% include 'pc/sidebar.html' %}
   </div>
   
 </body>
