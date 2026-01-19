@@ -66,6 +66,15 @@
     }
     }
 
+    .card {
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+  .card.hidden {
+    display: none; 
+  }
+
+
 </style>
 <body class="text-gray-100 font-sans">
   <div class="mx-auto">
@@ -92,28 +101,32 @@
     <div class="overflow-x-auto ml-6">
       <div class="flex space-x-2 min-w-max py-2">
         <button class="filter-btn active" data-filter="all">Все</button>
-        <button class="filter-btn" data-filter="obrabotka">В обработке</button>
+        <button class="filter-btn" data-filter="processing">В обработке</button>
         <button class="filter-btn" data-filter="todo">Требует действия</button>
         <button class="filter-btn" data-filter="finish">Завершено</button>
+
       </div>
     </div>
 
     <div class="bg_card border_card rounded-[1.2rem] p-[1rem] grid grid-cols-3 gap-2 mx-5">
 
         {% for verdict in verdicts %}
-        <a href="{% url 'verdict' %}?code={{ verdict.code }}">
-          <div class="bg-[#0A0C11] rounded-[1.2rem] mb-4 {% if verdict.status == 'LEGIT' %} obrabotka
-          {% elif verdict.status == 'LEGIT' %} todo
-          {% elif verdict.status == 'FAKE' %} finish
+        <div class="card bg-[#0A0C11] rounded-[1.2rem] mb-4
+          {% if verdict.status == 'inpending' %} processing
+          {% elif verdict.status == 'todo' %} todo
+          {% elif verdict.status == 'legit' or verdict.status == 'fake' %} finish
           {% endif %}">
+        <a href="{% url 'verdict' %}?code={{ verdict.code }}" class="block">
+
               {# Картинка из verdict.photo1 #}
               <div
-              class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
-              style="background-image: url('{{ verdict.photo1.url }}');"
+                class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
+                style="background-image: url('{{ verdict.photos.first.image.url }}');"
               >
+
               {# Метка LEGIT/FAKE #}
               <div
-                  class="flex justify-center items-center text-[0.7rem] flex-shrink-0 p-1 mt-2 ml-2 w-[5.5rem] rounded-[801.32px] bg-[rgba(21,26,33,0.8)] font-bold
+                  class="flex justify-center items-center text-[0.7rem] flex-shrink-0 p-1 mt-2 ml-2 w-[7.3rem] rounded-[801.32px] bg-[rgba(21,26,33,0.8)] font-bold
                   {% if verdict.status == 'legit' %}
                     text-[#35E6AD]
                   {% elif verdict.status == 'fake' %}
@@ -141,8 +154,8 @@
                   </div>
               </div>
               </div>
+              </a>
           </div>
-        </a>
         {% empty %}
         <p>У этого пользователя ещё нет вердиктов.</p>
         {% endfor %}
@@ -174,6 +187,32 @@
   <div class="mt-4">
 
   </div>
+
+  <style>
+  /* Базовый вид кнопок-чипов */
+  .filter-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    height: 3rem; padding: 0 1.5rem; border-radius:999px;
+    font-size:18px; font-weight:500; letter-spacing:.2px; white-space:nowrap;
+    color:#464F5D;
+    background: linear-gradient(180deg, #171C24 0%, #11151A 100%);
+    transition: color .15s ease, background .15s ease, box-shadow .15s ease, transform .05s ease;
+  }
+  .filter-btn:hover{ color:#AEB6C3; }
+  .filter-btn:active{ transform: translateY(1px); }
+
+  /* Активная — белая, как на примере */
+  .filter-btn.active{
+    background:#fff; color:#0B0E13;
+    font-weight:700;
+    border-color: transparent;
+  }
+
+  /* Скрыть горизонтальный скроллбар (по желанию) */
+  .overflow-x-auto{ scrollbar-width:none; }
+  .overflow-x-auto::-webkit-scrollbar{ display:none; }
+</style>
+
   <!-- в самый низ body перед закрывающим </body> -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -199,29 +238,29 @@
     });
     </script>
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const buttons = document.querySelectorAll('.filter-btn');
-        const cards   = document.querySelectorAll('.card');
-      
-        buttons.forEach(btn => {
-          btn.addEventListener('click', () => {
-            // Помечаем активную кнопку
-            buttons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-      
-            const filter = btn.dataset.filter;
-            cards.forEach(card => {
-              // Показываем, если совпадает по классу или выбран "all"
-              if (filter === 'all' || card.classList.contains(filter)) {
-                card.style.display = '';
-              } else {
-                card.style.display = 'none';
-              }
-            });
-          });
-        });
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.card');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filter = btn.dataset.filter;
+
+      cards.forEach(card => {
+        if (filter === 'all' || card.classList.contains(filter)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
       });
-      </script>
+    });
+  });
+});
+</script>
+
 
   <script>
     // инициализируем WebApp

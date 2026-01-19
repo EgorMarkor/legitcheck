@@ -90,7 +90,7 @@
     <!-- Верхняя панель -->
     {% include 'header.html' %}
 
-    <img src="{% static 'phone.png' %}" class="mt-6 text-center w-full h-auto rounded-full">
+    <img src="{% static 'phone.png' %}" class="mt-6 text-center w-full h-auto">
     <section class="px-6">
         <div class="font-bold text-[1.6rem]">Вердикты</div>
         <div class="font-medium text-[1.2rem] text-[#464F5D]">Введите код вердикта, чтобы проверить оригинальность изделия</div>
@@ -108,68 +108,64 @@
         
         
           <script>
-            const inputs = document.querySelectorAll('.code-inputs input');
-            let prevCount = 0;  // предыдущий счёт заполненных полей
-          
-            inputs.forEach((input, idx) => {
-              input.addEventListener('input', () => {
-                // автоматический переход фокуса
-                if (input.value.length > 0 && idx < inputs.length - 1) {
-                  inputs[idx + 1].focus();
-                }
-                handleCountChange();
-              });
-          
-              input.addEventListener('keydown', e => {
-                if (e.key === 'Backspace' && input.value === '' && idx > 0) {
-                  inputs[idx - 1].focus();
-                }
-              });
-            });
-          
-            function handleCountChange() {
-              const filled = Array.from(inputs).filter(i => i.value !== '').length;
-          
-              if (filled === 5 && prevCount < 5) {
-                document.querySelector('.check-btn').classList.add("bg_active");
-                document.querySelector('.check-btn').classList.add("text-white");
-              }
-              if (filled === 4 && prevCount === 5) {
-                document.querySelector('.check-btn').classList.remove("bg_active");
-                document.querySelector('.check-btn').classList.remove("text-white");
-              }
-          
-              prevCount = filled;
-              updateValue();
-            }
-          
-            function updateValue() {
-              const allFilled = prevCount === inputs.length;
-              document.querySelector('.check-btn').disabled = !allFilled;
-            }
-          
-            document.querySelector('.check-btn').addEventListener('click', () => {
-              const code = Array.from(inputs).map(i => i.value).join('');
-              window.location.href = "{% url 'verdict' %}?code=" + code;
-            });
-          
-            // Сброс фокуса при тапе вне
-            function blurOnOutsideTap(e) {
-              const active = document.activeElement;
-              if (active && active.tagName === 'INPUT' && !e.target.closest('.code-inputs input')) {
-                active.blur();
-              }
-            }
-            document.addEventListener('touchstart', blurOnOutsideTap, { passive: true });
-            document.addEventListener('click', blurOnOutsideTap);
-          
-            // Начальный фокус
-            window.addEventListener('load', () => {
-              inputs[0].focus();
-              prevCount = 0;
-              updateValue();
-            });
-          </script>
+  const inputs = document.querySelectorAll('.code-inputs input');
+  const btn = document.querySelector('.check-btn');
+  let prevCount = 0;
+
+  function updateButton() {
+    const filled = Array.from(inputs).filter(i => i.value !== '').length;
+    btn.classList.toggle('bg_active', filled === 5);
+    btn.classList.toggle('text-white', filled === 5);
+    btn.disabled = filled !== 5;
+    prevCount = filled;
+  }
+
+  inputs.forEach((input, idx) => {
+
+    // 🔢 Разрешаем только цифры
+    input.addEventListener('input', e => {
+      input.value = input.value.replace(/\D/g, '');
+
+      // ➡️ авто-переход
+      if (input.value && idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+      }
+      updateButton();
+    });
+
+    // ⬅️ backspace назад
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !input.value && idx > 0) {
+        inputs[idx - 1].focus();
+      }
+    });
+
+    // 📋 Вставка всего кода сразу
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 5);
+      paste.split('').forEach((char, i) => {
+        if (inputs[i]) inputs[i].value = char;
+      });
+      inputs[Math.min(paste.length, 4)].focus();
+      updateButton();
+    });
+  });
+
+  // ▶️ Переход по кнопке
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    const code = Array.from(inputs).map(i => i.value).join('');
+    window.location.href = "{% url 'verdict' %}?code=" + code;
+  });
+
+  // 🔄 Начальный фокус
+  window.addEventListener('load', () => {
+    inputs[0].focus();
+    updateButton();
+  });
+</script>
+
           
     </section>
 

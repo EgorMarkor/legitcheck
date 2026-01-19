@@ -45,6 +45,7 @@ MEDIA_URL = "/media/"
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'webapp',
     'pcwebapp',
     'unfold',

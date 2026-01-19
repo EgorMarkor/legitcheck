@@ -49,7 +49,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   padding: 2.3rem 2.6rem 2.3rem 2.6rem;
   display: flex;
   flex-direction: column;
@@ -186,7 +186,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   padding: 0.743rem 0.743rem 0.743rem 2.788rem;
   display: flex;
   flex-direction: row;
@@ -222,7 +222,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 4.17rem;
   height: 2.93rem;
@@ -270,7 +270,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   padding: 1.115rem 2.416rem 1.115rem 2.416rem;
   display: flex;
   flex-direction: column;
@@ -462,7 +462,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 52.8rem;
   height: 6.656999999999999rem;
@@ -557,7 +557,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -590,7 +590,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -623,7 +623,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -664,7 +664,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -716,7 +716,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -749,7 +749,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -782,7 +782,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -823,7 +823,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -856,7 +856,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   flex-shrink: 0;
   width: 10.9rem;
   height: 10.9rem;
@@ -898,7 +898,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   width: 150.9rem;
   height: 27rem;
   position: absolute;
@@ -1020,7 +1020,7 @@
       rgba(125, 182, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   width: 12.8rem;
   height: 12.8rem;
   position: absolute;
@@ -1159,7 +1159,7 @@
       rgba(179, 214, 255, 0) 100%
     )
   );
-  border-image-slice: 1;
+  
   padding: 2.3rem 2.6rem 2.3rem 2.6rem;
   width: 28.7rem;
   height: 7.9rem;

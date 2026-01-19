@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Legit Check — Услуги и цены</title>
+
+  <!-- Подключение ваших старых стилей (если нужно) -->
+  <link rel="stylesheet" href="{% static 'check/vars.css' %}">
+  <link rel="stylesheet" href="{% static 'check/style.css' %}">
+
+  <style>
+    html { font-size: 0.52vw; }
+    a, button, input, select, h1, h2, h3, h4, h5, * { box-sizing: border-box; margin:0; padding:0; border:none; text-decoration:none; background:none; -webkit-font-smoothing: antialiased; }
+    menu, ol, ul { list-style:none; margin:0; padding:0; }
+
+    body { background:#0A0D13; color:#fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Arial, sans-serif; }
+    .checker-span { color:#fff; } .checker-span2 { color:#13CD90; }
+
+    /* Контейнер + заголовки */
+    main { max-width:58.9rem; margin:0 auto; padding:3rem 2rem 8rem; }
+    h1 { font-size:2.4rem; font-weight:700; }
+    .sub { color:#9CA3AF; margin-top:.8rem; }
+
+    /* Прогресс-бар (как в референсе, декоративно) */
+    #progress-container { width:100%; background:#171C23; border-radius:30px; height:8px; overflow:hidden; margin:2rem 0 3rem; }
+    #progress-bar { background:#13CD90; height:100%; width:100%; border-radius:30px; }
+
+    /* Переключатель категорий услуг */
+    #switch { position:relative; display:flex; align-items:center; background:#0C0F14; border-radius:999px; width:100%; height:6.7rem; padding:.8rem; margin-bottom:2rem; }
+    #switch-indicator { position:absolute; inset:4px; width:50%; background:#171C23; border-radius:999px; transition:transform .3s ease; }
+    #switch button { z-index:1; flex:1; font-size:1.2rem; font-weight:500; cursor:pointer; color:#fff; }
+    #switch button.text-neutral-400 { color:#6b7280; }
+
+    /* Сетка карточек услуг */
+    .services-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:1.2rem; }
+    @media (max-width:1100px){ .services-grid{ grid-template-columns:repeat(2, 1fr); } }
+    @media (max-width:900px){ html{ font-size:14px; } .services-grid{ grid-template-columns:1fr; } }
+
+    /* Карточка услуги (переносим стиль прайс-карт) */
+    .price-card { position:relative; background:linear-gradient(to bottom, #171C24, #11151A); border-radius:1.6rem; padding:1.2rem 1.2rem 1.6rem; overflow:hidden; transition:transform .25s, box-shadow .25s; }
+    .price-card:hover { transform:translateY(-3px); box-shadow:0 12px 24px -10px #000; }
+    .price-card .badge { position:absolute; top:1rem; left:1rem; font-size:.75rem; padding:.3rem .7rem; border-radius:999px; background:#13CD901A; color:#13CD90; }
+    .price-card .icon { display:block; margin:.6rem auto 1rem; max-width:72%; }
+    .price-card h3 { font-size:1.25rem; font-weight:700; margin-bottom:.3rem; }
+    .price-card .lead { color:#9CA3AF; font-size:.9rem; line-height:1.4; min-height:3.2rem; }
+    .price-card .price { font-size:1.4rem; font-weight:800; margin:.8rem 0; }
+    .price-card .feat { display:flex; gap:.6rem; align-items:flex-start; color:#C5CAD3; font-size:.9rem; margin:.35rem 0; }
+    .price-card .dot { width:.45rem; height:.45rem; border-radius:50%; background:#13CD90; margin-top:.45rem; flex-shrink:0; opacity:.8; }
+    .btn-main { width:100%; height:3.2rem; border-radius:1.2rem; background:linear-gradient(90deg,#13CD90,#0ABA6F); color:#fff; font-size:1.05rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.6rem; margin-top:1rem; }
+
+    /* Блок «Как это работает» */
+    .how { background:linear-gradient(to bottom, #171C24, #11151A); border-radius:1.6rem; padding:1.6rem; margin-top:2rem; }
+    .how h2 { font-size:2rem; font-weight:700; margin-bottom:.6rem; }
+    .how .row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .how .step { background:#0C0F14; border-radius:1.2rem; padding:1rem 1.2rem; }
+    .how .step .n { width:2rem; height:2rem; display:inline-flex; align-items:center; justify-content:center; border-radius:.6rem; background:#171C23; margin-right:.6rem; font-weight:700; color:#13CD90; }
+    .muted { color:#9CA3AF; font-size:.95rem; }
+
+    /* Разделы/хедеры */
+    .section-title { font-size:2rem; font-weight:700; margin:1rem 0; }
+    .section-sub { color:#9CA3AF; margin-bottom:1.2rem; }
+  </style>
+</head>
+<body>
+<div class="_1-legit-default">
+  <div class="_1-legit-default__frame-2131329239">
+    {% include 'pc/header.html' %}
+
+    <main>
+      <h1>Услуги и цены</h1>
+      <p class="sub">Выберите подходящую услугу — мы проверим вещь и дадим понятный вердикт. Оплата в рублях.</p>
+
+      <!-- Декоративный прогресс (полный) -->
+      <div id="progress-container"><div id="progress-bar"></div></div>
+
+      <!-- Переключатель категорий: базовые / люкс -->
+      <section aria-label="Категории услуг">
+        <div id="switch">
+          <div id="switch-indicator"></div>
+          <button id="btn-basic">Базовые услуги</button>
+          <button id="btn-luxury" class="text-neutral-400">Люкс & дополнительные</button>
+        </div>
+      </section>
+
+      <!-- БАЗОВЫЕ -->
+      <section id="services-basic">
+        <div class="section-title">Базовые услуги</div>
+        <div class="section-sub">Подходят для большинства сценариев проверки.</div>
+
+        <div class="services-grid">
+          <!-- 24 часа -->
+          <article class="price-card">
+            <span class="badge">Хит</span>
+            <img src="{% static 'lupa.png' %}" alt="" class="icon"/>
+            <h3>Проверка — 24 часа</h3>
+            <p class="lead">Стандартная проверка с подробным анализом фотографий и факторов оригинальности.</p>
+            <div class="price">450 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Вердикт в течение 24 часов</span></div>
+            <div class="feat"><span class="dot"></span><span>Поддержка в чате по итогу</span></div>
+            <button class="btn-main" data-service="24h">Оформить</button>
+          </article>
+
+          <!-- 15 минут (быстро) -->
+          <article class="price-card">
+            <span class="badge">Самое быстрое</span>
+            <img src="{% static 'clock.png' %}" alt="" class="icon"/>
+            <h3>Проверка — 15 минут (премиум)</h3>
+            <p class="lead">Экстренный приоритет: эксперт подключится первым делом и даст ответ максимально быстро.</p>
+            <div class="price">650 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Приоритетная очередь</span></div>
+            <div class="feat"><span class="dot"></span><span>Короткий чек-лист факторов</span></div>
+            <button class="btn-main" data-service="15min-expensive">Оформить</button>
+          </article>
+
+          <!-- 15 минут (базовый приоритет) -->
+          <article class="price-card">
+            <img src="{% static 'almaz.png' %}" alt="" class="icon"/>
+            <h3>Проверка — 15 минут (базовая)</h3>
+            <p class="lead">Высокая скорость без расширенного пакета привилегий премиум-очереди.</p>
+            <div class="price">600 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Быстрый вердикт</span></div>
+            <div class="feat"><span class="dot"></span><span>Краткий комментарий</span></div>
+            <button class="btn-main" data-service="15min-basic">Оформить</button>
+          </article>
+        </div>
+
+        <!-- Допы, применимые к любой проверке -->
+        <div class="section-title" style="margin-top:2rem;">Дополнения</div>
+        <div class="services-grid">
+          <article class="price-card">
+            <h3>Обоснование вердикта</h3>
+            <p class="lead">Структурированный разбор: где и что мы фиксируем на фото, ссылки на референсы и пояснения.</p>
+            <div class="price">+150 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Подойдёт для споров с продавцом</span></div>
+            <div class="feat"><span class="dot"></span><span>Чёткие критерии и детали</span></div>
+            <button class="btn-main" data-service="rationale">Добавить к заказу</button>
+          </article>
+
+          <article class="price-card">
+            <h3>Дополнительная консультация</h3>
+            <p class="lead">Краткая сессия «вопрос-ответ» по модели, рынку и рискам покупки.</p>
+            <div class="price">200 ₽</div>
+            <div class="feat"><span class="dot"></span><span>До 10 минут чата</span></div>
+            <div class="feat"><span class="dot"></span><span>Советы по безопасной сделке</span></div>
+            <button class="btn-main" data-service="consult">Оформить</button>
+          </article>
+
+          <article class="price-card">
+            <h3>Повторная проверка</h3>
+            <p class="lead">Если продавец прислал новые фото — повторно оценим без полного переоформления.</p>
+            <div class="price">250 ₽</div>
+            <div class="feat"><span class="dot"></span><span>До 6 новых фотографий</span></div>
+            <div class="feat"><span class="dot"></span><span>Действует 72 часа от первой проверки</span></div>
+            <button class="btn-main" data-service="recheck">Оформить</button>
+          </article>
+        </div>
+      </section>
+
+      <!-- ЛЮКС / ДОП ПАКЕТЫ -->
+      <section id="services-luxury" style="display:none;">
+        <div class="section-title">Люкс & комплексные пакеты</div>
+        <div class="section-sub">Для дорогих покупок и ситуаций, где важны репутация и документальное подтверждение.</div>
+
+        <div class="services-grid">
+          <article class="price-card">
+            <span class="badge">Документ</span>
+            <img src="{% static 'diploma.png' %}" alt="" class="icon"/>
+            <h3>Официальное заключение PDF</h3>
+            <p class="lead">Формализованный документ с печатью сервиса, детальными аргументами и фото-вставками.</p>
+            <div class="price">900 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Подходит для маркетплейсов и споров</span></div>
+            <div class="feat"><span class="dot"></span><span>PDF до 3 страниц</span></div>
+            <button class="btn-main" data-service="pdf">Заказать</button>
+          </article>
+
+          <article class="price-card">
+            <span class="badge">VIP</span>
+            <img src="{% static 'vip.png' %}" alt="" class="icon"/>
+            <h3>Премиум-сопровождение сделки</h3>
+            <p class="lead">Отбор продавца, чек-лист запросов, пост-проверка, рекомендации по оплате и доставке.</p>
+            <div class="price">1 900 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Персональный куратор</span></div>
+            <div class="feat"><span class="dot"></span><span>Поддержка до 7 дней</span></div>
+            <button class="btn-main" data-service="vip-support">Заказать</button>
+          </article>
+
+          <article class="price-card">
+            <img src="{% static 'shield.png' %}" alt="" class="icon"/>
+            <h3>Пакет «Безопасная покупка»</h3>
+            <p class="lead">Проверка товара + обоснование + повторная проверка по новым фото.</p>
+            <div class="price">950 ₽</div>
+            <div class="feat"><span class="dot"></span><span>Экономия  - ~100 ₽</span></div>
+            <div class="feat"><span class="dot"></span><span>Действует 5 дней</span></div>
+            <button class="btn-main" data-service="safe-pack">Оформить</button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Как это работает -->
+      <section class="how">
+        <h2>Как это работает</h2>
+        <p class="muted">Загрузка фото — быстрая оценка — чёткий вердикт. Документы и консультации — по запросу.</p>
+        <div class="row" style="margin-top:.6rem;">
+          <div class="step"><span class="n">1</span><strong>Выбираете услугу</strong><br><span class="muted">Определите скорость и нужные дополнения</span></div>
+          <div class="step"><span class="n">2</span><strong>Отправляете фото</strong><br><span class="muted">Снимки по чек-листу — так быстрее и точнее</span></div>
+          <div class="step"><span class="n">3</span><strong>Получаете вердикт</strong><br><span class="muted">Кратко или с обоснованием — на ваш выбор</span></div>
+          <div class="step"><span class="n">4</span><strong>Поддержка</strong><br><span class="muted">Поможем в диалоге с продавцом при необходимости</span></div>
+        </div>
+      </section>
+
+      <!-- Примечания -->
+      <section style="margin-top:2rem;">
+        <div class="muted">
+          <ul style="display:grid; gap:.4rem;">
+            <li>• Цены указаны в рублях и могут корректироваться при акциях.</li>
+            <li>• «Повторная проверка» доступна при наличии исходного заказа.</li>
+            <li>• Для премиум-очереди время считается с момента получения полного пакета фото.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Низ страницы, как в вашем шаблоне -->
+    <div class="_1-legit-default__frame-2131329238" style="top: 120.9rem;">
+      <div class="_1-legit-default__frame-2131329181">
+        <div class="_1-legit-default__frame-2131329243">
+          <div class="_1-legit-default__frame-2131329242">
+            <div class="_1-legit-default__frame-1000002421">
+              <div class="_1-legit-default__frame-2131328953">
+                <img class="_1-legit-default__group-9001" src="{% static 'check/group-90010.svg' %}" />
+                <div class="_1-legit-default__frame-1948754082">
+                  <div class="_1-legit-default__checker"><span><span class="checker-span">Check</span><span class="checker-span2">er</span></span></div>
+                </div>
+              </div>
+              <div class="_1-legit-default__headline">Legit Check - это профессиональный сервис с помощью которого вы сможете проверить любую вещь на оригинальность.</div>
+            </div>
+            <div class="_1-legit-default__headline2">© 2019- 2025 LEGIT CHECK. Все права защищены.</div>
+          </div>
+          <div class="_1-legit-default__frame-2131329241">
+            <div class="_1-legit-default__frame-1948754013">
+              <div class="_1-legit-default__frame-1948753974">
+                <div class="_1-legit-default__qr-code-1">
+                  <img class="_1-legit-default__vector" src="{% static 'check/vector0.svg' %}" />
+                  <img class="_1-legit-default__group2" src="{% static 'check/group1.svg' %}" />
+                  <div class="_1-legit-default__qr-code-1-1">
+                    <img class="_1-legit-default__vector2" src="{% static 'check/vector1.svg' %}" />
+                    <img class="_1-legit-default__group3" src="{% static 'check/group2.svg' %}" />
+                  </div>
+                </div>
+                <div class="_1-legit-default__frame-1948753973">
+                  <div class="_1-legit-default__frame-1948753972"></div>
+                  <div class="_1-legit-default__frame-1948753971"></div>
+                </div>
+              </div>
+            </div>
+            <div class="_1-legit-default__headline3">Политика конфиденциальности</div>
+            <div class="_1-legit-default__headline4">Пользовательское соглашение</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Нижняя панель навигации -->
+  <div class="_1-legit-default__border2">
+    <div class="_1-legit-default__frame-1948754056">
+      <div class="_1-legit-default__frame-1948754055">
+        <div class="_1-legit-default__frame-1948754052">
+          <img class="_1-legit-default__group-8745" src="{% static 'check/group-87450.svg' %}" />
+          <div class="_1-legit-default__div9">Главная</div>
+        </div>
+        <div class="_1-legit-default__bt"></div>
+      </div>
+      <div class="_1-legit-default__frame-1948754076">
+        <div class="_1-legit-default__frame-1948754054"><div class="_1-legit-default__go">GO</div></div>
+      </div>
+      <div class="_1-legit-default__frame-1948754053">
+        <img class="_1-legit-default__group-87452" src="{% static 'check/group-87451.svg' %}" />
+        <div class="_1-legit-default__div10">Вердикты</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Интеграция Telegram WebApp (если есть)
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) tg.BackButton.show();
+
+  // Переключатель разделов «Базовые» / «Люкс»
+  const btnBasic = document.getElementById('btn-basic');
+  const btnLuxury = document.getElementById('btn-luxury');
+  const switchIndicator = document.getElementById('switch-indicator');
+  const sectBasic = document.getElementById('services-basic');
+  const sectLuxury = document.getElementById('services-luxury');
+
+  btnBasic.addEventListener('click', ()=>{
+    switchIndicator.style.transform='translateX(0)';
+    btnBasic.classList.remove('text-neutral-400');
+    btnLuxury.classList.add('text-neutral-400');
+    sectBasic.style.display='block';
+    sectLuxury.style.display='none';
+  });
+  btnLuxury.addEventListener('click', ()=>{
+    switchIndicator.style.transform='translateX(100%)';
+    btnLuxury.classList.remove('text-neutral-400');
+    btnBasic.classList.add('text-neutral-400');
+    sectBasic.style.display='none';
+    sectLuxury.style.display='block';
+  });
+
+  // Кнопки «Оформить» — примеры действий (подключите ваш backend)
+  document.querySelectorAll('.btn-main[data-service]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const service = btn.getAttribute('data-service');
+      // Пример редиректа/действия — замените на ваш роут
+      // Можно передать service как query-параметр
+      window.location.href = "{% url 'pc_pay' %}" + "?service=" + encodeURIComponent(service);
+    });
+  });
+</script>
+</body>
+</html>

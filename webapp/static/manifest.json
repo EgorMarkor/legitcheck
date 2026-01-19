@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Checker - Legit Check",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Checker",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "lang": "ru"
+}

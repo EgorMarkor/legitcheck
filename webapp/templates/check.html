@@ -5,11 +5,12 @@
 <style>
   .preview-img {
     border-radius: 10px;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
   }
 </style>
-<body class="bg-[#0A0D13] text-white">
+<body class="text-white">
   {% include 'header.html' %}
-
   <!-- Шаг 1: Выбор бренда -->
   <section class="px-4 py-2">
     <h1 id="form-title" class="text-2xl font-bold mb-2">Выберите бренд</h1>
@@ -20,334 +21,687 @@
       <div id="progress-bar" class="bg-[#13CD90] h-full w-0 rounded-[30px] transition-all duration-500 ease-in-out"></div>
     </div>
   </section>
-
   <!-- Шаг 1: Блок выбора бренда -->
   <section id="brand-section" class="px-4 pb-4 transition-opacity duration-500 ease-in-out">
     <!-- Переключатель -->
-    <div id="switch" class="relative flex items-center bg-[#0C0F14] rounded-full mb-4 w-full h-[3.7rem] p-3">
-      <div id="switch-indicator" class="absolute inset-1 w-1/2 bg-[#171C23] rounded-full transition-transform duration-300 ease-in-out"></div>
-      <button id="btn-basic" class="relative z-10 flex-1 text-center font-medium">Базовые</button>
-      <button id="btn-luxury" class="relative z-10 flex-1 text-center font-medium text-neutral-400">Люкс</button>
+    <div id="switch"
+       class="relative mx-auto mb-5 flex w-full max-w-xl items-center rounded-full bg-[#0C0F14] p-2">
+      <div id="switch-indicator"
+          class="pointer-events-none absolute inset-y-1 left-1 w-1/3 rounded-full bg-[#171C23] transition-transform duration-300 ease-in-out"></div>
+      <button data-tab="all" class="seg-btn relative z-10 flex-1 py-3 text-center font-semibold">Все</button>
+      <button data-tab="basic" class="seg-btn relative z-10 flex-1 py-3 text-center font-medium text-neutral-400">Обычные</button>
+      <button data-tab="luxury" class="seg-btn relative z-10 flex-1 py-3 text-center font-medium text-neutral-400">Люкс</button>
     </div>
     <!-- Сетка брендов базовые -->
-    <div id="brands-basic" class="grid grid-cols-3 gap-4">
-      <img src="{% static 'jordan.png' %}"        data-brand="jordan"        class="brend cursor-pointer" alt="jordan" />
-      <img src="{% static 'champion.png' %}"      data-brand="champion"      class="brend cursor-pointer" alt="champion" />
-      <img src="{% static 'palmangels.png' %}"    data-brand="palmangels"    class="brend cursor-pointer" alt="palmangels" />
-      <img src="{% static 'yeezy.png' %}"         data-brand="yeezy"         class="brend cursor-pointer" alt="yeezy" />
-      <img src="{% static 'nike.png' %}"          data-brand="nike"          class="brend cursor-pointer" alt="nike" />
-      <img src="{% static 'stoneisland.png' %}"   data-brand="stoneisland"   class="brend cursor-pointer" alt="stoneisland" />
-      <img src="{% static 'nb.png' %}"            data-brand="nb"            class="brend cursor-pointer" alt="nb" />
-      <img src="{% static 'eye.png' %}"           data-brand="eye"           class="brend cursor-pointer" alt="eye" />
-      <img src="{% static 'puma.png' %}"          data-brand="puma"          class="brend cursor-pointer" alt="puma" />
-      <img src="{% static 'supreme.png' %}"       data-brand="supreme"       class="brend cursor-pointer" alt="supreme" />
+    <div class="relative mx-auto w-full max-w-4xl">
+    <!-- Вертикальная A–Z навигация справа -->
+    <nav id="az-rail"
+         class="pointer-events-none absolute right-0 top-0 hidden h-full select-none md:block">
+      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-neutral-500">
+        <!-- буквы создаст скрипт -->
+      </ul>
+    </nav>
+    <!-- Поле поиска бренда -->
+    <div class="mx-auto mb-5 w-full max-w-xl">
+      <div class="relative">
+        <input
+          id="brand-search"
+          type="text"
+          placeholder="Поиск бренда..."
+          class="w-full rounded-full bg-[#0C0F14] px-5 py-3 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
+        />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.65 5.65a7.5 7.5 0 016 12.99z" />
+        </svg>
+      </div>
     </div>
-    <!-- Сетка брендов люкс -->
-    <div id="brands-luxury" class="grid grid-cols-3 gap-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-      <img src="{% static 'louisvuitton.png' %}" data-brand="louisvuitton"  class="brend cursor-pointer" alt="louisvuitton" />
-      <img src="{% static 'vetements.png' %}"    data-brand="vetements"     class="brend cursor-pointer" alt="vetements" />
-      <img src="{% static 'dg.png' %}"           data-brand="dg"            class="brend cursor-pointer" alt="dg" />
-      <img src="{% static 'balenciaga.png' %}"   data-brand="balenciaga"    class="brend cursor-pointer" alt="balenciaga" />
-      <img src="{% static 'miumiu.png' %}"       data-brand="miumiu"        class="brend cursor-pointer" alt="miumiu" />
-      <img src="{% static 'dior.png' %}"         data-brand="dior"          class="brend cursor-pointer" alt="dior" />
-      <img src="{% static 'cartier.png' %}"      data-brand="cartier"       class="brend cursor-pointer" alt="cartier" />
-      <img src="{% static 'bottega.png' %}"      data-brand="bottega"       class="brend cursor-pointer" alt="bottega" />
-      <img src="{% static 'gucci.png' %}"        data-brand="gucci"         class="brend cursor-pointer" alt="gucci" />
-      <img src="{% static 'moncler.png' %}"      data-brand="moncler"       class="brend cursor-pointer" alt="moncler" />
+    <!-- Контейнер секций -->
+    <div id="brand-list" class="">
+      <!-- секции A, B, C... создаст скрипт -->
     </div>
+  </div>
   </section>
-
   <!-- Шаг 2: Выбор типа вещи -->
   <section id="item-section" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <h1 class="text-2xl font-bold mb-4">Выберите тип вещи</h1>
     <div id="itemType" class="grid grid-cols-3 gap-4">
-      <img src="{% static 'sneakers_pl.png' %}" data-type="sneakers" class="type cursor-pointer" alt="sneakers" />
-      <img src="{% static 'bag.png' %}"         data-type="bag"      class="type cursor-pointer" alt="bag" />
-      <img src="{% static 'pants.png' %}"       data-type="pants"    class="type cursor-pointer" alt="pants" />
-      <img src="{% static 'hoodie.png' %}"      data-type="hoodie"   class="type cursor-pointer" alt="hoodie" />
-      <img src="{% static 'belt.png' %}"        data-type="belt"     class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/sneakers.png' %}" data-type="sneakers" class="type cursor-pointer" alt="sneakers" />
+      <img src="{% static 'categories/clothes.png' %}" data-type="clothes" class="type cursor-pointer" alt="bag" />
+      <img src="{% static 'categories/bags.png' %}" data-type="bags" class="type cursor-pointer" alt="pants" />
+      <img src="{% static 'categories/belts.png' %}" data-type="belts" class="type cursor-pointer" alt="hoodie" />
+      <img src="{% static 'categories/watch.png' %}" data-type="watch" class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/cosmetics.png' %}" data-type="cosmetics" class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/jewerly.png' %}" data-type="jewerly" class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/toys.png' %}" data-type="toys" class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/accsesory.png' %}" data-type="accsesory" class="type cursor-pointer" alt="belt" />
+      <img src="{% static 'categories/others.png' %}" data-type="others" class="type cursor-pointer" alt="belt" />
     </div>
   </section>
-
   <!-- Шаг 3: Загрузка фотографий -->
-
   <!-- sneakers -->
   <section id="check_sneakers" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <!-- Внешняя сторона -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'external_boots.png' %}" class="w-40 h-auto preview-img" alt="Внешняя сторона" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Внешняя сторона</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте кроссовок с внешней стороны</p>
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 sm:grid-cols-4 gap-2">
+      <!-- 1 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/vnesh_prav.png' %}" alt="Внешний вид (справа)" class="w-30 h-30 opacity-70">
         </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+        <p class="text-white text-sm text-center leading-snug">Внешний вид<br>(справа)</p>
+      </div>
+      <!-- 2 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/vnesh_lev.png' %}" alt="Внешний вид (слева)" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Внешний вид<br>(слева)</p>
+      </div>
+      <!-- 3 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/pyatka.png' %}" alt="Пятка (справа)" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Пятка<br>(справа)</p>
+      </div>
+      <!-- 4 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/podoshva.png' %}" alt="Подошва (справа)" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Подошва<br>(справа)</p>
+      </div>
+      <!-- 5 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/verh_stelk.png' %}" alt="Верхняя часть стельки (справа)" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Верхняя часть<br>стельки (справа)</p>
+      </div>
+      <!-- 6 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/zad_stel.png' %}" alt="Задняя часть стельки (справа)" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Задняя часть<br>стельки (справа)</p>
+      </div>
+      <!-- 7 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/inside_shov.png' %}" alt="Внутренний шов (справа)" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Внутренний шов<br>(справа)</p>
       </div>
     </div>
-    <!-- Внутренняя сторона -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'internal_boots.png' %}" class="w-40 h-auto preview-img" alt="Внутренняя сторона" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Внутренняя сторона</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте кроссовок с внутренней стороны</p>
+    <h2 class="text-white text-xl font-semibold mt-8 mb-4">Дополнительные фотографии</h2>
+    <div class="grid grid-cols-4 sm:grid-cols-4 gap-2">
+      <!-- 8 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/vnutr_etik.png' %}" alt="Внутренняя этикетка (справа)" class="w-30 h-30 opacity-70">
         </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
+        <p class="text-white text-sm text-center leading-snug">Внутр.этикетка<br>(справа)</p>
       </div>
-    </div>
-    <!-- Носок -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'sock_boots.png' %}" class="w-40 h-auto preview-img" alt="Носок" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Носок</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте кроссовок со стороны носка</p>
+      <!-- 9 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/shtamp.png' %}" alt="Штамп на коробке" class="w-30 h-30 opacity-70">
         </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
+        <p class="text-white text-sm text-center leading-snug">Штамп<br>на коробке</p>
       </div>
-    </div>
-    <!-- Вид сзади -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'behind_boots.png' %}" class="w-40 h-auto preview-img" alt="Вид сзади" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Вид сзади</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте кроссовок сзади</p>
+      <!-- 10 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'sneakers/etik.png' %}" alt="Этикетка коробки" class="w-30 h-30 opacity-70">
         </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
-      </div>
-    </div>
-    <!-- Подошва -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'sole_boots.png' %}" class="w-40 h-auto preview-img" alt="Подошва" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Подошва</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте подошву кроссовка</p>
-        </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
-      </div>
-    </div>
-    <!-- Внутренняя бирка -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'internal_tag_boots.png' %}" class="w-40 h-auto preview-img" alt="Внутренняя бирка" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Внутренняя бирка</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте внутреннюю бирку кроссовка</p>
-        </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
-      </div>
-    </div>
-    <!-- Бирка на коробке -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'outside_tag_boots.png' %}" class="w-40 h-auto preview-img" alt="Бирка на коробке" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <div>
-          <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Бирка на коробке</h3>
-          <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте бирку на коробке от кроссовок</p>
-        </div>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
-        </div>
+        <p class="text-white text-sm text-center leading-snug">Этикетка<br>коробки</p>
       </div>
     </div>
   </section>
-
-  <!-- bag -->
-  <section id="check_bag" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <!-- Общий вид -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'full_bag.png' %}" class="w-40 h-auto preview-img" alt="Общий вид" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Общий вид</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте общий вид сумки</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+  <section id="check_clothes" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-2">
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'clothes/1.png' %}" alt="1" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Внешний вид
+(спереди)</p>
       </div>
-    </div>
-    <!-- Молния/застежка -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'lighting_bags.png' %}" class="w-40 h-auto preview-img" alt="Молния/застежка" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Молния/застежка</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте молнию или застёжку сумки</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'clothes/2.png' %}" alt="1" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Внешний вид
+(сзади)</p>
       </div>
-    </div>
-    <!-- Логотип/принт -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'logo_bag.png' %}" class="w-40 h-auto preview-img" alt="Логотип/принт" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Логотип/принт</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте логотип/принт сумки</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'clothes/3.png' %}" alt="2" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Этикетка</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'clothes/4.png' %}" alt="3" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Этикетка (спереди)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-1">
+          <img src="{% static 'clothes/5.png' %}" alt="4" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Этикетка (сзади)</p>
       </div>
     </div>
   </section>
-
-  <!-- pants -->
-  <section id="check_pants" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <!-- Общий вид -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'full_pants.png' %}" class="w-40 h-auto preview-img" alt="Общий вид штанов" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Общий вид</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте общий вид штанов</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+  <section id="check_bags" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-3">
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/1.png' %}" alt="front" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
       </div>
-    </div>
-    <!-- Логотип/принт -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'logo_pants.png' %}" class="w-40 h-auto preview-img" alt="Логотип/принт штанов" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Логотип/принт</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте логотип/принт штанов</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/2.png' %}" alt="texture" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Материал с<br>текстурой кожи</p>
       </div>
-    </div>
-  </section>
-
-  <!-- hoodie -->
-  <section id="check_hoodie" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <!-- Общий вид -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'full_hoodie.png' %}" class="w-40 h-auto preview-img" alt="Общий вид худи" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Общий вид</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте общий вид худи</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/3.png' %}" alt="inner-label" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Внутренняя<br>этикетка</p>
       </div>
-    </div>
-    <!-- Логотип/принт -->
-    <div class="bg-gradient-to-b from-[#171C24] to[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'logo_hoodie.png' %}" class="w-40 h-auto preview-img" alt="Логотип/принт худи" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Логотип/принт</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте логотип/принт худи</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/4.png' %}" alt="serial" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Серийный код</p>
       </div>
-    </div>
-    <!-- Шейные бирки -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'neck_tags_hoodie.png' %}" class="w-40 h-auto preview-img" alt="Шейные бирки" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Шейные бирки</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте шейные бирки худи</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/5.png' %}" alt="zip-front" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Молния<br>(спереди)</p>
       </div>
-    </div>
-    <!-- Нижние бирки -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'side_tags_hoodie.png' %}" class="w-40 h-auto preview-img" alt="Нижние бирки" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Нижние бирки</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте нижние бирки худи</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/6.png' %}" alt="zip-back" class="w-30 h-30 opacity-60">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Молния<br>(сзади)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/7.png' %}" alt="zip-chain" class="w-30 h-30 opacity-60">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Молния<br>(цепочка)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'bags/8.png' %}" alt="buckle" class="w-30 h-30 opacity-60">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Пряжка</p>
       </div>
     </div>
   </section>
-
-  <!-- belt -->
-  <section id="check_belt" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
-    <!-- Общий вид -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'full_belt.png' %}" class="w-40 h-auto preview-img" alt="Общий вид ремня" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Общий вид</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте общий вид ремня</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+  <section id="check_belts" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-3">
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/1.png' %}" alt="front" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
       </div>
-    </div>
-    <!-- Логотип/принт -->
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6 flex items-center space-x-6 mt-4 check-item">
-      <img src="{% static 'logo_belt.png' %}" class="w-40 h-auto preview-img" alt="Логотип/принт ремня" />
-      <div class="flex-1 flex flex-col justify-between h-40">
-        <h3 class="text-white text-[1.2rem] font-semibold leading-tight">Логотип/принт</h3>
-        <p class="text-neutral-500 text-[1rem] mt-2 leading-relaxed">Сфотографируйте логотип/принт ремня</p>
-        <div class="w-full h-16 bg-[#13CD900F] rounded-xl flex items-center justify-center upload-btn cursor-pointer relative">
-          <img src="{% static 'camera.svg' %}" class="w-[2.6rem] h-[2.6rem]" alt="Загрузить" />
-          <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 file-input" />
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/2.png' %}" alt="serial" class="w-30 h-30 opacity-70">
         </div>
+        <p class="text-white text-sm text-center leading-snug">Серийный код</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/3.png' %}" alt="pin1" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Информация о<br>пин-коде (1)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/4.png' %}" alt="pin2" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Информация о<br>пин-коде (2)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/5.png' %}" alt="metal-front" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Метал. нашивка<br>(спереди)</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'belts/6.png' %}" alt="metal-back" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Метал. нашивка<br>(сзади)</p>
       </div>
     </div>
   </section>
-
+  <section id="check_watch" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-3 mb-8">
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/1.png' %}" alt="dial-front" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Сторона<br>циферблата</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/2.png' %}" alt="back-case" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Задняя сторона<br>корпуса</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/3.png' %}" alt="dial-closeup" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Циферблат<br>крупным планом</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/4.png' %}" alt="hand-rotation" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Деталь<br>поворота руки</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/5.png' %}" alt="hand-tip" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Деталь<br>наконечника руки</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/6.png' %}" alt="crown" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Деталь<br>короны</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/7.png' %}" alt="clasp-detail" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Деталь<br>застежки</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/8.png' %}" alt="logo-clasp" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Застежка<br>с логотипом</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/9.png' %}" alt="back-cover-close" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Задняя крышка<br>крупным планом</p>
+      </div>
+    </div>
+    <h2 class="text-white text-xl font-semibold mb-4">Дополнительные фотографии</h2>
+    <div class="grid grid-cols-4 gap-3">
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/10.png' %}" alt="extra-photo" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Доп. фото<br>общий вид</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/11.png' %}" alt="engraving" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Гравировка<br>модели мех.</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/12.png' %}" alt="shock-absorber" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Амортизатор<br>крупным планом</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/13.png' %}" alt="auth-card-1" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Карточка<br>подлинности 1</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/14.png' %}" alt="auth-card-2" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Карточка<br>подлинности 2</p>
+      </div>
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'clock/15.png' %}" alt="extra" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Доп</p>
+      </div>
+    </div>
+  </section>
+  <section id="check_cosmetics" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-3">
+      <!-- 1 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/1.png' %}" alt="front" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
+      </div>
+      <!-- 2 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/2.png' %}" alt="back" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Вид сзади</p>
+      </div>
+      <!-- 3 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/3.png' %}" alt="top-cap" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Верх. часть<br>крышки бутылки</p>
+      </div>
+      <!-- 4 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/4.png' %}" alt="body-pattern" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Рисунок корпуса<br>бутылки</p>
+      </div>
+      <!-- 5 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/5.png' %}" alt="bottom" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Дно бутылки</p>
+      </div>
+      <!-- 6 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/6.png' %}" alt="inner-cap" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Внутр. крышка<br>со вспышкой</p>
+      </div>
+      <!-- 7 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/7.png' %}" alt="closeup" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Крупный план</p>
+      </div>
+      <!-- 8 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/8.png' %}" alt="side-closeup" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Крупный план<br>боковой части</p>
+      </div>
+      <!-- 9 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/9.png' %}" alt="inner-press" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Внутр. прижим.<br>головки</p>
+      </div>
+      <!-- 10 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/10.png' %}" alt="inner-closeup" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Крупный план<br>внутр. части</p>
+      </div>
+      <!-- 11 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/11.png' %}" alt="tube-connection" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Соединение<br>соломы</p>
+      </div>
+      <!-- 12 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/12.png' %}" alt="tube-closeup" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Солома<br>крупным планом</p>
+      </div>
+      <!-- 13 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/13.png' %}" alt="box-front" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Передняя часть<br>коробки</p>
+      </div>
+      <!-- 14 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/14.png' %}" alt="box-back" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Задняя часть<br>коробки</p>
+      </div>
+      <!-- 15 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/15.png' %}" alt="box-top" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Верхняя часть<br>коробки</p>
+      </div>
+      <!-- 16 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'perfume/16.png' %}" alt="box-bottom" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Дно коробки</p>
+      </div>
+    </div>
+  </section>
+  <section id="check_jewerly" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+<div class="grid grid-cols-4 gap-3">
+  <!-- 1 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/1.png' %}" alt="front-view" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
+  </div>
+  <!-- 2 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/2.png' %}" alt="engraving" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Гравировка/<br>детали</p>
+  </div>
+  <!-- 3 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/3.png' %}" alt="inner-engraving-1" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Внутренняя<br>гравировка 1</p>
+  </div>
+  <!-- 4 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/4.png' %}" alt="inner-engraving-2" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Внутренняя<br>гравировка 2</p>
+  </div>
+  <!-- 5 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/5.png' %}" alt="buckle-1" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Пряжка</p>
+  </div>
+  <!-- 6 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'jewelry/6.png' %}" alt="buckle-2" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Пряжка</p>
+  </div>
+</div>
+  </section>
+  <section id="check_toys" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+<div class="grid grid-cols-4 gap-3 mb-8">
+  <!-- 1 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/1.png' %}" alt="front-view" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
+  </div>
+  <!-- 2 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/2.png' %}" alt="back-view" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид сзади</p>
+  </div>
+  <!-- 3 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/3.png' %}" alt="top-view" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид сверху</p>
+  </div>
+  <!-- 4 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/4.png' %}" alt="bottom-view" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид снизу</p>
+  </div>
+  <!-- 5 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/5.png' %}" alt="left-side" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид сбоку<br>(слева)</p>
+  </div>
+  <!-- 6 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/6.png' %}" alt="right-side" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Вид сбоку<br>(справа)</p>
+  </div>
+  <!-- 7 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/7.png' %}" alt="qr" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">QR-код</p>
+  </div>
+  <!-- 8 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/8.png' %}" alt="brand-logo" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Логотип бренда</p>
+  </div>
+</div>
+<h2 class="text-white text-xl font-semibold mb-4">Дополнительные фотографии</h2>
+<div class="grid grid-cols-4 gap-3">
+  <!-- 1 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/9.png' %}" alt="box-front-details" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Детали коробки<br>(спереди)</p>
+  </div>
+  <!-- 2 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/10.png' %}" alt="box-back-info" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Подр. о коробке<br>(сзади)</p>
+  </div>
+  <!-- 3 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/11.png' %}" alt="box-texture" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Текстура коробки</p>
+  </div>
+  <!-- 4 -->
+  <div class="rounded-2xl flex flex-col items-center">
+    <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+      <img src="{% static 'box/12.png' %}" alt="laser-name" class="w-30 h-30 opacity-70">
+    </div>
+    <p class="text-white text-sm text-center leading-snug">Название Laser<br>(эксклюзив)</p>
+  </div>
+</div>
+  </section>
+  <section id="check_accsesory" class="px-4 pb-4 hidden opacity-0 transition-opacity duration-500 ease-in-out">
+    <h2 class="text-white text-xl font-semibold mb-4">Необходимые фотографии</h2>
+    <div class="grid grid-cols-4 gap-3 mb-8">
+      <!-- 1 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/1.png' %}" alt="front-view" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Вид спереди</p>
+      </div>
+      <!-- 2 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/2.png' %}" alt="inner-label" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Внутренняя<br>этикетка</p>
+      </div>
+      <!-- 3 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/3.png' %}" alt="wash-label" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Этикетка<br>для стирки</p>
+      </div>
+    </div>
+    <h2 class="text-white text-xl font-semibold mb-4">Дополнительные фотографии</h2>
+    <div class="grid grid-cols-4 gap-3">
+      <!-- 1 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/4.png' %}" alt="label-size" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Размер<br>этикетки</p>
+      </div>
+      <!-- 2 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/5.png' %}" alt="details" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Другие<br>подробности</p>
+      </div>
+      <!-- 3 -->
+      <div class="rounded-2xl flex flex-col items-center">
+        <div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">
+          <img src="{% static 'accessories/6.png' %}" alt="extra" class="w-30 h-30 opacity-70">
+        </div>
+        <p class="text-white text-sm text-center leading-snug">Доп</p>
+      </div>
+    </div>
+  </section>
 <section id="obsh_type" class="hidden opacity-0 transition-opacity duration-500 ease-in-out">
-
   <!-- Дополнительные фотографии -->
-
-  <section class="px-4 pb-4">
-    <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-6">
-      <h2 class="text-white text-2xl font-semibold">Дополнительные фотографии</h2>
-      <p class="text-neutral-500 mt-2">
-        Загрузите дополнительные фото, которые могут помочь при проверке
-      </p>
-      <!-- контейнер для превью -->
-      <div id="additional-previews" class="flex flex-wrap gap-2 mt-4"></div>
-      <!-- input с multiple -->
-      <div class="w-full h-16 bg-[#0C0F14] rounded-xl mt-4 flex items-center justify-center relative">
-        <img src="{% static 'camera.svg' %}" class="w-6 h-6 text-[#3DDC97]" alt="Camera" />
-        <input
-          id="additional-photos-input"
-          type="file"
-          accept="image/*"
-          multiple
-          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        />
-      </div>
-    </div>
-  </section>
-  
-
+ 
 <!-- Комментарий -->
 <section class="px-4 pb-4">
   <label for="comment" class="block text-white text-lg font-medium mb-2">Комментарий</label>
@@ -358,7 +712,6 @@
     class="w-full bg-[#0C0F14] rounded-2xl p-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
   ></textarea>
 </section>
-
 <!-- Кнопка Продолжить -->
 <section class="px-4 pb-8">
   <button
@@ -367,21 +720,18 @@
     Продолжить
   </button>
 </section>
-
 </section>
-
-
 <!-- Секция с вариантами вердикта (скрыта) -->
 <section id="verdict-section" class="px-4 pb-4 hidden space-y-6">
   <!-- Итоговая плашка -->
   <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-4 flex items-center space-x-4">
     <div class="bg-[#0B0D11] p-4 rounded-[1.2rem] flex items-center w-full">
       <div class="flex-1 space-y-1">
-        <div class="text-neutral-500 text-sm">Категория</div>
+        <div class="text-neutral-500 text-sm mb-[-6px]">Категория</div>
         <div id="verdict-category" class="text-white text-lg font-semibold">–</div>
-        <div class="text-neutral-500 text-sm">Бренд</div>
+        <div class="text-neutral-500 text-sm mb-[-12px]">Бренд</div>
         <div id="verdict-brand" class="text-white text-lg font-semibold">–</div>
-        <div class="text-neutral-500 text-sm">Модель</div>
+        <div class="text-neutral-500 text-sm mb-[-18px]">Модель</div>
         <div id="verdict-model" class="text-white text-lg font-semibold">–</div>
       </div>
       <!-- Картинка: первая из загруженных -->
@@ -389,7 +739,6 @@
       <!-- Текстовые данные -->
     </div>
   </div>
-
   <!-- Переключатель «Обоснование вердикта» -->
   <div class="flex items-center justify-between bg-[#0C0F14] rounded-2xl p-4">
     <div class="flex items-center gap-3">
@@ -402,29 +751,28 @@
         <div
           class="
             relative
-            w-10 h-7                             /* 40×28px */
+            w-10 h-7 /* 40×28px */
             bg-gray-200 dark:bg-gray-700
             rounded-full
             transition-colors
             peer-focus:outline-none
             peer-focus:ring-4 peer-focus:ring-[#0FC288] dark:peer-focus:ring-[#0FC288]
             peer-checked:bg-[#0FC288] dark:peer-checked:bg-[#0FC288]
-      
+     
             after:content-['']
             after:absolute
-            after:top-[2px] after:start-[2px]  /* держим по 2px от верха и левого края */
-            after:h-6 after:w-6                /* 24×24px */
+            after:top-[2px] after:start-[2px] /* держим по 2px от верха и левого края */
+            after:h-6 after:w-6 /* 24×24px */
             after:bg-white after:border after:border-gray-300 dark:after:border-gray-600
             after:rounded-full after:transition-all
-      
-            peer-checked:after:translate-x-[12px]    /* смещаем вправо на (40−24−2−2)=12px */
+     
+            peer-checked:after:translate-x-[12px] /* смещаем вправо на (40−24−2−2)=12px */
             rtl:peer-checked:after:-translate-x-[12px]
           "
         ></div>
       </label>
     </div>
   </div>
-
   <!-- Карточки вариантов скорости -->
   <!-- HTML -->
 <div id="options" class="grid grid-cols-3 gap-4">
@@ -452,7 +800,6 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-
     <div class="text-neutral-500 text-xs">24 часа</div>
     <div class="text-white text-lg font-semibold">450 ₽</div>
     <img
@@ -461,7 +808,6 @@
       class="mt-5 mx-auto w-auto h-auto object-contain peer-checked:brightness-110 transition"
     />
   </label>
-
   <!-- 15 минут (дорогой) -->
   <label class="relative block bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl px-4 pt-4 cursor-pointer">
     <input
@@ -484,7 +830,6 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-
     <div class="text-neutral-500 text-xs">15 минут</div>
     <div class="text-white text-lg font-semibold">650 ₽</div>
     <img
@@ -493,7 +838,6 @@
       class="mt-2 mx-auto w-auto h-auto object-contain peer-checked:brightness-110 transition"
     />
   </label>
-
   <!-- 15 минут (базовый) -->
   <label class="relative block bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl px-4 pt-4 cursor-pointer">
     <input
@@ -516,7 +860,6 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-
     <div class="text-neutral-500 text-xs">15 минут</div>
     <div class="text-white text-lg font-semibold">600 ₽</div>
     <img
@@ -526,253 +869,696 @@
     />
   </label>
 </div>
-
-
   <!-- Кнопка Подтвердить выбор -->
   <button id="verdict-continue" class="w-full h-12 bg-gradient-to-r from-[#13CD90] to-[#0ABA6F] rounded-2xl text-white text-lg font-medium">
     Продолжить
   </button>
-
-  <button onclick="window.location.href='{% url 'payment' %}'" id="verdict-payment" class="hidden w-full h-12 bg-gradient-to-r from-[#13CD90] to-[#0ABA6F] rounded-2xl text-white text-lg font-medium flex items-center justify-center">
+  <button onclick="window.location.href='{% url 'payment' %}'" id="verdict-payment" class="gap-2 hidden w-full h-12 bg-gradient-to-r from-[#13CD90] to-[#0ABA6F] rounded-2xl text-white text-lg font-medium flex items-center justify-center">
     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="15" viewBox="0 0 17 15" fill="none">
       <path d="M16.8334 6.76602V8.48268C16.8334 8.94102 16.4667 9.31602 16 9.33268H14.3667C13.4667 9.33268 12.6417 8.67435 12.5667 7.77435C12.5167 7.24935 12.7167 6.75768 13.0667 6.41602C13.375 6.09935 13.8 5.91602 14.2667 5.91602H16C16.4667 5.93268 16.8334 6.30768 16.8334 6.76602Z" fill="white"/>
       <path d="M15.5584 10.5827H14.3667C12.7834 10.5827 11.4501 9.39102 11.3167 7.87435C11.2417 7.00768 11.5584 6.14102 12.1917 5.52435C12.7251 4.97435 13.4667 4.66602 14.2667 4.66602H15.5584C15.8001 4.66602 16.0001 4.46602 15.9751 4.22435C15.7917 2.19935 14.4501 0.816016 12.4584 0.582682C12.2584 0.549349 12.0501 0.541016 11.8334 0.541016H4.33342C4.10008 0.541016 3.87508 0.557682 3.65841 0.591016C1.53341 0.857682 0.166748 2.44102 0.166748 4.70768V10.541C0.166748 12.841 2.03341 14.7077 4.33342 14.7077H11.8334C14.1667 14.7077 15.7751 13.2493 15.9751 11.0243C16.0001 10.7827 15.8001 10.5827 15.5584 10.5827ZM9.33342 5.74935H4.33342C3.99175 5.74935 3.70841 5.46602 3.70841 5.12435C3.70841 4.78268 3.99175 4.49935 4.33342 4.49935H9.33342C9.67508 4.49935 9.95842 4.78268 9.95842 5.12435C9.95842 5.46602 9.67508 5.74935 9.33342 5.74935Z" fill="white"/>
     </svg>
     Пополнить на
   </button>
-
   <div class="bg-transparent rounded-2xl w-full w-full">
     <!-- Первая строка -->
     <div class="flex justify-between items-center mb-2">
       <span class="text-sm text-neutral-500">Сумма заказа</span>
       <span id="orderSum" class="text-sm text-neutral-500">0 ₽</span>
     </div>
-  
+ 
     <!-- Вторая строка -->
     <div class="flex justify-between items-center mb-4">
       <span class="text-sm text-neutral-500">Обоснование вердикта</span>
       <span id="verdictSum" class="text-sm text-neutral-500">0 ₽</span>
     </div>
-  
+ 
     <!-- Итоговая строка -->
     <div class="flex justify-between items-center">
       <span class="text-lg text-white font-semibold">Сумма заказа</span>
       <span id="totalSum" class="text-lg text-white font-semibold">0 ₽</span>
     </div>
   </div>
-  
+ 
+</section>
+<section id="brand-section" class="px-4 pb-6 transition-opacity duration-500 ease-in-out bg-[#0A0D12] text-white">
+  <!-- Переключатель: Все / Обычные / Люкс -->
+  <!-- Витрина логотипов (можно скрыть, если не нужно) -->
+  <!-- Список брендов как на скрине -->
+  <div class="relative mx-auto w-full max-w-4xl">
+    <!-- Вертикальная A–Z навигация справа -->
+    <nav id="az-rail"
+         class="pointer-events-none absolute right-0 top-0 hidden h-full select-none md:block">
+      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-neutral-500">
+        <!-- буквы создаст скрипт -->
+      </ul>
+    </nav>
+  </div>
 </section>
 
-
+<script>
+  window.initialBalance = Number("{{ balance|default:'0' }}");
+</script>
 
 <script>
-  // Инициализация Telegram Web App и кнопки "Назад"
-  const tg = window.Telegram.WebApp;
-  tg.BackButton.show();
-
-  // Ссылки на элементы
+document.addEventListener('DOMContentLoaded', function() {
+  // Photo upload handler
+  document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
+    const cards = section.querySelectorAll('div.rounded-2xl');
+    cards.forEach(function(card) {
+      const img = card.querySelector('img');
+      if (!img) return;
+      // Fix sizes and prevent jumping
+      const wrapper = img.parentElement;
+      wrapper.classList.add('relative', 'overflow-hidden');
+      wrapper.style.width = '6.5rem';
+      wrapper.style.height = '6.5rem';
+      wrapper.style.flexShrink = '0';
+      // Create hidden input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.className = 'hidden file-input';
+      card.appendChild(input);
+      // Remember original src
+      const originalSrc = img.src;
+      // Click on icon -> open camera
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', function() { input.click(); });
+      // Handle file selection
+      input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          img.src = ev.target.result;
+          img.style.objectFit = 'cover';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.opacity = '1';
+          img.classList.add('preview-img');
+          // Create cross overlay
+          const existingCross = wrapper.querySelector('.photo-cross');
+          if (existingCross) existingCross.remove();
+          const cross = document.createElement('img');
+          cross.src = "{% static 'photo_cross.svg' %}";
+          cross.className = 'photo-cross absolute top-1 right-1 w-4 h-4 cursor-pointer z-10 opacity-80 hover:opacity-100 transition-opacity';
+          cross.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            img.src = originalSrc;
+            img.style.opacity = '0.7';
+            img.classList.remove('preview-img');
+            input.value = '';
+            cross.remove();
+          });
+          wrapper.appendChild(cross);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  });
+  // Fallback for previews if images 404
+  const PREVIEW_FALLBACK = "{% static 'placeholder.png' %}";
+  document.querySelectorAll('.preview-img').forEach(function(img) {
+    img.addEventListener('error', function() { img.src = PREVIEW_FALLBACK; }, { once: true });
+  });
+  // Brands and tabs with search
+  (function() {
+    /* ===== DATA ===== */
+    const ALL_BRANDS = [
+"A Bathing APE","Aesop","Anastasia Beverly Hils","Armani Beauty","Acne Studios","Adidas","Adidas Neo",
+"Adidas Originals","Air Jordan","Alexander McQueen","Alexander Wang","Alo Yoga","American Tourister","Amiri","AMIPARIS",
+"ANTA","Arcteryx","Armani Exchange","Audemars Piguet","Asics","Apm Monaco",
+"Balenciaga","Bally","Balmain","Bottega Veneta","Bobbi Brown","Brunello Cucinelli","Breitling","BVLGARI","Burberry",
+"C.P. Company","Canada Goose","Calvin Klein","Cartier","Casio","Carhartt","Celine","Chrome Hearts","Coach","Chopard",
+"Champion","Chanel","Clarins","Clinique","Charlotte Tibury","Calvin Klein Beauty","Chloé","Columbia","Converse","Crocs","Citizen",
+"Dickies","Diesel","Dior","Disney","Dr. Martens",
+"EastPak","Emporio Armani","Estee Lauder","E.L.F. Cosmetics","Evisu",
+"Fear Of God","Fear Of God Essentials","Fendi","Fenty Beauty","Fresh","Fila","Furla",
+"Gap","Garnier","Glossier","Givenchy","Golden Goose","Goyard","Gucci","Graff","Guess",
+"Hermes","Hamilton","Hoka One One","Hugo Boss","Hublot","Human Made",
+"Issey Miyake",
+"Jacquemus","Jaeger-LeCOULTURE","Jack Wolfskin","Jeep","Jil Sander","Jimmy Choo",
+"Kangol","Kappa","Kiko Milano","Kelme","Kylie Cosmetics","Kenzo",
+"Lacoste","Lee","Levis","LEGO","Lanvin","Loewe","Lemaire","Loro Piana","L’Oreal Paris","Louis Vuitton","LONGINES","Lancome",
+"Maison Margiela","Maserati","Maurice Laicroix","Marc Jacobs","Marni","MCM","Michael Kors","Miu Miu","Mizuno","MM6 Maison Margiela","Moncler","MONTBLANC","Moon Boot","Moschino",
+"New Balance","Nike",
+"Oakley","Off - White","OMEGA","Onitsuka Tiger",
+"Palm Angels","Patagonia","Pinko","Polo Ralph Lauren","Prada","PATEK PHILIPPE","Puma","Pokemon",
+"RADO","RayBan","Raf Simons","Reebok","Rick Owens","ROLEX",
+"Saint Laurent","Salomon","Saucony","Skechers","Stone Island","Stussy","Supreme","SWAROVSKI","SWATCH",
+"The North Face","TISSOT","TUDOR","Trasher","Timberland","Tom Ford","Tiffany&CO.","Tommy Hilfiger","Tods","Tory Burch","Travis Scott",
+"Ugg","Under Armour","Uniqlo","Urban Decay",
+"Valentino","Vans","Versace","Vetements","Vicrtoria’s Secret","Vivienne Westwood","Vlone",
+"Yeezy","Yves Saint Laurent Beauty",
+"Zara","ZENITH","ZIPPO"
+    ];
+    // Luxury
+    const LUXURY_SET = new Set([
+"Aesop","Alexander McQueen","Alexander Wang","Audemars Piguet","Balenciaga",
+"Cartier","Celine","Chrome Hearts","Chloé","Dior","Fendi","Goyard","Gucci",
+"Hermes","Jil Sander","Jimmy Choo","Loro Piana","Louis Vuitton","Miu Miu","Moncler",
+"Palm Angels","Prada","PATEK PHILIPPE","Rick Owens","ROLEX","Vetements"
+    ]);
+    const BASIC_SET = new Set(ALL_BRANDS.filter(function(b) { return !LUXURY_SET.has(b); }));
+    const LOGO = {
+      // A
+'A Bathing APE': "{% static 'frame-19487541450.svg' %}",
+'Aesop': "{% static 'aesop-o-0-w-9-rp-39-q-brandlogos-net-10.svg' %}",
+'Anastasia Beverly Hils': "{% static 'group0.svg' %}",
+'Armani Beauty': "{% static '_673-d-7-bbbe-6-a-8-d-armani-beauty-10.svg' %}",
+'Acne Studios': "{% static 'acne-studios-ozp-1-v-xxvh-brandlogos-net-10.svg' %}",
+'Adidas': "{% static 'adidas-logo-brandlogos-net-sdsassa-1-10.svg' %}",
+'Adidas Neo': "{% static 'adidas-neo-10.svg' %}",
+'Adidas Originals': "{% static 'svg-20.svg' %}",
+'Air Jordan': "{% static 'air-jordan-logo-87-b-33-ur-5-brandlogos-net-1-10.svg' %}",
+'Alexander McQueen': "{% static 'alexander-mcqueen-10.svg' %}",
+'Alexander Wang': "{% static 'alexander-wang-logo-brandlogos-net-cx-8-a-6993-u-10.svg' %}",
+'Alo Yoga': "{% static 'alo-yoga-logo-brandlogos-net-7-tlf-9-eix-0-10.svg' %}",
+'American Tourister': "{% static 'clip-path-group0.svg' %}",
+'Amiri': "{% static 'amiri-o-kwxny-dx-p-brandlogos-net-10.svg' %}",
+'AMIPARIS': "{% static '_67-caa-246-e-7-b-95-ami-paris-alexandre-10.svg' %}",
+'ANTA': "{% static '_20.svg' %}",
+'Arcteryx': "{% static 'arcteryx-od-hnpr-ipa-brandlogos-net-10.svg' %}",
+'Armani Exchange': "{% static 'group1.svg' %}",
+'Audemars Piguet': "{% static '_673-be-15-e-70-e-40-audemars-piguet-10.svg' %}",
+'Asics': "{% static 'group3.svg' %}",
+'Apm Monaco': "{% static 'apm-monaco-10.svg' %}",
+      // B
+'Balenciaga': "{% static 'clip-path-group1.svg' %}",
+'Bally': "{% static 'layer-10.svg' %}",
+'Balmain': "{% static 'frame-194875414517.svg' %}",
+'Bottega Veneta': "{% static 'vector1.svg' %}",
+'Bobbi Brown': "{% static 'group4.svg' %}",
+'Brunello Cucinelli': "{% static 'group5.svg' %}",
+'Breitling': "{% static 'group6.svg' %}",
+'BVLGARI': "{% static 'group7.svg' %}",
+'Burberry': "{% static 'burberry-new-2025-logo-png-svg-vector-10.svg' %}",
+      // C
+'C.P. Company': "{% static 'c-p-company-logo-10.svg' %}",
+'Canada Goose': "{% static 'group8.svg' %}",
+'Calvin Klein': "{% static 'group9.svg' %}",
+'Cartier': "{% static 'cartier-og-prk-6-g-2-q-brandlogos-net-10.svg' %}",
+'Casio': "{% static 'layer-11.svg' %}",
+'Carhartt': "{% static 'surface-18630.svg' %}",
+'Celine': "{% static 'celine-logo-10.svg' %}",
+'Chrome Hearts': "{% static 'chrome-hearts-ov-tp-5-f-6-jp-brandlogos-net-10.svg' %}",
+'Coach': "{% static 'layer-12.svg' %}",
+'Chopard': "{% static 'g-80.svg' %}",
+'Champion': "{% static 'champion-o-jb-ub-am-gp-brandlogos-net-10.svg' %}",
+'Chanel': "{% static 'chanel-logo-10.svg' %}",
+'Clarins': "{% static 'atom-logo-clarins-red-block0.svg' %}",
+'Clinique': "{% static 'clinique-logo-10.svg' %}",
+'Charlotte Tibury': "{% static 'g-160.svg' %}",
+'Calvin Klein Beauty': "{% static 'calvin-klein-o-zg-d-gire-c-brandlogos-net-10.svg' %}",
+'Chloé': "{% static 'chlo-logo-10.svg' %}",
+'Columbia': "{% static 'columbia-sportswear-co-logo-10.svg' %}",
+'Converse': "{% static 'g-32840.svg' %}",
+'Crocs': "{% static 'crocs-olg-ns-1-du-r-brandlogos-net-10.svg' %}",
+'Citizen': "{% static 'layer-13.svg' %}",
+      // D
+'Dickies': "{% static 'frame-19487541830.svg' %}",
+'Diesel': "{% static 'layer-14.svg' %}",
+'Dior': "{% static 'layer-15.svg' %}",
+'Disney': "{% static 'frame-19487541840.svg' %}",
+'Dr. Martens': "{% static 'frame-19487541850.svg' %}",
+      // E
+'EastPak': "{% static 'g-45750.svg' %}",
+'Emporio Armani': "{% static 'group10.svg' %}",
+'Estee Lauder': "{% static 'layer-2-10.svg' %}",
+'E.L.F. Cosmetics': "{% static 'elf-cosmetics-10.svg' %}",
+'Evisu': "{% static 'design0.svg' %}",
+      // F
+'Fear Of God': "{% static 'fear-of-god-ou-4-ukq-wtz-brandlogos-net-10.svg' %}",
+'Fear Of God Essentials': "{% static 'group11.svg' %}",
+'Fendi': "{% static '_231-f-20-ff0.svg' %}",
+'Fenty Beauty': "{% static 'fenty-beauty-logo-brandlogos-net-g-2-j-4-yvrxg-10.svg' %}",
+'Fresh': "{% static 'id-7-d-v-lg-l-gu-1755684835766-10.svg' %}",
+'Fila': "{% static 'group12.svg' %}",
+'Furla': "{% static 'furla-logo-10.svg' %}",
+      // G
+'Gap': "{% static 'gap-logo-10.svg' %}",
+'Garnier': "{% static 'frame-19487541860.svg' %}",
+'Glossier': "{% static 'glossier-logo-brandlogos-net-kfjn-7-tzms-10.svg' %}",
+'Givenchy': "{% static 'layer-20.svg' %}",
+'Golden Goose': "{% static 'layer-16.svg' %}",
+'Goyard': "{% static 'logo-goyard-10.svg' %}",
+'Gucci': "{% static 'frame-19487541870.svg' %}",
+'Graff': "{% static 'graff-logo-brandlogos-net-gab-52-esfb-10.svg' %}",
+'Guess': "{% static 'guess-logo-10.svg' %}",
+      // H
+'Hermes': "{% static 'frame-19487541880.svg' %}",
+'Hamilton': "{% static 'hamilton-watch-o-7-ky-0-e-t-ld-brandlogos-net-10.svg' %}",
+'Hoka One One': "{% static 'hoka-one-one-logo-brandlogos-net-aaag-7-jnmm-10.svg' %}",
+'Hugo Boss': "{% static 'layer-17.svg' %}",
+'Hublot': "{% static 'group14.svg' %}",
+'Human Made': "{% static 'group15.svg' %}",
+      // I
+'Issey Miyake': "{% static 'frame-19487541890.svg' %}",
+      // J
+'Jacquemus': "{% static 'logo-jacquemus-10.svg' %}",
+'Jaeger-LeCOULTURE': "{% static 'jaeger-le-coultre-oy-2-z-6-xqnf-brandlogos-net-10.svg' %}",
+'Jack Wolfskin': "{% static 'group16.svg' %}",
+'Jeep': "{% static 'g-29930.svg' %}",
+'Jil Sander': "{% static 'jil-sander-logo-10.svg' %}",
+'Jimmy Choo': "{% static 'path-10.svg' %}",
+      // K
+'Kangol': "{% static 'kangol-logo-brandlogos-net-311-d-5-bp-8-u-10.svg' %}",
+'Kappa': "{% static 'group17.svg' %}",
+'Kiko Milano': "{% static 'kiko-milano-logo-10.svg' %}",
+'Kelme': "{% static 'kelme-new-logo-10.svg' %}",
+'Kylie Cosmetics': "{% static 'group18.svg' %}",
+'Kenzo': "{% static 'group19.svg' %}",
+      // L
+'Lacoste': "{% static 'lacoste-logo-10.svg' %}",
+'Lee': "{% static 'edede-3-ff0.svg' %}",
+'Levis': "{% static 'levi-s-logo-10.svg' %}",
+'LEGO': "{% static 'frame-19487541940.svg' %}",
+'Lanvin': "{% static 'lanvin-logo-2023-10.svg' %}",
+'Loewe': "{% static 'layer-18.svg' %}",
+'Lemaire': "{% static 'frame-19487541950.svg' %}",
+'Loro Piana': "{% static 'loro-piana-o-0-rz-dt-2-gq-brandlogos-net-10.svg' %}",
+'L’Oreal Paris': "{% static 'l-oreal-o-4-l-ih-jb-id-brandlogos-net-10.svg' %}",
+'Louis Vuitton': "{% static 'louis-vuitton-logo-10.svg' %}",
+'LONGINES': "{% static 'longines-ou-w-gz-y-9-xu-brandlogos-net-10.svg' %}",
+'Lancome': "{% static 'clip-path-group3.svg' %}",
+      // M
+'Maison Margiela': "{% static 'maison-margiela-logo-10.svg' %}",
+'Maserati': "{% static 'frame-19487541960.svg' %}",
+'Maurice Laicroix': "{% static 'maurice-lacroix-of-1-h-yx-v-9-k-brandlogos-net-10.svg' %}",
+'Marc Jacobs': "{% static 'g-100.svg' %}",
+'Marni': "{% static 'marni-logo-brandlogos-net-s-4-yx-12-fry-10.svg' %}",
+'MCM': "{% static 'g-101.svg' %}",
+'Michael Kors': "{% static 'layer-19.svg' %}",
+'Miu Miu': "{% static 'layer-110.svg' %}",
+'Mizuno': "{% static 'layer-111.svg' %}",
+'MM6 Maison Margiela': "{% static 'maison-margiela-logo-1-10.svg' %}",
+'Moncler': "{% static 'moncler-o-43-z-zr-f-4-s-brandlogos-net-10.svg' %}",
+'MONTBLANC': "{% static 'x-23-231-f-20-ff0.svg' %}",
+'Moon Boot': "{% static 'group20.svg' %}",
+'Moschino': "{% static 'moschino-brandlogos-net-6-a-46-ycv-7-v-10.svg' %}",
+      // N
+'New Balance': "{% static 'new-balance-logo-806-e-5-d-gq-brandlogos-net-20.svg' %}",
+'Nike': "{% static 'frame-19487541980.svg' %}",
+      // O
+'Oakley': "{% static 'g-40.svg' %}",
+'Off - White': "{% static 'frame-19487542000.svg' %}",
+'OMEGA': "{% static 'omega-logo-brandlogos-net-6-ri-0-ufvyv-10.svg' %}",
+'Onitsuka Tiger': "{% static 'onitsuka-tiger-logo-brandlogos-net-8-qv-84-hxz-1-10.svg' %}",
+      // P
+'Palm Angels': "{% static 'palm-angels-oe-nw-1-jq-ga-brandlogos-net-10.svg' %}",
+'Patagonia': "{% static 'frame-19487542010.svg' %}",
+'Pinko': "{% static 'surface-10.svg' %}",
+'Polo Ralph Lauren': "{% static 'polo-ralph-lauren-logo-brandlogos-net-ks-5-zkn-85-p-10.svg' %}",
+'Prada': "{% static 'prada-logo-brandlogos-net-4-e-6-w-4-w-4-yj-10.svg' %}",
+'PATEK PHILIPPE': "{% static 'patek-label0.svg' %}",
+'Puma': "{% static 'puma-se-ox-b-ef-0-aby-brandlogos-net-10.svg' %}",
+'Pokemon': "{% static 'pokemon-logo-brandlogos-net-67-a-0-zzk-8-j-10.svg' %}",
+'RADO': "{% static 'group21.svg' %}",
+'RayBan': "{% static 'frame-19487542030.svg' %}",
+'Raf Simons': "{% static 'raf-simons-wordmark-1-10.svg' %}",
+'Reebok': "{% static 'reebok-2014-logo-brandlogos-net-qdjty-740-l-10.svg' %}",
+'Rick Owens': "{% static 'group22.svg' %}",
+'ROLEX': "{% static 'rolex-logo-402-d-6-j-8-x-brandlogos-net-10.svg' %}",
+      // S
+'Saint Laurent': "{% static 'saint-laurent-logo-brandlogos-net-sqkjtqcfd-10.svg' %}",
+'Salomon': "{% static 'salomon-logo-brandlogos-net-zci-6-dwc-3-e-10.svg' %}",
+'Saucony': "{% static 'uuid-c-3997-e-95-09-fc-480-e-939-c-c-6-a-055-e-8-bdd-00.svg' %}",
+'Skechers': "{% static 'skechers-logo-brandlogos-net-8-axa-88-a-47-10.svg' %}",
+'Stone Island': "{% static 'stone-island-logo-brandlogos-net-yhputn-6-lx-10.svg' %}",
+'Stussy': "{% static 'stussy-logo-brandlogos-net-4-dri-6-ecx-6-10.svg' %}",
+'Supreme': "{% static 'supreme-logo-brandlogos-net-stuudluje-10.svg' %}",
+'SWAROVSKI': "{% static 'swa-brandlogo-icon-10.svg' %}",
+'SWATCH': "{% static 'swatch-logo-brandlogos-net-b-3-c-0-ybrip-10.svg' %}",
+      // T
+'The North Face': "{% static 'symbols0.svg' %}",
+'TISSOT': "{% static 'tissot-os-ba-w-9-n-i-6-brandlogos-net-10.svg' %}",
+'TUDOR': "{% static 'tudor-watches-logo-brandlogos-net-w-5-nmx-5-x-92-10.svg' %}",
+'Trasher': "{% static 'thrasher-u-ru-0-wdy-6-brandlogos-net-10.svg' %}",
+'Timberland': "{% static 'timberland-logo-brandlogos-net-j-16-ud-0-ppk-10.svg' %}",
+'Tom Ford': "{% static 'tom-ford-logo-brandlogos-net-ildf-0-mqm-4-10.svg' %}",
+'Tiffany&CO.': "{% static 'group23.svg' %}",
+'Tommy Hilfiger': "{% static 'tommy-hilfiger-o-0-rpq-v-9-d-j-brandlogos-net-10.svg' %}",
+'Tods': "{% static 'tods-logo-brandlogos-net-fxu-7-xvn-1-r-10.svg' %}",
+'Tory Burch': "{% static 'tory-burch-logo-brandlogos-net-0-e-5-nk-4-inj-10.svg' %}",
+'Travis Scott': "{% static 'travis-scott-id-d-8-olnr-ve-1-10.svg' %}",
+      // U
+'Ugg': "{% static 'ugg-o-jp-5-hn-zcf-brandlogos-net-10.svg' %}",
+'Under Armour': "{% static 'g-30.svg' %}",
+'Uniqlo': "{% static 'uniqlo-logo-brandlogos-net-vwj-5-u-8-nvn-10.svg' %}",
+'Urban Decay': "{% static 'frame-19487542060.svg' %}",
+      // V
+'Valentino': "{% static 'valentino-oeem-e-yrrv-brandlogos-net-10.svg' %}",
+'Vans': "{% static 'vans-logo-31-c-9-f-8-eq-brandlogos-net-10.svg' %}",
+'Versace': "{% static 'versace-1997-2008-logo-brandlogos-net-l-92-ufggep-10.svg' %}",
+'Vetements': "{% static 'vetements-logo-brandlogos-net-wc-5-is-5-vap-10.svg' %}",
+'Vicrtoria’s Secret': "{% static 'group24.svg' %}",
+'Vivienne Westwood': "{% static 'vivienne-westwood-logo-10.svg' %}",
+'Vlone': "{% static 'group25.svg' %}",
+      // Y
+'Yeezy': "{% static 'group26.svg' %}",
+'Yves Saint Laurent Beauty': "{% static 'saint-laurent-logo-brandlogos-net-sqkjtqcfd-1-10.svg' %}",
+      // Z
+'Zara': "{% static 'zara-logo-brandlogos-net-t-2-mjzcjds-10.svg' %}",
+'ZENITH': "{% static 'zenith-onir-d-byxi-brandlogos-net-10.svg' %}",
+'ZIPPO': "{% static 'uuid-4-f-0-cc-9-b-0-86-af-44-eb-81-b-0-b-0420-d-92-a-05-f0.svg' %}"
+    };
+    const seg = document.getElementById('switch');
+    const indicator = document.getElementById('switch-indicator');
+    const listRoot = document.getElementById('brand-list');
+    const rail = document.querySelector('#az-rail ul');
+    const searchInput = document.getElementById('brand-search');
+    function isLuxury(name){ return LUXURY_SET.has(name); }
+    function isBasic(name){ return BASIC_SET.has(name); }
+    function brandsForTab(tab){
+      if(tab==='luxury') return ALL_BRANDS.filter(isLuxury);
+      if(tab==='basic') return ALL_BRANDS.filter(isBasic);
+      return [...ALL_BRANDS];
+    }
+    function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/gi,'-'); }
+    function groupByLetter(arr){
+      const map = new Map();
+      arr.forEach(function(n){
+        const ch=(n[0]||'#').toUpperCase();
+        const key=/[A-ZА-ЯЁ]/i.test(ch)?ch:'#';
+        if(!map.has(key)) map.set(key,[]);
+        map.get(key).push(n);
+      });
+      for(const [k,v] of map) v.sort(function(a,b){return a.localeCompare(b,'ru',{sensitivity:'base'});});
+      return map;
+    }
+    function renderAZ(keys){
+      if(!rail) return;
+      rail.innerHTML='';
+      const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      letters.forEach(function(L){
+        const enabled=keys.has(L);
+        rail.insertAdjacentHTML('beforeend',`
+          <li>
+            <a href="${enabled?('#sec-'+L):'javascript:void(0)'}"
+               class="block rounded-md px-2 py-1 ${enabled?'text-neutral-300 hover:text-white':'text-neutral-600 cursor-default'}">
+            ${L}
+            </a>
+          </li>
+        `);
+      });
+    }
+    function renderList(tab){
+      const data = brandsForTab(tab);
+      const groups = groupByLetter(data);
+      const keys = new Set(groups.keys());
+      const sortedKeys=[...keys].sort(function(a,b){ return a==='#'?1 : b==='#'?-1 : a.localeCompare(b,'ru');});
+      renderAZ(new Set(sortedKeys));
+      listRoot.innerHTML='';
+      for(const L of sortedKeys){
+        const items = groups.get(L);
+        const section = document.createElement('section');
+        section.id='sec-'+L;
+        section.className='mb-6';
+        section.innerHTML = `
+          <h2 class="mb-3 text-xl font-bold tracking-wide">${L}</h2>
+          <ul class="divide-y divide-[#1B222C] rounded-2xl">
+        ${items.map(function(name){
+          const src=LOGO[name];
+          const img = src
+                    ? `<img src="${src}" alt="${slug(name)}" class="h-8 w-8 object-contain brand-logo"/>`
+                    : `<div class="flex h-8 w-8 items-center justify-center rounded bg-[#121822] text-sm text-neutral-400">${(name[0]||'#').toUpperCase()}</div>`;
+          return `
+            <li class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#0F141C]" data-brand="${name}">
+            ${img}
+              <span class="text-lg font-semibold">${name}</span>
+            </li>
+          `;
+        }).join('')}
+          </ul>
+        `;
+        listRoot.appendChild(section);
+      }
+      // fallback for logos (if 404)
+      const FALLBACK = "{% static 'placeholder.png' %}";
+      document.querySelectorAll('.brand-logo').forEach(function(img){
+        img.addEventListener('error', function() {
+          img.classList.remove('object-contain');
+          img.src = FALLBACK;
+        }, { once:true });
+      });
+    }
+    function setTab(tab){
+      const x = tab==='all' ? '0%' : tab==='basic' ? '100%' : '200%';
+      if(indicator) indicator.style.transform = `translateX(${x})`;
+      document.querySelectorAll('.seg-btn').forEach(function(btn){
+        const active = btn.dataset.tab === tab;
+        btn.classList.toggle('font-semibold', active);
+        btn.classList.toggle('text-neutral-200', active);
+        btn.classList.toggle('text-neutral-400', !active);
+      });
+      renderList(tab);
+      applyFilter(); // Apply search filter after render
+    }
+    // Tab switching
+    if(seg){
+      seg.addEventListener('click', function(e){
+        const btn = e.target.closest('.seg-btn');
+        if(!btn) return;
+        setTab(btn.dataset.tab);
+      });
+    }
+    // Init
+    setTab('all');
+    // Brand click delegation -> go to step 2
+    listRoot.addEventListener('click', function(e){
+      const li = e.target.closest('li[data-brand]');
+      if(!li) return;
+      window.__selectedBrand = li.getAttribute('data-brand'); // Pass to second script
+      if(typeof window.gotoStep2 === 'function') window.gotoStep2();
+    });
+    // Search filtering
+    // Create (lazily) "No results" plaque
+    function ensureNoResultsEl() {
+      let el = listRoot.querySelector('#brand-no-results');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'brand-no-results';
+        el.className = 'hidden rounded-2xl bg-[#0C0F14] px-4 py-6 text-center text-neutral-400';
+        el.textContent = 'Ничего не найдено';
+        listRoot.appendChild(el);
+      }
+      return el;
+    }
+    // Hide/show sections where all items are hidden
+    function updateSectionVisibility() {
+      const sections = listRoot.querySelectorAll('section[id^="sec-"]');
+      sections.forEach(function(section) {
+        const items = section.querySelectorAll('li[data-brand]');
+        const hasVisible = Array.from(items).some(function(li) { return !li.classList.contains('hidden'); });
+        section.classList.toggle('hidden', !hasVisible);
+      });
+    }
+    // Apply filter
+    function applyFilter() {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      // If list not rendered yet — do nothing
+      if (!listRoot) return;
+      const items = listRoot.querySelectorAll('li[data-brand]');
+      let anyVisible = false;
+      items.forEach(function(li) {
+        const name = (li.dataset.brand || li.textContent || '').toLowerCase();
+        const match = !q || name.includes(q);
+        // Hide only the li itself — without redrawing DOM
+        li.classList.toggle('hidden', !match);
+        if (match) anyVisible = true;
+      });
+      // Hide section headers without visible items
+      updateSectionVisibility();
+      // Show / hide "Nothing found"
+      const noRes = ensureNoResultsEl();
+      noRes.classList.toggle('hidden', anyVisible);
+    }
+    // Apply filter on input
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilter);
+    }
+    // Apply filter after first render
+    requestAnimationFrame(applyFilter);
+  })();
+});
+// Steps, master, upload, sums
+(function() {
+  // Telegram API safely
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : { BackButton: { show: function(){}, onClick: function(){} } };
+  // Elements
   const progressBar = document.getElementById('progress-bar');
   const formTitle = document.getElementById('form-title');
   const brandSection = document.getElementById('brand-section');
   const itemSection = document.getElementById('item-section');
   const obshTypeSection = document.getElementById('obsh_type');
   const verdictSection = document.getElementById('verdict-section');
-  const switchIndicator = document.getElementById('switch-indicator');
-  const btnBasic = document.getElementById('btn-basic');
-  const btnLuxury = document.getElementById('btn-luxury');
-  const brandsBasic = document.getElementById('brands-basic');
-  const brandsLuxury = document.getElementById('brands-luxury');
-  const brandImgs = document.querySelectorAll('#brands-basic .brend, #brands-luxury .brend');
   const typeImgs = document.querySelectorAll('#itemType .type');
   const continueBtn = document.getElementById('continue-btn');
-  const fileInputs = document.querySelectorAll('.upload-btn .file-input');
-  const additionalInput = document.getElementById('additional-photos-input');
-  const previewsContainer = document.getElementById('additional-previews');
   const radios = document.querySelectorAll('input[name="speed"]');
   const toggle = document.getElementById('verdictToggle');
   const orderSumEl = document.getElementById('orderSum');
   const verdictSumEl = document.getElementById('verdictSum');
   const totalSumEl = document.getElementById('totalSum');
   const verdictBtn = document.getElementById('verdict-continue');
-
-  let selectedBrand;
+  let selectedBrand = window.__selectedBrand || null;
   let type_item;
   let currentStep = 1;
-
-  // Функция показа шага
+  let balance = Number(window.initialBalance || 0);
+  // Show step
   function showStep(step) {
-    // Скрываем все секции, кроме необходимой
-    if (step !== 1) brandSection.classList.add('hidden', 'opacity-0');
-    if (step !== 2) itemSection.classList.add('hidden', 'opacity-0');
-    document.querySelectorAll('[id^="check_"]').forEach(sec => sec.classList.add('hidden', 'opacity-0'));
-    if (step !== 3) obshTypeSection.classList.add('hidden', 'opacity-0');
-    if (step !== 4) verdictSection.classList.add('hidden', 'opacity-0');
-
-    // Отображаем нужный
+    if (step !== 1) { brandSection.classList.add('hidden', 'opacity-0'); }
+    if (step !== 2) { itemSection.classList.add('hidden', 'opacity-0'); }
+    document.querySelectorAll('[id^="check_"]').forEach(function(sec) { sec.classList.add('hidden', 'opacity-0'); });
+    if (step !== 3) { obshTypeSection.classList.add('hidden', 'opacity-0'); }
+    if (step !== 4) { verdictSection.classList.add('hidden', 'opacity-0'); }
     switch (step) {
       case 1:
         brandSection.classList.remove('hidden');
-        setTimeout(() => brandSection.classList.remove('opacity-0'), 50);
+        setTimeout(function() { brandSection.classList.remove('opacity-0'); }, 50);
         progressBar.style.width = '20%';
         formTitle.textContent = 'Выберите бренд';
         break;
       case 2:
         itemSection.classList.remove('hidden');
-        setTimeout(() => itemSection.classList.remove('opacity-0'), 50);
+        setTimeout(function() { itemSection.classList.remove('opacity-0'); }, 50);
         progressBar.style.width = '40%';
         formTitle.textContent = 'Выберите тип вещи';
         break;
-      case 3:
+      case 3: {
         const checkSec = document.getElementById('check_' + type_item);
         if (checkSec) {
           checkSec.classList.remove('hidden');
-          setTimeout(() => checkSec.classList.remove('opacity-0'), 50);
+          setTimeout(function() { checkSec.classList.remove('opacity-0'); }, 50);
         }
         obshTypeSection.classList.remove('hidden');
-        setTimeout(() => obshTypeSection.classList.remove('opacity-0'), 50);
+        setTimeout(function() { obshTypeSection.classList.remove('opacity-0'); }, 50);
         progressBar.style.width = '60%';
         break;
+      }
       case 4:
         verdictSection.classList.remove('hidden');
-        setTimeout(() => verdictSection.classList.remove('opacity-0'), 50);
+        setTimeout(function() { verdictSection.classList.remove('opacity-0'); }, 50);
         progressBar.style.width = '80%';
         break;
     }
   }
-
-  // Анимация начального прогресса
-  window.addEventListener('load', () => {
-    requestAnimationFrame(() => progressBar.style.width = '20%');
-  });
-
-  // Переключение брендов
-  btnBasic.addEventListener('click', () => {
-    switchIndicator.classList.remove('translate-x-full');
-    btnBasic.classList.remove('text-neutral-400');
-    btnLuxury.classList.add('text-neutral-400');
-    brandsBasic.classList.remove('hidden', 'opacity-0');
-    brandsLuxury.classList.add('hidden');
-  });
-  btnLuxury.addEventListener('click', () => {
-    switchIndicator.classList.add('translate-x-full');
-    btnLuxury.classList.remove('text-neutral-400');
-    btnBasic.classList.add('text-neutral-400');
-    brandsLuxury.classList.remove('hidden', 'opacity-0');
-    brandsBasic.classList.add('hidden');
-  });
-
-  // Выбор бренда
-  brandImgs.forEach(img => img.addEventListener('click', e => {
-    selectedBrand = e.currentTarget.dataset.brand;
+  // Called from 1st script after brand click
+  window.gotoStep2 = function(){
+    selectedBrand = window.__selectedBrand || selectedBrand;
     currentStep = 2;
     showStep(currentStep);
-    console.log('Выбран бренд:', selectedBrand);
-  }));
-
-  // Бренд из параметра URL
-  const params = new URLSearchParams(window.location.search);
-  if (params.has('brand')) {
-    selectedBrand = params.get('brand');
-    currentStep = 2;
-    showStep(currentStep);
-    console.log('Выбран бренд (из URL):', selectedBrand);
-  }
-
-  // Выбор типа вещи
-  typeImgs.forEach(img => img.addEventListener('click', e => {
-    type_item = e.currentTarget.dataset.type;
-    currentStep = 3;
-    showStep(currentStep);
-    console.log('Выбран тип:', type_item);
-  }));
-
-  // Превью фото
-  fileInputs.forEach(input => {
-    const checkItem = input.closest('.check-item');
-    const preview = checkItem.querySelector('.preview-img');
-    input.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => preview.src = ev.target.result;
-      reader.readAsDataURL(file);
+  };
+  // Initial progress + brand from URL
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() { progressBar.style.width = '20%'; });
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('brand')) {
+      selectedBrand = params.get('brand');
+      currentStep = 2;
+      showStep(currentStep);
+    } else if (selectedBrand) {
+      currentStep = 2;
+      showStep(currentStep);
+    }
+  });
+  // Type selection
+  typeImgs.forEach(function(img) {
+    img.addEventListener('click', function(e) {
+      type_item = e.currentTarget.dataset.type;
+      currentStep = 3;
+      showStep(currentStep);
     });
   });
-
-  // Продолжить после фото
-  continueBtn.addEventListener('click', () => {
-    const imgEl = document.querySelector('.check-item .preview-img');
+  // Continue
+  continueBtn.addEventListener('click', function() {
+    const checkSection = document.getElementById('check_' + type_item);
+    const imgEl = checkSection ? checkSection.querySelector('img.preview-img') : null;
     const photo = imgEl ? imgEl.src : '';
+    const CATEGORY_LABELS = {
+      sneakers: 'Кроссовки',
+      clothes: 'Одежда',
+      bags: 'Сумки',
+      belts: 'Ремни',
+      watch: 'Часы',
+      cosmetics: 'Косметика',
+      jewerly: 'Украшения',
+      toys: 'Игрушки',
+      accsesory: 'Аксессуары',
+      others: 'Другое'
+    };
+
+
     document.getElementById('verdict-photo').src = photo;
-    document.getElementById('verdict-category').textContent = type_item;
+    document.getElementById('verdict-category').textContent =
+  CATEGORY_LABELS[type_item] || '-';
     document.getElementById('verdict-brand').textContent = selectedBrand || '-';
     document.getElementById('verdict-model').textContent = '-';
     currentStep = 4;
     showStep(currentStep);
     verdictSection.scrollIntoView({ behavior: 'smooth' });
   });
-
-  // Дополнительные фото
-  additionalInput.addEventListener('change', e => {
-    previewsContainer.innerHTML = '';
-    Array.from(e.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = document.createElement('img');
-        img.src = ev.target.result;
-        img.className = 'w-24 h-24 object-cover rounded-lg';
-        previewsContainer.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-
-  // Подсчет суммы заказа
+  // Sums
   function updateSummary() {
     const checked = document.querySelector('input[name="speed"]:checked');
-    if (!checked) return;
     const tariffPrices = { '24h':450, '15min-expensive':650, '15min-basic':600 };
     const verdictCost = 150;
-    const base = tariffPrices[checked.value] || 0;
-    const verdict = toggle.checked ? verdictCost : 0;
+    const base = checked ? (tariffPrices[checked.value] || 0) : 0;
+    const verdict = (toggle && toggle.checked) ? verdictCost : 0;
     const total = base + verdict;
     orderSumEl.textContent = `${base} ₽`;
     verdictSumEl.textContent = `${verdict} ₽`;
     totalSumEl.textContent = `${total} ₽`;
+    const payBtn = document.getElementById('verdict-payment');
+    const contBtn = document.getElementById('verdict-continue');
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="17" height="15" viewBox="0 0 17 15" fill="none">
+<path d="M16.8334 6.76602V8.48268C16.8334 8.94102 16.4667 9.31602 16 9.33268H14.3667C13.4667 9.33268 12.6417 8.67435 12.5667 7.77435C12.5167 7.24935 12.7167 6.75768 13.0667 6.41602C13.375 6.09935 13.8 5.91602 14.2667 5.91602H16C16.4667 5.93268 16.8334 6.30768 16.8334 6.76602Z" fill="white"/>
+<path d="M15.5584 10.5827H14.3667C12.7834 10.5827 11.4501 9.39102 11.3167 7.87435C11.2417 7.00768 11.5584 6.14102 12.1917 5.52435C12.7251 4.97435 13.4667 4.66602 14.2667 4.66602H15.5584C15.8001 4.66602 16.0001 4.46602 15.9751 4.22435C15.7917 2.19935 14.4501 0.816016 12.4584 0.582682C12.2584 0.549349 12.0501 0.541016 11.8334 0.541016H4.33342C4.10008 0.541016 3.87508 0.557682 3.65841 0.591016C1.53341 0.857682 0.166748 2.44102 0.166748 4.70768V10.541C0.166748 12.841 2.03341 14.7077 4.33342 14.7077H11.8334C14.1667 14.7077 15.7751 13.2493 15.9751 11.0243C16.0001 10.7827 15.8001 10.5827 15.5584 10.5827ZM9.33342 5.74935H4.33342C3.99175 5.74935 3.70841 5.46602 3.70841 5.12435C3.70841 4.78268 3.99175 4.49935 4.33342 4.49935H9.33342C9.67508 4.49935 9.95842 4.78268 9.95842 5.12435C9.95842 5.46602 9.67508 5.74935 9.33342 5.74935Z" fill="white"/>
+</svg>`;
     if (balance < total) {
-      document.getElementById('verdict-payment').textContent = 'Пополнить на ' + (total - balance);
-      document.getElementById('verdict-payment').classList.remove('hidden');
-      document.getElementById('verdict-continue').classList.add('hidden');
+      if (payBtn) {
+        payBtn.innerHTML = svgIcon + ` Пополнить на ${total - balance} ₽`;
+        payBtn.classList.remove('hidden');
+      }
+      if (contBtn) contBtn.classList.add('hidden');
     } else {
-      document.getElementById('verdict-payment').classList.add('hidden');
-      document.getElementById('verdict-continue').classList.remove('hidden');
+      if (payBtn) payBtn.classList.add('hidden');
+      if (contBtn) contBtn.classList.remove('hidden');
     }
   }
-  radios.forEach(r => r.addEventListener('change', updateSummary));
-  toggle.addEventListener('change', updateSummary);
+  radios.forEach(function(r) { r.addEventListener('change', updateSummary); });
+  if (toggle) toggle.addEventListener('change', updateSummary);
   updateSummary();
-
-  // Отправка вердикта
-  verdictBtn.addEventListener('click', () => {
+  // Send
+  verdictBtn.addEventListener('click', function() {
     const formData = new FormData();
-    formData.append('category', type_item);
-    formData.append('brand', selectedBrand);
-    formData.append('comment', document.getElementById('comment').value);
-    document.querySelectorAll('#check_' + type_item + ' .file-input').forEach(input => {
-      if (input.files[0]) formData.append('photos', input.files[0]);
+    formData.append('category', type_item || '');
+    formData.append('brand', selectedBrand || '');
+    formData.append('comment', (document.getElementById('comment').value || ''));
+    document.querySelectorAll('#check_' + (type_item||'') + ' .file-input').forEach(function(input) {
+      if (input.files && input.files[0]) formData.append('photos', input.files[0]);
     });
-    Array.from(additionalInput.files).forEach(f => formData.append('additional_photos', f));
+    const selectedSpeed = document.querySelector('input[name="speed"]:checked');
+    const speedValue = selectedSpeed ? selectedSpeed.value : null;
+    const withReason = document.getElementById('verdictToggle')?.checked ? '1' : '0';
+
+    formData.append('speed', speedValue);
+    formData.append('with_reason', withReason);
+
     fetch("{% url 'create_verdict' %}", { method:'POST', body: formData })
-      .then(r=>r.json()).then(json=>{
-        if (json.success) window.location.href=json.redirect_url;
-        else alert('Ошибка: ' + (json.error||'неизвестная'));
-      }).catch(err=>{
-        console.error(err); alert('Не удалось создать вердикт');
+      .then(function(r){return r.json();})
+      .then(function(json){
+        if (json && json.success) window.location.href = json.redirect_url;
+        else alert('Ошибка: ' + ((json && json.error) || 'неизвестная'));
+      })
+      .catch(function(err){
+        console.error(err);
+        alert('Не удалось создать вердикт');
       });
   });
-
-  // Обработка кнопки «Назад»
-  tg.BackButton.onClick(() => {
+  // Back button
+  if (tg.BackButton.show) tg.BackButton.show();
+  if (tg.BackButton.onClick) tg.BackButton.onClick(function() {
     if (currentStep > 1) {
       currentStep--;
       showStep(currentStep);
@@ -780,10 +1566,7 @@
       window.history.back();
     }
   });
+})();
 </script>
-
-
-
-
 </body>
 </html>

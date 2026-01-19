@@ -13,4 +13,5 @@ urlpatterns = [
     path('login/', views.telegram_login, name='pc_login'),
     path('login/poll/<str:token>/', views.poll_token, name='pc_login_poll'),
     path('verdict/create/', views.create_verdict, name='create_verdict'),
+    path('uslugi/', views.uslugi, name='uslugi'),
 ]

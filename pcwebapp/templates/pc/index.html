@@ -56,6 +56,39 @@
        padding: 0;
    }
    </style>
+   <style>
+  .clickable-login {
+    position: relative;
+    cursor: pointer;
+  }
+  .clickable-login::after { content:""; position:absolute; inset:0; }
+
+  /* эффект вдавливания */
+  .pressable {
+    transition: transform .06s ease, filter .12s ease, box-shadow .12s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    border-radius: 1.2rem; /* подправь при необходимости */
+  }
+  .pressable:active,
+  .pressable.is-pressed {
+    transform: translateY(1.5px) scale(0.997);
+    filter: brightness(.98);
+    box-shadow: inset 0 3px 10px rgba(0,0,0,.18);
+  }
+  .pressable:focus-visible {
+    outline: 2px solid #70a5ff;
+    outline-offset: 2px;
+    border-radius: 1.2rem;
+  }
+
+  html { font-size: 0.52vw; }
+  a,button,input,select,h1,h2,h3,h4,h5,* {
+    box-sizing: border-box; margin:0; padding:0; border:none;
+    text-decoration:none; background:none; -webkit-font-smoothing:antialiased;
+  }
+  menu,ol,ul { list-style-type:none; margin:0; padding:0; }
+</style>
+
   <title>Document</title>
 </head>
 <body>
@@ -64,7 +97,7 @@
       {% include 'pc/header.html' %}
       <div class="_1-hi__frame-2131329235">
         <div class="_1-hi__frame-2131329234">
-          <div class="_1-hi__frame-1948754057">
+          <div class="_1-hi__frame-1948754057 clickable-login pressable">
             <div class="_1-hi__image-upload-1"></div>
             <div class="_1-hi__image-upload-2"></div>
             <div class="_1-hi__frame-1948754008">
@@ -95,7 +128,7 @@
             </div>
           </div>
           <div class="_1-hi__frame-1948754047">
-            <div class="_1-hi__frame-1948754046">
+            <div class="_1-hi__frame-1948754046 clickable-login pressable">
               <div class="_1-hi__gradient-blur"></div>
               <div class="_1-hi__frame-1000006149">
                 <img class="_1-hi__mask-group" src="{% static 'head_page/mask-group0.svg' %}" />
@@ -109,7 +142,7 @@
                 </div>
               </div>
             </div>
-            <div class="_1-hi__frame-1000006150">
+            <div class="_1-hi__frame-1000006150 clickable-login pressable">
               <div class="_1-hi__div9">
                 <span>
                   <span class="div-9-span">
@@ -129,56 +162,56 @@
         </div>
         <div class="_1-hi__frame-2131329233">
           <div class="_1-hi__frame-1948754039">
-            <div class="_1-hi__frame-1948754038">
-              <img class="_1-hi__frame-19487540342" src="{% static 'head_page/frame-19487540341.svg' %}" />
-              <div class="_1-hi__frame-1948754035">
+            <div class="_1-hi__frame-1948754038 ">
+              <img class="_1-hi__frame-19487540342 clickable-login pressable" src="{% static 'head_page/frame-19487540341.svg' %}" />
+              <div class="_1-hi__frame-1948754035 clickable-login pressable">
                 <div class="_1-hi__yeezy-logo-1">
                   <img class="_1-hi__group" src="{% static 'head_page/group0.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-1948754044">
+              <div class="_1-hi__frame-1948754044 clickable-login pressable">
                 <img
                   class="_1-hi__frame-1948754058"
                   src="{% static 'head_page/frame-19487540580.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-1948754037">
+              <div class="_1-hi__frame-1948754037 clickable-login pressable">
                 <img
                   class="_1-hi__stone-island-logo-1"
                   src="{% static 'head_page/stone-island-logo-10.svg' %}"
                 />
               </div>
-              <img class="_1-hi__frame-1948754045" src="{% static 'head_page/frame-19487540450.svg' %}" />
-              <div class="_1-hi__frame-19487540462">
+              <img class="_1-hi__frame-1948754045 clickable-login pressable" src="{% static 'head_page/frame-19487540450.svg' %}" />
+              <div class="_1-hi__frame-19487540462 clickable-login pressable">
                 <div class="_1-hi__yeezy-logo-1">
                   <img class="_1-hi__group2" src="{% static 'head_page/group1.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540472">
+              <div class="_1-hi__frame-19487540472 clickable-login pressable">
                 <img
                   class="_1-hi__frame-19487540582"
                   src="{% static 'head_page/frame-19487540581.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-19487540483">
+              <div class="_1-hi__frame-19487540483 clickable-login pressable">
                 <img
                   class="_1-hi__stone-island-logo-12"
                   src="{% static 'head_page/stone-island-logo-11.svg' %}"
                 />
               </div>
-              <img class="_1-hi__frame-19487540494" src="{% static 'head_page/frame-19487540493.svg' %}" />
-              <div class="_1-hi__frame-1948754050">
+              <img class="_1-hi__frame-19487540494 clickable-login pressable" src="{% static 'head_page/frame-19487540493.svg' %}" />
+              <div class="_1-hi__frame-1948754050 clickable-login pressable">
                 <div class="_1-hi__yeezy-logo-1">
                   <img class="_1-hi__group3" src="{% static 'head_page/group2.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-1948754051">
+              <div class="_1-hi__frame-1948754051 clickable-login pressable">
                 <img
                   class="_1-hi__frame-19487540583"
                   src="{% static 'head_page/frame-19487540582.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-1948754052">
+              <div class="_1-hi__frame-1948754052 clickable-login pressable">
                 <img
                   class="_1-hi__stone-island-logo-13"
                   src="{% static 'head_page/stone-island-logo-12.svg' %}"
@@ -226,65 +259,65 @@
               <div class="_1-hi__div10">Премиальная обувь</div>
             </div>
             <div class="_1-hi__frame-1948754038">
-              <div class="_1-hi__frame-19487540344">
+              <div class="_1-hi__frame-19487540344 clickable-login pressable">
                 <img
                   class="_1-hi__frame-19487540584"
                   src="{% static 'head_page/frame-19487540583.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-19487540352">
+              <div class="_1-hi__frame-19487540352 clickable-login pressable">
                 <div class="_1-hi__balenciaga-logo-1">
                   <img class="_1-hi__layer-1" src="{% static 'head_page/layer-10.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540362">
+              <div class="_1-hi__frame-19487540362 clickable-login pressable">
                 <div class="_1-hi__dior-logo-1">
                   <img class="_1-hi__layer-12" src="{% static 'head_page/layer-11.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540372">
+              <div class="_1-hi__frame-19487540372 clickable-login pressable">
                 <div class="_1-hi__louis-vuitton-logo-and-wordmark-1">
                   <img class="_1-hi__path-33" src="{% static 'head_page/path-330.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540383">
+              <div class="_1-hi__frame-19487540383 clickable-login pressable">
                 <img
                   class="_1-hi__frame-19487540585"
                   src="{% static 'head_page/frame-19487540584.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-19487540393">
+              <div class="_1-hi__frame-19487540393 clickable-login pressable">
                 <div class="_1-hi__balenciaga-logo-1">
                   <img class="_1-hi__layer-13" src="{% static 'head_page/layer-12.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540403">
+              <div class="_1-hi__frame-19487540403 clickable-login pressable">
                 <div class="_1-hi__dior-logo-1">
                   <img class="_1-hi__layer-14" src="{% static 'head_page/layer-13.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540413">
+              <div class="_1-hi__frame-19487540413 clickable-login pressable">
                 <div class="_1-hi__louis-vuitton-logo-and-wordmark-1">
                   <img class="_1-hi__path-332" src="{% static 'head_page/path-331.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540422">
+              <div class="_1-hi__frame-19487540422 clickable-login pressable">
                 <img
                   class="_1-hi__frame-19487540586"
                   src="{% static 'head_page/frame-19487540585.svg' %}"
                 />
               </div>
-              <div class="_1-hi__frame-19487540432">
+              <div class="_1-hi__frame-19487540432 clickable-login pressable">
                 <div class="_1-hi__balenciaga-logo-1">
                   <img class="_1-hi__layer-15" src="{% static 'head_page/layer-14.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540442">
+              <div class="_1-hi__frame-19487540442 clickable-login pressable">
                 <div class="_1-hi__dior-logo-1">
                   <img class="_1-hi__layer-16" src="{% static 'head_page/layer-15.svg' %}" />
                 </div>
               </div>
-              <div class="_1-hi__frame-19487540453">
+              <div class="_1-hi__frame-19487540453 clickable-login pressable">
                 <div class="_1-hi__louis-vuitton-logo-and-wordmark-1">
                   <img class="_1-hi__path-333" src="{% static 'head_page/path-332.svg' %}" />
                 </div>
@@ -362,5 +395,49 @@
     {% include 'pc/sidebar.html' %}
   </div>
   
+<script>
+  (function() {
+    const authUrl = "{% url 'pc_login' %}";
+
+    // делегирование: если забыли сделать <a>, но добавили класс clickable-login — тоже сработает
+    document.addEventListener('click', function(e) {
+      const el = e.target.closest('.clickable-login');
+      if (!el) return;
+      // если это ссылка — браузер сам перейдет
+      if (el.tagName !== 'A') {
+        e.preventDefault();
+        window.location.href = authUrl;
+      }
+    });
+
+    // эффект вдавливания для всего с .pressable
+    function pressStart(e) {
+      const el = e.target.closest('.pressable');
+      if (!el) return;
+      el.classList.add('is-pressed');
+    }
+    function pressEnd(e) {
+      document.querySelectorAll('.pressable.is-pressed').forEach(el => el.classList.remove('is-pressed'));
+    }
+    document.addEventListener('pointerdown', pressStart);
+    document.addEventListener('pointerup', pressEnd);
+    document.addEventListener('pointercancel', pressEnd);
+    document.addEventListener('mouseleave', pressEnd);
+
+    // доступность: Enter/Space активируют
+    document.addEventListener('keydown', function(e) {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.clickable-login')) {
+        e.preventDefault();
+        const a = e.target.closest('a.clickable-login');
+        if (a && a.href) {
+          window.location.href = a.href;
+        } else {
+          window.location.href = authUrl;
+        }
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>

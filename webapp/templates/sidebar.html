@@ -1,27 +1,37 @@
 {% load static %}
+
 <div class="fixed bottom-0 w-full flex justify-center">
-    <!-- Навигационная панель -->
-    <nav class="bg_sidebar text-gray-300 
-                px-4 mx-28 py-2 mb-4 w-full max-w-md 
-                rounded-full flex justify-between items-center" 
-         aria-label="Bottom Navigation">
-      <!-- Левая кнопка "Главная" -->
-      <a href="/" class="flex flex-col items-center">
-        <!-- Иконка домика (пример SVG иконки) -->
+  <nav class="bg_sidebar text-gray-300 
+              px-4 mx-28 py-2 mb-4 w-full max-w-md 
+              rounded-full flex justify-between items-center"
+       aria-label="Bottom Navigation">
+       
+    <!-- Кнопка "Главная" -->
+    <a href="{% url 'home' %}" class="flex flex-col items-center">
+      {% if request.resolver_match.url_name == 'home' %}
+        <img class="w-[1.5rem] h-auto" src="{% static 'home_active.svg' %}">
+      {% else %}
         <img class="w-[1.5rem] h-auto" src="{% static 'home.svg' %}">
-        <span class="text-sm">Главная</span>
-      </a>
-      <!-- Центральная кнопка "GO" -->
-      <a class="relative z-10 bg-green-500 text-white font-bold 
-                     rounded-full px-5 py-4
-                     ring-4 transform green_button" href="/check">
-        GO
+      {% endif %}
+      <span class="text-sm">Главная</span>
     </a>
-      <!-- Правая кнопка "Вердикты" -->
-      <a href="/verdicts" class="flex flex-col items-center">
-        <!-- Иконка галочки (пример SVG) -->
+
+    <!-- Кнопка "GO" -->
+    <a class="relative z-10 bg-green-500 text-white font-bold 
+               rounded-full px-5 py-4 ring-4 transform green_button"
+       href="{% url 'check' %}">
+      GO
+    </a>
+
+    <!-- Кнопка "Вердикты" -->
+    <a href="{% url 'verdicts' %}" class="flex flex-col items-center">
+      {% if request.resolver_match.url_name == 'verdicts' %}
+        <img class="w-[1.5rem] h-auto" src="{% static 'verdicts_active.svg' %}">
+      {% else %}
         <img class="w-[1.5rem] h-auto" src="{% static 'verdicts.svg' %}">
-        <span class="text-sm">Вердикты</span>
-      </a>
-    </nav>
-  </div>
+      {% endif %}
+      <span class="text-sm">Вердикты</span>
+    </a>
+
+  </nav>
+</div>

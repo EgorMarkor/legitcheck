@@ -1,0 +1,100 @@
+{% load static %}
+<!doctype html>
+<html>
+  <script>
+    // фикс для iOS/Safari: без этого :active почти не применяется
+    document.addEventListener("touchstart", function(){}, false);
+  </script>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  img {
+    display: inline-block;
+    user-select: none;              
+    -webkit-user-drag: none;        
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;     /* чтобы быстро реагировать на тап */
+    transition: transform 0.3s ease, filter 0.1s ease;
+    cursor: pointer;
+  }
+  /* «вдавленное» состояние */
+  img:active,
+  img.pressed {
+    transform: scale(0.9);
+  }
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    
+    <div class="container px-6">
+        <div class="font-bold text-[18px] mb-4">Наша поддержка работает 24/7!</div>
+        <div class="font-normal text-[15px] mb-4">
+            Мы всегда готовы помочь вам в любой момент, ответить на ваши вопросы и предоставить необходимые рекомендации.
+        </div>
+        <div class="font-medium text-[14px] mb-4">07:14, 2 сентября 2025 I 7 минут на чтение</div>
+        <div class="mb-4">
+            <img src="{% static 'articles/our_support/our_support.png' %}" class="w-full h-auto">
+        </div>
+        <div class="font-bold text-[18px] mb-4">Обратите внимание: </div>
+        <div class="font-normal text-[15px] mb-4">
+            С 23:00 до 7:00 по московскому времени время ответа может быть увеличено.
+        </div>
+        <div class="font-normal text-[15px] mb-4">
+            Если вы не нашли нужный бренд в приложении, пожалуйста, напишите менеджеру.
+        </div>
+        <div class="mb-4">
+            <img src="{% static 'articles/our_support/attention.png' %}" class="w-full h-auto">
+        </div>
+        <div class="font-bold text-[14px] mb-4 pb-24">Сервис Checker поддерживает более 500 брендов, включая одежду, обувь, часы, ювелирные изделия, косметику и другие категории. В настоящее время в приложении представлены не все бренды, и их проверка доступна через чат с менеджером.</div>
+    {% include 'sidebar.html' %}
+
+  </div>
+
+    <script>
+    // инициализируем WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // показываем кнопку "Назад" в заголовке
+    tg.BackButton.show();
+
+    // при клике уходим на предыдущий шаг истории
+    tg.BackButton.onClick(() => {
+      window.history.back();
+      tg.BackButton.hide();
+    });
+  </script>
+</body>
+</html>

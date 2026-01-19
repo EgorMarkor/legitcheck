@@ -35,7 +35,7 @@ def mobile_redirect(view_func=None, *, skip_if_authenticated=True):
         def wrapper(request, *args, **kwargs):
             if is_mobile(request):
                 if not (skip_if_authenticated and request.session.get("tg_id")):
-                    return redirect(TELEGRAM_BOT_URL)
+                    return render(request, 'pc/mobile_redir.html')
             return func(request, *args, **kwargs)
         return wrapper
     if view_func is not None:
@@ -69,6 +69,11 @@ def home(request):
     sneakers = Brand.objects.filter(category='sneakers')
     return render(request, 'pc/index.html', {'sneakers': sneakers})
 
+def uslugi(request):
+    """
+    Главная страница (desktop / уже авторизованные мобильные).
+    """
+    return render(request, 'pc/list_uslug.html')
 
 @_require_tg_user
 def start_check(request):
@@ -140,7 +145,7 @@ def telegram_login(request):
                       used_at__isnull=True,
                       created_at__gte=timezone.now() - timedelta(minutes=5))
               .count())
-    if active >= 5:
+    if active >= 30:
         return HttpResponse("Too many active tokens", status=429)
 
     token = get_random_string(6, allowed_chars=ALLOWED_TOKEN_CHARS)

@@ -6,6 +6,7 @@
     document.addEventListener("touchstart", function(){}, false);
   </script>
 {% include 'head.html' %}
+<link rel="manifest" href="/manifest.json">
 <style>
   .brend {
     width: 9rem;
@@ -64,13 +65,13 @@
       <div class="swiper myPromoSwiper">
         <div class="swiper-wrapper">
           <div class="swiper-slide flex items-center justify-center">
-            <img src="{% static 'express.png' %}" alt="Promo 1" class="w-full h-auto" />
+            <img src="{% static 'express2.png' %}" alt="Promo 1" class="w-full h-auto" />
           </div>
           <div class="swiper-slide flex items-center justify-center">
-            <img src="{% static 'express.png' %}" alt="Promo 2" class="w-full h-auto" />
+            <img src="{% static 'express2.png' %}" alt="Promo 2" class="w-full h-auto" />
           </div>
           <div class="swiper-slide flex items-center justify-center">
-            <img src="{% static 'express.png' %}" alt="Promo 3" class="w-full h-auto" />
+            <img src="{% static 'express2.png' %}" alt="Promo 3" class="w-full h-auto" />
           </div>
         </div>
       </div>
@@ -99,7 +100,7 @@
       <a href="/check" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'start_prov.png' %}" alt="Scanner"  />
       </a>
-      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+      <a href="/check" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'find_brend.png' %}" alt="Scanner" />
       </a>
     </div>
@@ -129,10 +130,10 @@
     </div>
 
     <div class="flex gap-3 px-4 mt-4">
-      <a href="#" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+      <a href="{% url 'auth_check' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'our_garanties.png' %}" alt="Scanner"  />
       </a>
-      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+      <a href="{% url 'our_support' %}" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
         <img src="{% static 'how_me_work.png' %}" alt="Scanner" />
       </a>
     </div>
@@ -146,10 +147,10 @@
     </div>
 
     <div class="flex gap-3 px-4 mt-4">
-      <a href="{% url 'articles' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+      <a href="{% url 'feedbacks' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'how_check.png' %}" alt="Scanner"  />
       </a>
-      <a href="#" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
+      <a href="{% url 'start_check' %}" class="flex-1 rounded-lg relative hover:bg-[#272b33] transition">
         <img src="{% static 'full_finance.png' %}" alt="Scanner" />
       </a>
     </div>

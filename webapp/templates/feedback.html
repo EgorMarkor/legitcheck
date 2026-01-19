@@ -1,0 +1,123 @@
+{% load static %}
+<!doctype html>
+<html>
+  <script>
+    // фикс для iOS/Safari: без этого :active почти не применяется
+    document.addEventListener("touchstart", function(){}, false);
+  </script>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  img {
+    display: inline-block;
+    user-select: none;              
+    -webkit-user-drag: none;        
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;     /* чтобы быстро реагировать на тап */
+    transition: transform 0.3s ease, filter 0.1s ease;
+    cursor: pointer;
+  }
+  /* «вдавленное» состояние */
+  img:active,
+  img.pressed {
+    transform: scale(0.9);
+  }
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+    
+    <div class="container px-6">
+        <div class="font-bold text-[18px] mb-4">Отзывы о нашем сервисе</div>
+        <div class="font-normal text-[15px] mb-4">
+            Мы ценим мнение наших пользователей и стремимся к постоянному улучшению качества обслуживания. Ознакомьтесь с отзывами о нашем сервисе на следующих платформах:
+        </div>
+        <div class="font-medium text-[14px] mb-4">07:14, 2 сентября 2025 I 7 минут на чтение</div>
+        <div class="mb-4">
+            <img src="{% static 'articles/feedbacks/feedback.png' %}" class="w-full h-auto">
+        </div>
+        <div class="font-bold text-[18px] mb-4">1. Группа ВКонтакте</div>
+        <div class="font-normal text-[15px] mb-2">
+            Читайте отзывы в разделе звезд и обсуждений:
+        </div>
+        <button class="mb-4 bg-[#53A3FF1A] text-[#53A3FF] rounded-[8px] pl-[20px] pr-[20px] pt-[15px] pb-[15px]">
+            Перейти к отзывам ВК
+        </button>
+        <div class="font-normal text-[15px] mb-2">
+            Обсуждение отзывов:
+        </div>
+        <button class="mb-4 bg-[#53A3FF1A] text-[#53A3FF] rounded-[8px] pl-[20px] pr-[20px] pt-[15px] pb-[15px]">
+            Перейти к обсуждению
+        </button>
+        <div class="font-bold text-[18px] mb-4">2. Канал Telegram</div>
+        <div class="font-normal text-[15px] mb-2">
+            Подписывайтесь на наш канал для получения свежих отзывов: 
+        </div>
+        <button class="mb-4 bg-[#53A3FF1A] text-[#53A3FF] rounded-[8px] pl-[20px] pr-[20px] pt-[15px] pb-[15px]">
+            Перейти в Telegram канал
+        </button>
+        <div class="font-bold text-[18px] mb-4">3. App Store</div>
+        <div class="font-normal text-[15px] mb-2">
+            Оставьте свой отзыв и ознакомьтесь с мнениями других пользователей на странице нашего приложения в App Store: 
+        </div>
+        <button class="mb-4 text-[#53A3FF] bg-[#53A3FF1A] rounded-[8px] pl-[20px] pr-[20px] pt-[15px] pb-[15px]">
+            Перейти в App Store
+        </button>
+        <div class="font-bold text-[18px] mb-4">Наша команда и партнеры</div>
+        <div class="font-normal text-[15px] mb-2">
+            В нашей команде работают опытные специалисты, включая бывших сотрудников Oskelly и отдела по одежде Avito. Мы гордимся тем, что можем предложить нашим пользователям высокий уровень сервиса благодаря профессионализму нашей команды.
+        </div>
+        <div class="font-normal text-[15px] mb-4 pb-24">
+            Мы сотрудничаем с множеством международных платформ, таких как Grailed, Ebay и Vinted, а также с крупными магазинами в России, предоставляя услуги аутентификации их продукции. Это позволяет нам гарантировать качество и подлинность товаров, которые мы предлагаем нашим клиентам.
+        </div>
+    {% include 'sidebar.html' %}
+
+  </div>
+
+    <script>
+    // инициализируем WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // показываем кнопку "Назад" в заголовке
+    tg.BackButton.show();
+
+    // при клике уходим на предыдущий шаг истории
+    tg.BackButton.onClick(() => {
+      window.history.back();
+      tg.BackButton.hide();
+    });
+  </script>
+</body>
+</html>

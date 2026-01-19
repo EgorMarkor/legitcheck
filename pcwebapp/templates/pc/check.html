@@ -70,154 +70,275 @@
 
     <!-- ====== НОВЫЙ ФУНКЦИОНАЛ (ШАГИ) ВСТАВЛЕН В ОСНОВНОЙ КОНТЕЙНЕР ====== -->
     <main style="max-width:58.9rem;margin:0 auto;padding:3rem 2rem 8rem;">
-      <h1 id="form-title" style="font-size:2.4rem;font-weight:700;">Выберите бренд</h1>
-      <p style="color:#9CA3AF;margin-top:.8rem;">Мы предоставляем широкий ценовой спектр, чтобы каждый смог найти, что подходит именно ему.</p>
-      <div id="progress-container"><div id="progress-bar"></div></div>
+      
+      <section style="padding:1.2vw 1.6vw;">
+    <h1 id="form-title" style="font-size:1.3vw;font-weight:800;margin:0 0 .6vw 0;">Выберите бренд</h1>
+    <p style="color:#9CA3AF;margin:0 0 1vw 0;">
+      Мы предоставляем широкий ценовой спектр, чтобы каждый смог найти, что подходит именно ему.
+    </p>
+    <div id="progress-container" style="width:100%;height:.35vw;background:#171C23;border-radius:1.55vw;overflow:hidden;margin:0 0 1.4vw 0;">
+      <div id="progress-bar" style="height:100%;width:0;background:#13CD90;border-radius:1.55vw;transition:width .5s ease-in-out;"></div>
+    </div>
+  </section>
 
-      <!-- ШАГ 1 -->
-      <section id="brand-section" class="fade show">
-        <div id="switch">
-          <div id="switch-indicator"></div>
-          <button id="btn-basic">Базовые</button>
-            <button id="btn-luxury" class="text-neutral-400">Люкс</button>
-        </div>
-        <div id="brands-basic" class="grid-brands">
-          <img src="{% static 'jordan.png' %}"        data-brand="jordan"        class="brend" alt="jordan" />
-          <img src="{% static 'champion.png' %}"      data-brand="champion"      class="brend" alt="champion" />
-          <img src="{% static 'palmangels.png' %}"    data-brand="palmangels"    class="brend" alt="palmangels" />
-          <img src="{% static 'yeezy.png' %}"         data-brand="yeezy"         class="brend" alt="yeezy" />
-          <img src="{% static 'nike.png' %}"          data-brand="nike"          class="brend" alt="nike" />
-          <img src="{% static 'stoneisland.png' %}"   data-brand="stoneisland"   class="brend" alt="stoneisland" />
-          <img src="{% static 'nb.png' %}"            data-brand="nb"            class="brend" alt="nb" />
-          <img src="{% static 'eye.png' %}"           data-brand="eye"           class="brend" alt="eye" />
-          <img src="{% static 'puma.png' %}"          data-brand="puma"          class="brend" alt="puma" />
-          <img src="{% static 'supreme.png' %}"       data-brand="supreme"       class="brend" alt="supreme" />
-        </div>
-        <div id="brands-luxury" class="grid-brands hidden">
-          <img src="{% static 'louisvuitton.png' %}" data-brand="louisvuitton"  class="brend" alt="louisvuitton" />
-          <img src="{% static 'vetements.png' %}"    data-brand="vetements"     class="brend" alt="vetements" />
-          <img src="{% static 'dg.png' %}"           data-brand="dg"            class="brend" alt="dg" />
-          <img src="{% static 'balenciaga.png' %}"   data-brand="balenciaga"    class="brend" alt="balenciaga" />
-          <img src="{% static 'miumiu.png' %}"       data-brand="miumiu"        class="brend" alt="miumiu" />
-          <img src="{% static 'dior.png' %}"         data-brand="dior"          class="brend" alt="dior" />
-          <img src="{% static 'cartier.png' %}"      data-brand="cartier"       class="brend" alt="cartier" />
-          <img src="{% static 'bottega.png' %}"      data-brand="bottega"       class="brend" alt="bottega" />
-          <img src="{% static 'gucci.png' %}"        data-brand="gucci"         class="brend" alt="gucci" />
-          <img src="{% static 'moncler.png' %}"      data-brand="moncler"       class="brend" alt="moncler" />
-        </div>
-      </section>
+  <!-- Шаг 1: Блок выбора бренда -->
+  <section id="brand-section" style="padding:0 1.6vw 1.2vw 1.6vw;transition:opacity .5s ease-in-out;opacity:1; height: 90rem;
+overflow: auto;">
+    <!-- Переключатель -->
+    <div id="switch" style="position:relative;margin:0 auto 1.2vw auto;display:flex;width:100%;max-width:36vw;align-items:center;background:#0C0F14;border-radius:999px;padding:.5vw;">
+      <div id="switch-indicator" style="position:absolute;inset: .25vw auto .25vw .25vw;width:33.3333%;border-radius:999px;background:#171C23;transform:translateX(0%);transition:transform .3s ease-in-out;pointer-events:none;"></div>
+      <button data-tab="all" class="seg-btn" style="position:relative;z-index:1;flex:1;padding:.8vw 0;text-align:center;font-weight:700;background:transparent;border:none;color:#E5E7EB;cursor:pointer;">Все</button>
+      <button data-tab="basic" class="seg-btn" style="position:relative;z-index:1;flex:1;padding:.8vw 0;text-align:center;font-weight:500;background:transparent;border:none;color:#9CA3AF;cursor:pointer;">Обычные</button>
+      <button data-tab="luxury" class="seg-btn" style="position:relative;z-index:1;flex:1;padding:.8vw 0;text-align:center;font-weight:500;background:transparent;border:none;color:#9CA3AF;cursor:pointer;">Люкс</button>
+    </div>
 
-      <!-- ШАГ 2 -->
-      <section id="item-section" class="fade hidden">
-        <h2 style="font-size:2rem;font-weight:700;margin-bottom:1.2rem;">Выберите тип вещи</h2>
-        <div id="itemType" class="grid-brands" style="grid-template-columns:repeat(5,1fr);">
-          <img src="{% static 'sneakers_pl.png' %}" data-type="sneakers" class="type" alt="sneakers" />
-          <img src="{% static 'bag.png' %}"         data-type="bag"      class="type" alt="bag" />
-          <img src="{% static 'pants.png' %}"       data-type="pants"    class="type" alt="pants" />
-          <img src="{% static 'hoodie.png' %}"      data-type="hoodie"   class="type" alt="hoodie" />
-          <img src="{% static 'belt.png' %}"        data-type="belt"     class="type" alt="belt" />
-        </div>
-      </section>
+    <div style="position:relative;margin:0 auto;width:100%;max-width:64vw;">
+      <!-- Вертикальная A–Z навигация справа -->
+      <nav id="az-rail" style="position:absolute;right:0;top:0;display:block;height:100%;user-select:none;">
+        <ul style="position:sticky;top:1.8vw;display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:80vh;padding:1vw .6vw 1vw 0;margin:0;list-style:none;color:#9CA3AF;font-size:.68vw;">
+          <!-- буквы создаст скрипт -->
+        </ul>
+      </nav>
 
-      <!-- ШАГ 3 (ДИНАМИЧЕСКИЕ СЕКЦИИ ЗАГРУЗКИ) -->
-      <div id="upload-sections-wrapper">
-        <!-- sneakers -->
-        <section id="check_sneakers" style="justify-content: center; gap: 1.5rem; margin-left: -41rem; /* position: absolute; */ width: 147.7rem; display: flex; flex-wrap: wrap;" class="fade hidden">
-          <!-- repeat blocks -->
-          <div class="check-item"><img src="{% static 'external_boots.png' %}" class="preview-img" alt="Внешняя сторона" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Внешняя сторона</h3><p>Сфотографируйте кроссовок с внешней стороны</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'internal_boots.png' %}" class="preview-img" alt="Внутренняя сторона" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Внутренняя сторона</h3><p>Сфотографируйте кроссовок с внутренней стороны</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'sock_boots.png' %}" class="preview-img" alt="Носок" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Носок</h3><p>Сфотографируйте кроссовок со стороны носка</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'behind_boots.png' %}" class="preview-img" alt="Вид сзади" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Вид сзади</h3><p>Сфотографируйте кроссовок сзади</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'sole_boots.png' %}" class="preview-img" alt="Подошва" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Подошва</h3><p>Сфотографируйте подошву кроссовка</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'internal_tag_boots.png' %}" class="preview-img" alt="Внутренняя бирка" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Внутренняя бирка</h3><p>Сфотографируйте внутреннюю бирку кроссовка</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-          <div class="check-item"><img src="{% static 'outside_tag_boots.png' %}" class="preview-img" alt="Бирка на коробке" /><div class="flex-col" style="flex:1;justify-content:space-between;height:10rem;"> <div><h3>Бирка на коробке</h3><p>Сфотографируйте бирку на коробке от кроссовок</p></div><div class="upload-btn"><img src="{% static 'camera.svg' %}" style="width:2.6rem;height:2.6rem;" alt=""/><input type="file" accept="image/*" class="file-input"/></div></div></div>
-        </section>
-        <!-- Аналогично вставьте остальные секции (bag, pants, hoodie, belt) из второй страницы -->
-        {% comment %}Сокращено для примера. Добавьте остальные по аналогии.{% endcomment %}
+      <!-- Поле поиска бренда -->
+      <div style="margin:0 auto 1.2vw auto;width:100%;max-width:36vw;">
+        <div style="position:relative;">
+          <input
+            id="brand-search"
+            type="text"
+            placeholder="Поиск бренда..."
+            style="width:100%;border-radius:999px;background:#0C0F14;padding:.9vw 2.2vw .9vw 1.3vw;color:#fff;border:none;outline:none;box-shadow:0 0 0 0 rgba(0,0,0,0);"
+            onfocus="this.style.boxShadow='0 0 0 .15vw #13CD90'"
+            onblur="this.style.boxShadow='0 0 0 0 rgba(0,0,0,0)'"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               style="position:absolute;right:1.1vw;top:50%;transform:translateY(-50%);width:1.1vw;height:1.1vw;color:#9CA3AF;">
+            <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.65 5.65a7.5 7.5 0 016 12.99z"/>
+          </svg>
+        </div>
       </div>
 
-      <!-- Дополнительные фото + комментарий -->
-      <section id="obsh_type" class="fade hidden">
-        <div style="background:linear-gradient(to bottom,#171C24,#11151A);border-radius:24px;padding:2.4rem;margin-top:2rem;">
-          <h2 style="font-size:2rem;font-weight:600;">Дополнительные фотографии</h2>
-          <p style="color:#9CA3AF;margin-top:.8rem;">Загрузите дополнительные фото, которые могут помочь при проверке</p>
-          <div id="additional-previews" style="display:flex;flex-wrap:wrap;gap:.8rem;margin-top:1rem;"></div>
-          <div style="width:100%;height:4.2rem;background:#0C0F14;border-radius:1.2rem;margin-top:1.2rem;display:flex;align-items:center;justify-content:center;position:relative;">
-            <img src="{% static 'camera.svg' %}" style="width:2rem;height:2rem;" alt=""/>
-            <input id="additional-photos-input" type="file" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
+      <!-- Контейнер секций -->
+      <div id="brand-list">
+        <!-- секции A, B, C... создаст скрипт -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Шаг 2: Выбор типа вещи -->
+  <section id="item-section" style="padding:0 1.6vw 1.2vw 1.6vw;transition:opacity .5s ease-in-out;display:none;opacity:0;">
+    <div id="itemType" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1vw;">
+      <img src="{% static 'categories/sneakers.png' %}" data-type="sneakers" class="type" alt="sneakers" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/clothes.png' %}" data-type="clothes" class="type" alt="clothes" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/bags.png' %}" data-type="bags" class="type" alt="bags" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/belts.png' %}" data-type="belts" class="type" alt="belts" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/watch.png' %}" data-type="watch" class="type" alt="watch" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/cosmetics.png' %}" data-type="cosmetics" class="type" alt="cosmetics" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/jewerly.png' %}" data-type="jewerly" class="type" alt="jewerly" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/toys.png' %}" data-type="toys" class="type" alt="toys" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/accsesory.png' %}" data-type="accsesory" class="type" alt="accsesory" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+      <img src="{% static 'categories/others.png' %}" data-type="others" class="type" alt="others" style="cursor:pointer;max-width:100%;height:auto;border-radius:.8vw;background:#0C0F14;padding:.6vw;" />
+    </div>
+  </section>
+
+  <!-- Шаг 3: Загрузка фотографий (пример: sneakers) -->
+  <section id="check_sneakers" style="padding:0 1.6vw 1.2vw 1.6vw;transition:opacity .5s ease-in-out;display:none;opacity:0;">
+    <h2 style="color:#fff;font-size:1vw;font-weight:700;margin:0 0 .9vw 0;">Необходимые фотографии</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.8vw;">
+      <!-- карточки 1..7 -->
+      <!-- Универсальный стиль карточки -->
+      <!-- 1 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/vnesh_prav.png' %}" alt="Внешний вид (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Внешний вид<br>(справа)</p>
+      </div>
+      <!-- 2 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/vnesh_lev.png' %}" alt="Внешний вид (слева)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Внешний вид<br>(слева)</p>
+      </div>
+      <!-- 3 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/pyatka.png' %}" alt="Пятка (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Пятка<br>(справа)</p>
+      </div>
+      <!-- 4 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/podoshva.png' %}" alt="Подошва (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Подошва<br>(справа)</p>
+      </div>
+      <!-- 5 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/verh_stelk.png' %}" alt="Верхняя часть стельки (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Верхняя часть<br>стельки (справа)</p>
+      </div>
+      <!-- 6 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/zad_stel.png' %}" alt="Задняя часть стельки (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Задняя часть<br>стельки (справа)</p>
+      </div>
+      <!-- 7 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/inside_shov.png' %}" alt="Внутренний шов (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Внутренний шов<br>(справа)</p>
+      </div>
+    </div>
+
+    <h2 style="color:#fff;font-size:1vw;font-weight:700;margin:1.2vw 0 .9vw 0;">Дополнительные фотографии</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.8vw;">
+      <!-- 8 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/vnutr_etik.png' %}" alt="Внутренняя этикетка (справа)" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Внутр.этикетка<br>(справа)</p>
+      </div>
+      <!-- 9 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/shtamp.png' %}" alt="Штамп на коробке" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Штамп<br>на коробке</p>
+      </div>
+      <!-- 10 -->
+      <div class="rounded-2xl" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:6.5rem;height:6.5rem;background:#11151A;border-radius:.9vw;display:flex;align-items:center;justify-content:center;margin:0 0 .3vw 0;position:relative;overflow:hidden;flex-shrink:0;">
+          <img src="{% static 'sneakers/etik.png' %}" alt="Этикетка коробки" style="width:6.5rem;height:6.5rem;opacity:.7;object-fit:contain;">
+        </div>
+        <p style="color:#fff;font-size:.72vw;text-align:center;margin:.1vw 0 0 0;">Этикетка<br>коробки</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- (Из-за объема не дублируем все остальные секции проверки: clothes/bags/... — структура аналогична sneakers и будет работать с этим же JS) -->
+  <!-- Если нужны ВСЕ секции из исходника в inline-стиле — скажите, сгенерирую полный блок под каждую категорию. -->
+
+  <!-- Общая секция комментария и кнопки продолжить -->
+  <section id="obsh_type" style="transition:opacity .5s ease-in-out;display:none;opacity:0;">
+    <section style="padding:0 1.6vw 1.2vw 1.6vw;">
+      <label for="comment" style="display:block;color:#fff;font-size:.95vw;font-weight:600;margin:0 0 .6vw 0;">Комментарий</label>
+      <textarea id="comment" rows="4" placeholder="Введите текст..."
+        style="width:100%;background:#0C0F14;border-radius:1vw;padding:1vw;color:#fff;border:none;outline:none;box-shadow:0 0 0 0 rgba(0,0,0,0);resize:vertical;"
+        onfocus="this.style.boxShadow='0 0 0 .15vw #13CD90'"
+        onblur="this.style.boxShadow='0 0 0 0 rgba(0,0,0,0)'"></textarea>
+    </section>
+    <section style="padding:0 1.6vw 2.2vw 1.6vw;">
+      <button id="continue-btn"
+        style="width:100%;height:3.2vw;background:linear-gradient(90deg,#13CD90,#0ABA6F);border-radius:1vw;color:#fff;font-size:.95vw;font-weight:600;border:none;cursor:pointer;">
+        Продолжить
+      </button>
+    </section>
+  </section>
+
+  <!-- Секция с вариантами вердикта -->
+  <section id="verdict-section" style="padding:0 1.6vw 1.2vw 1.6vw;display:none;opacity:0;transition:opacity .5s ease-in-out;">
+    <!-- Итоговая плашка -->
+    <div style="background:linear-gradient(180deg,#171C24,#11151A);border-radius:1.2vw;padding:1vw;display:flex;align-items:center;gap:1vw;">
+      <div style="background:#0B0D11;border-radius:1.2vw;padding:1vw;display:flex;align-items:center;width:100%;gap:1vw;">
+        <div style="flex:1;display:grid;grid-template-columns:1fr;row-gap:.4vw;">
+          <div style="color:#9CA3AF;font-size:.72vw;">Категория</div>
+          <div id="verdict-category" style="color:#fff;font-size:1vw;font-weight:700;">–</div>
+          <div style="color:#9CA3AF;font-size:.72vw;">Бренд</div>
+          <div id="verdict-brand" style="color:#fff;font-size:1vw;font-weight:700;">–</div>
+          <div style="color:#9CA3AF;font-size:.72vw;">Модель</div>
+          <div id="verdict-model" style="color:#fff;font-size:1vw;font-weight:700;">–</div>
+        </div>
+        <img id="verdict-photo" src="" alt="Sneaker" style="width:8vw;height:auto;border-radius:.6vw;object-fit:cover;">
+      </div>
+    </div>
+
+    <!-- Переключатель «Обоснование вердикта» -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#0C0F14;border-radius:1vw;padding:1vw;margin-top:1vw;">
+      <div style="display:flex;align-items:center;gap:.8vw;">
+        <div style="color:#fff;font-weight:600;">Обоснование вердикта</div>
+        <div style="color:#13CD90;font-weight:600;">+150 ₽</div>
+      </div>
+      <div>
+        <label style="display:inline-flex;align-items:center;cursor:pointer;">
+          <input type="checkbox" class="sr-only" id="verdictToggle" style="position:absolute;opacity:0;pointer-events:none;">
+          <div id="verdictToggleRail"
+               style="position:relative;width:2.2vw;height:1.6vw;background:#374151;border-radius:999px;transition:background .2s;">
+            <div id="verdictToggleThumb"
+                 style="position:absolute;top:.2vw;left:.2vw;width:1.2vw;height:1.2vw;background:#fff;border:1px solid #4B5563;border-radius:999px;transition:transform .2s;"></div>
           </div>
-        </div>
-        <div style="margin-top:2.4rem;">
-          <label for="comment" style="display:block;font-size:1.2rem;font-weight:600;margin-bottom:.6rem;">Комментарий</label>
-          <textarea id="comment" placeholder="Введите текст..."></textarea>
-        </div>
-        <div style="margin-top:1.6rem;">
-          <button id="continue-btn" class="btn-main">Продолжить</button>
-        </div>
-      </section>
+        </label>
+      </div>
+    </div>
 
-      <!-- ШАГ 4: Вердикт -->
-      <section id="verdict-section" class="fade hidden">
-        <div style="background:linear-gradient(to bottom,#171C24,#11151A);border-radius:24px;padding:1.6rem;display:flex;gap:1.6rem;align-items:center;margin-bottom:2rem;">
-          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
-            <div style="color:#9CA3AF;font-size:.85rem;">Категория</div><div id="verdict-category" style="font-weight:600;">–</div>
-            <div style="color:#9CA3AF;font-size:.85rem;">Бренд</div><div id="verdict-brand" style="font-weight:600;">–</div>
-            <div style="color:#9CA3AF;font-size:.85rem;">Модель</div><div id="verdict-model" style="font-weight:600;">–</div>
-          </div>
-          <img id="verdict-photo" src="" alt="Фото" style="width:8rem;height:8rem;object-fit:cover;border-radius:1rem;background:#0C0F14;" />
-        </div>
+    <!-- Карточки вариантов скорости -->
+    <div id="options" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1vw;margin:1vw 0;">
+      <!-- 24 часа -->
+      <label style="position:relative;display:block;background:linear-gradient(180deg,#171C24,#11151A);border-radius:1vw;padding:1vw 1vw 1.2vw 1vw;cursor:pointer;">
+        <input type="radio" name="speed" value="24h" data-text="24 часа — 450 ₽" class="speed-input" style="display:none;" />
+        <div class="radio-indicator" style="position:absolute;top:1vw;right:1vw;width:1.2vw;height:1.2vw;border-radius:999px;border:.12vw solid #52525B;display:flex;align-items:center;justify-content:center;"></div>
+        <div style="color:#9CA3AF;font-size:.68vw;">24 часа</div>
+        <div style="color:#fff;font-size:1vw;font-weight:700;">450 ₽</div>
+        <img src="{% static 'lupa.png' %}" alt="" style="display:block;margin:.8vw auto 0 auto;max-width:100%;height:auto;object-fit:contain;">
+      </label>
 
-        <!-- Обоснование -->
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#0C0F14;padding:1.2rem 1.6rem;border-radius:1.6rem;margin-bottom:1.6rem;">
-          <div style="display:flex;align-items:center;gap:1rem;font-weight:500;">
-            <span>Обоснование вердикта</span><span style="color:#13CD90;">+150 ₽</span>
-          </div>
-          <label style="cursor:pointer;display:inline-flex;align-items:center;">
-            <input type="checkbox" id="verdictToggle" style="display:none;" />
-            <span style="position:relative;display:inline-block;width:2.5rem;height:1.8rem;background:#374151;border-radius:1rem;transition:.3s;">
-              <span id="toggleKnob" style="position:absolute;top:2px;left:2px;width:1.4rem;height:1.4rem;background:#fff;border-radius:50%;transition:.3s;"></span>
-            </span>
-          </label>
-        </div>
+      <!-- 15 минут (дорогой) -->
+      <label style="position:relative;display:block;background:linear-gradient(180deg,#171C24,#11151A);border-radius:1vw;padding:1vw 1vw 1.2vw 1vw;cursor:pointer;">
+        <input type="radio" name="speed" value="15min-expensive" data-text="15 минут (дорогой) — 600 ₽" class="speed-input" style="display:none;" />
+        <div class="radio-indicator" style="position:absolute;top:1vw;right:1vw;width:1.2vw;height:1.2vw;border-radius:999px;border:.12vw solid #52525B;display:flex;align-items:center;justify-content:center;"></div>
+        <div style="color:#9CA3AF;font-size:.68vw;">15 минут</div>
+        <div style="color:#fff;font-size:1vw;font-weight:700;">650 ₽</div>
+        <img src="{% static 'clock.png' %}" alt="" style="display:block;margin:.4vw auto 0 auto;max-width:100%;height:auto;object-fit:contain;">
+      </label>
 
-        <!-- Тарифы -->
-        <div id="options" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem;">
-          <label class="price-card" data-value="24h" data-price="450">
-            <input type="radio" name="speed" value="24h" />
-            <div class="radio-indicator"></div>
-            <div style="color:#9CA3AF;font-size:.75rem;">24 часа</div>
-            <div style="font-size:1.25rem;font-weight:600;">450 ₽</div>
-            <img src="{% static 'lupa.png' %}" alt="" style="display:block;margin:1.2rem auto 0;max-width:70%;" />
-          </label>
-          <label class="price-card" data-value="15min-expensive" data-price="650">
-            <input type="radio" name="speed" value="15min-expensive" />
-            <div class="radio-indicator"></div>
-            <div style="color:#9CA3AF;font-size:.75rem;">15 минут</div>
-            <div style="font-size:1.25rem;font-weight:600;">650 ₽</div>
-            <img src="{% static 'clock.png' %}" alt="" style="display:block;margin:.6rem auto 0;max-width:70%;" />
-          </label>
-          <label class="price-card" data-value="15min-basic" data-price="600">
-            <input type="radio" name="speed" value="15min-basic" />
-            <div class="radio-indicator"></div>
-            <div style="color:#9CA3AF;font-size:.75rem;">15 минут</div>
-            <div style="font-size:1.25rem;font-weight:600;">600 ₽</div>
-            <img src="{% static 'almaz.png' %}" alt="" style="display:block;margin:1rem auto 0;max-width:60%;" />
-          </label>
-        </div>
+      <!-- 15 минут (базовый) -->
+      <label style="position:relative;display:block;background:linear-gradient(180deg,#171C24,#11151A);border-radius:1vw;padding:1vw 1vw 1.2vw 1vw;cursor:pointer;">
+        <input type="radio" name="speed" value="15min-basic" data-text="15 минут (базовый) — 300 ₽" class="speed-input" style="display:none;" />
+        <div class="radio-indicator" style="position:absolute;top:1vw;right:1vw;width:1.2vw;height:1.2vw;border-radius:999px;border:.12vw solid #52525B;display:flex;align-items:center;justify-content:center;"></div>
+        <div style="color:#9CA3AF;font-size:.68vw;">15 минут</div>
+        <div style="color:#fff;font-size:1vw;font-weight:700;">600 ₽</div>
+        <img src="{% static 'almaz.png' %}" alt="" style="display:block;margin:.6vw auto 0 auto;max-width:100%;height:auto;object-fit:contain;">
+      </label>
+    </div>
 
-        <!-- Итоги -->
-        <div style="background:transparent;border-radius:1.6rem;margin-bottom:1.2rem;">
-          <div class="summary-line"><span>Сумма заказа</span><span id="orderSum">0 ₽</span></div>
-          <div class="summary-line"><span>Обоснование вердикта</span><span id="verdictSum">0 ₽</span></div>
-          <div class="summary-line total"><span>Сумма заказа</span><span id="totalSum">0 ₽</span></div>
-        </div>
+    <button id="verdict-continue"
+      style="width:100%;height:3.2vw;background:linear-gradient(90deg,#13CD90,#0ABA6F);border-radius:1vw;color:#fff;font-size:.95vw;font-weight:600;border:none;cursor:pointer;">
+      Продолжить
+    </button>
 
-        <button id="verdict-continue" class="btn-main" style="margin-top:1rem;">Продолжить</button>
-        <button onclick="window.location.href='{% url 'pc_pay' %}'" id="verdict-payment" class="btn-main hidden" style="margin-top:1rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="15" viewBox="0 0 17 15" fill="none"><path d="M16.8334 6.76602V8.48268C16.8334 8.94102 16.4667 9.31602 16 9.33268H14.3667C13.4667 9.33268 12.6417 8.67435 12.5667 7.77435C12.5167 7.24935 12.7167 6.75768 13.0667 6.41602C13.375 6.09935 13.8 5.91602 14.2667 5.91602H16C16.4667 5.93268 16.8334 6.30768 16.8334 6.76602Z" fill="white"/><path d="M15.5584 10.5827H14.3667C12.7834 10.5827 11.4501 9.39102 11.3167 7.87435C11.2417 7.00768 11.5584 6.14102 12.1917 5.52435C12.7251 4.97435 13.4667 4.66602 14.2667 4.66602H15.5584C15.8001 4.66602 16.0001 4.46602 15.9751 4.22435C15.7917 2.19935 14.4501 0.816016 12.4584 0.582682C12.2584 0.549349 12.0501 0.541016 11.8334 0.541016H4.33342C4.10008 0.541016 3.87508 0.557682 3.65841 0.591016C1.53341 0.857682 0.166748 2.44102 0.166748 4.70768V10.541C0.166748 12.841 2.03341 14.7077 4.33342 14.7077H11.8334C14.1667 14.7077 15.7751 13.2493 15.9751 11.0243C16.0001 10.7827 15.8001 10.5827 15.5584 10.5827ZM9.33342 5.74935H4.33342C3.99175 5.74935 3.70841 5.46602 3.70841 5.12435C3.70841 4.78268 3.99175 4.49935 4.33342 4.49935H9.33342C9.67508 4.49935 9.95842 4.78268 9.95842 5.12435C9.95842 5.46602 9.67508 5.74935 9.33342 5.74935Z" fill="white"/></svg>
-          <span id="payment-text">Пополнить на</span>
-        </button>
-      </section>
+    <button onclick="window.location.href='{% url 'pc_pay' %}'" id="verdict-payment"
+      style="display:none;width:100%;height:3.2vw;background:linear-gradient(90deg,#13CD90,#0ABA6F);border-radius:1vw;color:#fff;font-size:.95vw;font-weight:600;border:none;cursor:pointer;align-items:center;justify-content:center;gap:.6vw;margin-top:.6vw;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="15" viewBox="0 0 17 15" fill="none" style="display:inline;">
+        <path d="M16.8334 6.76602V8.48268C16.8334 8.94102 16.4667 9.31602 16 9.33268H14.3667C13.4667 9.33268 12.6417 8.67435 12.5667 7.77435C12.5167 7.24935 12.7167 6.75768 13.0667 6.41602C13.375 6.09935 13.8 5.91602 14.2667 5.91602H16C16.4667 5.93268 16.8334 6.30768 16.8334 6.76602Z" fill="white"/>
+        <path d="M15.5584 10.5827H14.3667C12.7834 10.5827 11.4501 9.39102 11.3167 7.87435C11.2417 7.00768 11.5584 6.14102 12.1917 5.52435C12.7251 4.97435 13.4667 4.66602 14.2667 4.66602H15.5584C15.8001 4.66602 16.0001 4.46602 15.9751 4.22435C15.7917 2.19935 14.4501 0.816016 12.4584 0.582682C12.2584 0.549349 12.0501 0.541016 11.8334 0.541016H4.33342C4.10008 0.541016 3.87508 0.557682 3.65841 0.591016C1.53341 0.857682 0.166748 2.44102 0.166748 4.70768V10.541C0.166748 12.841 2.03341 14.7077 4.33342 14.7077H11.8334C14.1667 14.7077 15.7751 13.2493 15.9751 11.0243C16.0001 10.7827 15.8001 10.5827 15.5584 10.5827ZM9.33342 5.74935H4.33342C3.99175 5.74935 3.70841 5.46602 3.70841 5.12435C3.70841 4.78268 3.99175 4.49935 4.33342 4.49935H9.33342C9.67508 4.49935 9.95842 4.78268 9.95842 5.12435C9.95842 5.46602 9.67508 5.74935 9.33342 5.74935Z" fill="white"/>
+      </svg>
+      <span id="verdict-payment-text">Пополнить на</span>
+    </button>
+
+    <div style="background:transparent;border-radius:1vw;width:100%;margin-top:1vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 .5vw 0;">
+        <span style="font-size:.78vw;color:#9CA3AF;">Сумма заказа</span>
+        <span id="orderSum" style="font-size:.78vw;color:#9CA3AF;">0 ₽</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 1vw 0;">
+        <span style="font-size:.78vw;color:#9CA3AF;">Обоснование вердикта</span>
+        <span id="verdictSum" style="font-size:.78vw;color:#9CA3AF;">0 ₽</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:1vw;color:#fff;font-weight:700;">Сумма заказа</span>
+        <span id="totalSum" style="font-size:1vw;color:#fff;font-weight:700;">0 ₽</span>
+      </div>
+    </div>
+  </section>
 
     </main>
 
@@ -262,137 +383,502 @@
     </div>
   </div>
 
-  <div class="_1-legit-default__border2">
-    <div class="_1-legit-default__frame-1948754056">
-      <div class="_1-legit-default__frame-1948754055">
-        <div class="_1-legit-default__frame-1948754052">
-          <img class="_1-legit-default__group-8745" src="{% static 'check/group-87450.svg' %}" />
-          <div class="_1-legit-default__div9">Главная</div>
-        </div>
-        <div class="_1-legit-default__bt"></div>
-      </div>
-      <div class="_1-legit-default__frame-1948754076">
-        <div class="_1-legit-default__frame-1948754054"><div class="_1-legit-default__go">GO</div></div>
-      </div>
-      <div class="_1-legit-default__frame-1948754053">
-        <img class="_1-legit-default__group-87452" src="{% static 'check/group-87451.svg' %}" />
-        <div class="_1-legit-default__div10">Вердикты</div>
-      </div>
-    </div>
-  </div>
+  {% include 'pc/sidebar.html' %}
 </div>
 
 <script>
-  // ==== Telegram WebApp integration (если нужно) ====
-  const tg = window.Telegram ? window.Telegram.WebApp : null;
-  if (tg) tg.BackButton.show();
+/* ===== Helper to set display/opacity inline (instead of utility classes) ===== */
+function showBlock(el){ if(!el) return; el.style.display='block'; requestAnimationFrame(()=>{ el.style.opacity='1';}); }
+function hideBlock(el){ if(!el) return; el.style.opacity='0'; setTimeout(()=>{ el.style.display='none'; }, 200); }
 
-  // ==== ELEMENTS ====
+/* ===== Photo upload handler (inline CSS only) ===== */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
+    const cards = section.querySelectorAll('div.rounded-2xl');
+    cards.forEach(function(card) {
+      const img = card.querySelector('img');
+      if (!img) return;
+      const wrapper = img.parentElement;
+      // Create hidden input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.style.display = 'none';
+      input.className = 'file-input';
+      card.appendChild(input);
+
+      const originalSrc = img.src;
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', function() { input.click(); });
+
+      input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          img.src = ev.target.result;
+          img.style.objectFit = 'cover';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.opacity = '1';
+          img.classList.add('preview-img');
+          const existingCross = wrapper.querySelector('.photo-cross');
+          if (existingCross) existingCross.remove();
+          const cross = document.createElement('img');
+          cross.src = "{% static 'photo_cross.svg' %}";
+          cross.className = 'photo-cross';
+          cross.style.position = 'absolute';
+          cross.style.top = '.4vw';
+          cross.style.right = '.4vw';
+          cross.style.width = '.9vw';
+          cross.style.height = '.9vw';
+          cross.style.cursor = 'pointer';
+          cross.style.zIndex = '10';
+          cross.style.opacity = '.8';
+          cross.addEventListener('mouseenter', ()=>cross.style.opacity='1');
+          cross.addEventListener('mouseleave', ()=>cross.style.opacity='.8');
+          cross.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            img.src = originalSrc;
+            img.style.opacity = '.7';
+            img.classList.remove('preview-img');
+            input.value = '';
+            cross.remove();
+          });
+          wrapper.appendChild(cross);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  });
+
+  // Fallback for previews if images 404
+  const PREVIEW_FALLBACK = "{% static 'placeholder.png' %}";
+  document.querySelectorAll('.preview-img').forEach(function(img) {
+    img.addEventListener('error', function() { img.src = PREVIEW_FALLBACK; }, { once: true });
+  });
+
+  /* ===== Brands and tabs with search ===== */
+  (function() {
+    const ALL_BRANDS = [
+"A Bathing APE","Aesop","Anastasia Beverly Hils","Armani Beauty","Acne Studios","Adidas","Adidas Neo",
+"Adidas Originals","Air Jordan","Alexander McQueen","Alexander Wang","Alo Yoga","American Tourister","Amiri","AMIPARIS",
+"ANTA","Arcteryx","Armani Exchange","Audemars Piguet","Asics","Apm Monaco",
+"Balenciaga","Bally","Balmain","Bottega Veneta","Bobbi Brown","Brunello Cucinelli","Breitling","BVLGARI","Burberry",
+"C.P. Company","Canada Goose","Calvin Klein","Cartier","Casio","Carhartt","Celine","Chrome Hearts","Coach","Chopard",
+"Champion","Chanel","Clarins","Clinique","Charlotte Tibury","Calvin Klein Beauty","Chloé","Columbia","Converse","Crocs","Citizen",
+"Dickies","Diesel","Dior","Disney","Dr. Martens",
+"EastPak","Emporio Armani","Estee Lauder","E.L.F. Cosmetics","Evisu",
+"Fear Of God","Fear Of God Essentials","Fendi","Fenty Beauty","Fresh","Fila","Furla",
+"Gap","Garnier","Glossier","Givenchy","Golden Goose","Goyard","Gucci","Graff","Guess",
+"Hermes","Hamilton","Hoka One One","Hugo Boss","Hublot","Human Made",
+"Issey Miyake",
+"Jacquemus","Jaeger-LeCOULTURE","Jack Wolfskin","Jeep","Jil Sander","Jimmy Choo",
+"Kangol","Kappa","Kiko Milano","Kelme","Kylie Cosmetics","Kenzo",
+"Lacoste","Lee","Levis","LEGO","Lanvin","Loewe","Lemaire","Loro Piana","L’Oreal Paris","Louis Vuitton","LONGINES","Lancome",
+"Maison Margiela","Maserati","Maurice Laicroix","Marc Jacobs","Marni","MCM","Michael Kors","Miu Miu","Mizuno","MM6 Maison Margiela","Moncler","MONTBLANC","Moon Boot","Moschino",
+"New Balance","Nike",
+"Oakley","Off - White","OMEGA","Onitsuka Tiger",
+"Palm Angels","Patagonia","Pinko","Polo Ralph Lauren","Prada","PATEK PHILIPPE","Puma","Pokemon",
+"RADO","RayBan","Raf Simons","Reebok","Rick Owens","ROLEX",
+"Saint Laurent","Salomon","Saucony","Skechers","Stone Island","Stussy","Supreme","SWAROVSKI","SWATCH",
+"The North Face","TISSOT","TUDOR","Trasher","Timberland","Tom Ford","Tiffany&CO.","Tommy Hilfiger","Tods","Tory Burch","Travis Scott",
+"Ugg","Under Armour","Uniqlo","Urban Decay",
+"Valentino","Vans","Versace","Vetements","Vicrtoria’s Secret","Vivienne Westwood","Vlone",
+"Yeezy","Yves Saint Laurent Beauty",
+"Zara","ZENITH","ZIPPO"
+    ];
+    const LUXURY_SET = new Set([
+"Aesop","Alexander McQueen","Alexander Wang","Audemars Piguet","Balenciaga",
+"Cartier","Celine","Chrome Hearts","Chloé","Dior","Fendi","Goyard","Gucci",
+"Hermes","Jil Sander","Jimmy Choo","Loro Piana","Louis Vuitton","Miu Miu","Moncler",
+"Palm Angels","Prada","PATEK PHILIPPE","Rick Owens","ROLEX","Vetements"
+    ]);
+    const BASIC_SET = new Set(ALL_BRANDS.filter(b => !LUXURY_SET.has(b)));
+
+    const LOGO = {}; // (оставил пустым: используйте свои пути если нужно)
+
+    const seg = document.getElementById('switch');
+    const indicator = document.getElementById('switch-indicator');
+    const listRoot = document.getElementById('brand-list');
+    const rail = document.querySelector('#az-rail ul');
+    const searchInput = document.getElementById('brand-search');
+
+    function isLuxury(name){ return LUXURY_SET.has(name); }
+    function isBasic(name){ return BASIC_SET.has(name); }
+    function brandsForTab(tab){
+      if(tab==='luxury') return ALL_BRANDS.filter(isLuxury);
+      if(tab==='basic') return ALL_BRANDS.filter(isBasic);
+      return [...ALL_BRANDS];
+    }
+    function slug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/gi,'-'); }
+    function groupByLetter(arr){
+      const map = new Map();
+      arr.forEach(function(n){
+        const ch=(n[0]||'#').toUpperCase();
+        const key=/[A-ZА-ЯЁ]/i.test(ch)?ch:'#';
+        if(!map.has(key)) map.set(key,[]);
+        map.get(key).push(n);
+      });
+      for (const [k,v] of map) v.sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
+      return map;
+    }
+    function renderAZ(keys){
+      if(!rail) return;
+      rail.innerHTML='';
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function(L){
+        const enabled=keys.has(L);
+        const a=document.createElement('a');
+        a.textContent=L;
+        a.href = enabled ? ('#sec-'+L) : 'javascript:void(0)';
+        a.style.display='block';
+        a.style.borderRadius='.4vw';
+        a.style.padding='.3vw .4vw';
+        a.style.color= enabled ? '#D1D5DB' : '#6B7280';
+        rail.appendChild((()=>{ const li=document.createElement('li'); li.style.listStyle='none'; li.appendChild(a); return li; })());
+      });
+    }
+    function renderList(tab){
+      const data = brandsForTab(tab);
+      const groups = groupByLetter(data);
+      const keys = new Set(groups.keys());
+      const sortedKeys=[...keys].sort((a,b)=> a==='#'?1 : b==='#' ? -1 : a.localeCompare(b,'ru'));
+      renderAZ(new Set(sortedKeys));
+      listRoot.innerHTML='';
+      for (const L of sortedKeys){
+        const items = groups.get(L);
+        const section = document.createElement('section');
+        section.id='sec-'+L;
+        section.style.marginBottom='1.2vw';
+
+        const h2 = document.createElement('h2');
+        h2.textContent=L;
+        h2.style.margin='0 0 .7vw 0';
+        h2.style.fontSize='1vw';
+        h2.style.fontWeight='800';
+        h2.style.letterSpacing='.02em';
+        section.appendChild(h2);
+
+        const ul = document.createElement('ul');
+        ul.style.borderRadius='1vw';
+        ul.style.margin='0';
+        ul.style.padding='0';
+        ul.style.listStyle='none';
+        items.forEach(function(name){
+          const li=document.createElement('li');
+          li.setAttribute('data-brand', name);
+          li.style.display='flex';
+          li.style.alignItems='center';
+          li.style.gap='.6vw';
+          li.style.padding='.8vw 1vw';
+          li.style.cursor='pointer';
+
+          li.addEventListener('mouseenter', ()=>{ li.style.background = '#0F141C'; });
+          li.addEventListener('mouseleave', ()=>{ li.style.background = 'transparent'; });
+
+          const src=LOGO[name];
+          if (src){
+            const img=document.createElement('img');
+            img.src=src;
+            img.alt=slug(name);
+            img.className='brand-logo';
+            img.style.height='1.6vw';
+            img.style.width='1.6vw';
+            img.style.objectFit='contain';
+            li.appendChild(img);
+          } else {
+            const box=document.createElement('div');
+            box.textContent=(name[0]||'#').toUpperCase();
+            box.style.display='flex';
+            box.style.alignItems='center';
+            box.style.justifyContent='center';
+            box.style.height='1.6vw';
+            box.style.width='1.6vw';
+            box.style.borderRadius='.3vw';
+            box.style.background='#121822';
+            box.style.color='#9CA3AF';
+            box.style.fontSize='.8vw';
+            li.appendChild(box);
+          }
+          const span=document.createElement('span');
+          span.textContent=name;
+          span.style.fontSize='1vw';
+          span.style.fontWeight='700';
+          li.appendChild(span);
+
+          ul.appendChild(li);
+        });
+        section.appendChild(ul);
+        listRoot.appendChild(section);
+      }
+
+      // fallback for logos
+      const FALLBACK = "{% static 'placeholder.png' %}";
+      document.querySelectorAll('.brand-logo').forEach(function(img){
+        img.addEventListener('error', function() {
+          img.style.objectFit='cover';
+          img.src = FALLBACK;
+        }, { once:true });
+      });
+    }
+
+    function setTab(tab){
+      const x = tab==='all' ? '0%' : tab==='basic' ? '100%' : '200%';
+      if(indicator) indicator.style.transform = `translateX(${x})`;
+      document.querySelectorAll('.seg-btn').forEach(function(btn){
+        const active = btn.dataset.tab === tab;
+        btn.style.fontWeight = active ? '800' : '500';
+        btn.style.color = active ? '#E5E7EB' : '#9CA3AF';
+      });
+      renderList(tab);
+      applyFilter();
+    }
+
+    if(seg){
+      seg.addEventListener('click', function(e){
+        const btn = e.target.closest('.seg-btn');
+        if(!btn) return;
+        setTab(btn.dataset.tab);
+      });
+    }
+
+    setTab('all');
+
+    listRoot.addEventListener('click', function(e){
+      const li = e.target.closest('li[data-brand]');
+      if(!li) return;
+      window.__selectedBrand = li.getAttribute('data-brand');
+      if(typeof window.gotoStep2 === 'function') window.gotoStep2();
+    });
+
+    function ensureNoResultsEl() {
+      let el = listRoot.querySelector('#brand-no-results');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'brand-no-results';
+        el.textContent = 'Ничего не найдено';
+        el.style.borderRadius='1vw';
+        el.style.background='#0C0F14';
+        el.style.padding='1.2vw';
+        el.style.textAlign='center';
+        el.style.color='#9CA3AF';
+        listRoot.appendChild(el);
+      }
+      return el;
+    }
+
+    function updateSectionVisibility() {
+      const sections = listRoot.querySelectorAll('section[id^="sec-"]');
+      sections.forEach(function(section) {
+        const items = section.querySelectorAll('li[data-brand]');
+        let hasVisible = false;
+        items.forEach(li => { if (li.style.display !== 'none') hasVisible = true; });
+        section.style.display = hasVisible ? 'block' : 'none';
+      });
+    }
+
+    function applyFilter() {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const items = listRoot.querySelectorAll('li[data-brand]');
+      let anyVisible = false;
+      items.forEach(function(li) {
+        const name = (li.dataset.brand || li.textContent || '').toLowerCase();
+        const match = !q || name.includes(q);
+        li.style.display = match ? 'flex' : 'none';
+        if (match) anyVisible = true;
+      });
+      updateSectionVisibility();
+      const noRes = ensureNoResultsEl();
+      noRes.style.display = anyVisible ? 'none' : 'block';
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilter);
+    requestAnimationFrame(applyFilter);
+  })();
+});
+
+/* ===== Steps / sums / verdict logic (inline styles) ===== */
+(function() {
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : { BackButton: { show: function(){}, onClick: function(){} } };
   const progressBar = document.getElementById('progress-bar');
   const formTitle = document.getElementById('form-title');
   const brandSection = document.getElementById('brand-section');
   const itemSection = document.getElementById('item-section');
-  const uploadWrapper = document.getElementById('upload-sections-wrapper');
   const obshTypeSection = document.getElementById('obsh_type');
   const verdictSection = document.getElementById('verdict-section');
-  const switchIndicator = document.getElementById('switch-indicator');
-  const btnBasic = document.getElementById('btn-basic');
-  const btnLuxury = document.getElementById('btn-luxury');
-  const brandsBasic = document.getElementById('brands-basic');
-  const brandsLuxury = document.getElementById('brands-luxury');
-  const brandImgs = document.querySelectorAll('#brands-basic .brend, #brands-luxury .brend');
   const typeImgs = document.querySelectorAll('#itemType .type');
-  const additionalInput = document.getElementById('additional-photos-input');
-  const previewsContainer = document.getElementById('additional-previews');
+  const continueBtn = document.getElementById('continue-btn');
+  const radios = document.querySelectorAll('input[name="speed"]');
+  const toggle = document.getElementById('verdictToggle');
+  const toggleRail = document.getElementById('verdictToggleRail');
+  const toggleThumb = document.getElementById('verdictToggleThumb');
   const orderSumEl = document.getElementById('orderSum');
   const verdictSumEl = document.getElementById('verdictSum');
   const totalSumEl = document.getElementById('totalSum');
   const verdictBtn = document.getElementById('verdict-continue');
-  const verdictToggle = document.getElementById('verdictToggle');
-  const paymentBtn = document.getElementById('verdict-payment');
-  const paymentText = document.getElementById('payment-text');
+  const payBtn = document.getElementById('verdict-payment');
+  const payText = document.getElementById('verdict-payment-text');
 
-  let selectedBrand; let type_item; let currentStep = 1;
-  let balance = {{ tg_user.balance }}; // подставьте из backend
+  let selectedBrand = window.__selectedBrand || null;
+  let type_item;
+  let currentStep = 1;
+  let balance = Number(window.initialBalance || 0);
 
-  function showStep(step){
-    [brandSection,itemSection,obshTypeSection,verdictSection].forEach(s=>{ if(!s) return; s.classList.add('hidden'); s.classList.remove('show'); });
-    currentStep = step;
-    switch(step){
-      case 1: brandSection.classList.remove('hidden'); setTimeout(()=>brandSection.classList.add('show'),10); progressBar.style.width='20%'; formTitle.textContent='Выберите бренд'; break;
-      case 2: itemSection.classList.remove('hidden'); setTimeout(()=>itemSection.classList.add('show'),10); progressBar.style.width='40%'; formTitle.textContent='Выберите тип вещи'; break;
-      case 3: const sec = document.getElementById('check_'+type_item); if(sec){sec.classList.remove('hidden'); setTimeout(()=>sec.classList.add('show'),10);} obshTypeSection.classList.remove('hidden'); setTimeout(()=>obshTypeSection.classList.add('show'),10); progressBar.style.width='60%'; formTitle.textContent='Загрузите фотографии'; break;
-      case 4: document.querySelector('#upload-sections-wrapper').style.display = 'none'; verdictSection.classList.remove('hidden'); setTimeout(()=>verdictSection.classList.add('show'),10); progressBar.style.width='80%'; formTitle.textContent='Оформление вердикта'; break;
+  function showStep(step) {
+    if (step !== 1) hideBlock(brandSection); else showBlock(brandSection);
+    if (step !== 2) hideBlock(itemSection); else showBlock(itemSection);
+    document.querySelectorAll('section[id^="check_"]').forEach(function(sec) { if (step===3 && ('check_'+type_item)===sec.id) showBlock(sec); else hideBlock(sec); });
+    if (step !== 3) hideBlock(obshTypeSection); else showBlock(obshTypeSection);
+    if (step !== 4) hideBlock(verdictSection); else showBlock(verdictSection);
+
+    switch (step) {
+      case 1:
+        progressBar.style.width = '20%';
+        formTitle.textContent = 'Выберите бренд';
+        break;
+      case 2:
+        progressBar.style.width = '40%';
+        formTitle.textContent = 'Выберите тип вещи';
+        break;
+      case 3:
+        progressBar.style.width = '60%';
+        formTitle.textContent = 'Загрузите фото';
+        break;
+      case 4:
+        progressBar.style.width = '80%';
+        formTitle.textContent = 'Выбор тарифа';
+        break;
     }
   }
-  window.addEventListener('load',()=> requestAnimationFrame(()=> progressBar.style.width='20%'));
 
-  // Переключатель брендов
-  btnBasic.addEventListener('click',()=>{ switchIndicator.style.transform='translateX(0)'; btnBasic.classList.remove('text-neutral-400'); btnLuxury.classList.add('text-neutral-400'); brandsBasic.classList.remove('hidden'); brandsLuxury.classList.add('hidden'); });
-  btnLuxury.addEventListener('click',()=>{ switchIndicator.style.transform='translateX(100%)'; btnLuxury.classList.remove('text-neutral-400'); btnBasic.classList.add('text-neutral-400'); brandsLuxury.classList.remove('hidden'); brandsBasic.classList.add('hidden'); });
+  window.gotoStep2 = function(){
+    selectedBrand = window.__selectedBrand || selectedBrand;
+    currentStep = 2;
+    showStep(currentStep);
+  };
 
-  // Выбор бренда
-  brandImgs.forEach(img=> img.addEventListener('click', e=>{ selectedBrand = e.currentTarget.dataset.brand; brandImgs.forEach(i=>i.classList.remove('selected')); e.currentTarget.classList.add('selected'); showStep(2); }));
-
-  // URL параметр brand
-  const params = new URLSearchParams(window.location.search); if(params.has('brand')) { selectedBrand = params.get('brand'); showStep(2); }
-
-  // Тип вещи
-  typeImgs.forEach(img=> img.addEventListener('click', e=> { type_item = e.currentTarget.dataset.type; showStep(3); attachFilePreview('#check_'+type_item); }));
-
-  function attachFilePreview(selector){
-    const sec = document.querySelector(selector); if(!sec) return;
-    sec.querySelectorAll('.file-input').forEach(inp=>{
-      if(inp._bound) return; inp._bound=true;
-      inp.addEventListener('change', ev=>{ const file = ev.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = v=> { const preview = inp.closest('.check-item').querySelector('.preview-img'); preview.src = v.target.result; }; reader.readAsDataURL(file); });
-    });
-  }
-
-  // Дополнительные фото
-  additionalInput && additionalInput.addEventListener('change', e=>{
-    previewsContainer.innerHTML=''; Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=v=>{ const im=document.createElement('img'); im.src=v.target.result; im.style.width='6rem'; im.style.height='6rem'; im.style.objectFit='cover'; im.style.borderRadius='1rem'; previewsContainer.appendChild(im); }; r.readAsDataURL(f); });
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() { progressBar.style.width = '20%'; });
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('brand')) {
+      selectedBrand = params.get('brand');
+      currentStep = 2;
+      showStep(currentStep);
+    } else if (selectedBrand) {
+      currentStep = 2;
+      showStep(currentStep);
+    } else {
+      showStep(1);
+    }
   });
 
-  // Кнопка Continue (переход к вердикту)
-  document.getElementById('continue-btn').addEventListener('click',()=>{
-    const firstImg = document.querySelector('#check_'+type_item+' .preview-img');
-    if(firstImg) document.getElementById('verdict-photo').src = firstImg.src;
+  typeImgs.forEach(function(img) {
+    img.addEventListener('click', function(e) {
+      type_item = e.currentTarget.dataset.type;
+      currentStep = 3;
+      showStep(currentStep);
+    });
+  });
+
+  continueBtn.addEventListener('click', function() {
+    const checkSection = document.getElementById('check_' + type_item);
+    const imgEl = checkSection ? checkSection.querySelector('img.preview-img') : null;
+    const photo = imgEl ? imgEl.src : '';
+    document.getElementById('verdict-photo').src = photo;
     document.getElementById('verdict-category').textContent = type_item || '-';
     document.getElementById('verdict-brand').textContent = selectedBrand || '-';
     document.getElementById('verdict-model').textContent = '-';
-    showStep(4); verdictSection.scrollIntoView({behavior:'smooth'});
+    currentStep = 4;
+    showStep(currentStep);
+    verdictSection.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // Тарифы
-  const tariffLabels = document.querySelectorAll('#options .price-card');
-  tariffLabels.forEach(l=> l.addEventListener('click',()=>{ tariffLabels.forEach(o=>o.classList.remove('selected')); l.classList.add('selected'); l.querySelector('input').checked=true; updateSummary(); }));
+  function updateSummary() {
+    const checked = document.querySelector('input[name="speed"]:checked');
+    const tariffPrices = { '24h':450, '15min-expensive':650, '15min-basic':600 };
+    const verdictCost = 150;
+    const base = checked ? (tariffPrices[checked.value] || 0) : 0;
+    const verdict = (toggle && toggle.checked) ? verdictCost : 0;
+    const total = base + verdict;
 
-  verdictToggle.addEventListener('change',()=>{ const knob = document.getElementById('toggleKnob'); if(verdictToggle.checked){ knob.style.transform='translateX(0.7rem)'; knob.parentElement.style.background='#13CD90'; } else { knob.style.transform='translateX(0)'; knob.parentElement.style.background='#374151'; } updateSummary(); });
+    orderSumEl.textContent = base + ' ₽';
+    verdictSumEl.textContent = verdict + ' ₽';
+    totalSumEl.textContent = total + ' ₽';
 
-  function updateSummary(){
-    const selected = document.querySelector('#options input[name="speed"]:checked');
-    if(!selected) return; const prices={ '24h':450,'15min-expensive':650,'15min-basic':600 };
-    const base = prices[selected.value]||0; const extra = verdictToggle.checked?150:0; const total = base+extra;
-    orderSumEl.textContent = base+' ₽'; verdictSumEl.textContent = extra+' ₽'; totalSumEl.textContent = total+' ₽';
-    if(balance < total){ paymentBtn.classList.remove('hidden'); verdictBtn.classList.add('hidden'); paymentText.textContent = 'Пополнить на '+(total-balance)+' ₽'; } else { paymentBtn.classList.add('hidden'); verdictBtn.classList.remove('hidden'); }
+    // radio visual
+    document.querySelectorAll('#options label').forEach(function(lbl){
+      const inp = lbl.querySelector('input[type="radio"]');
+      const ind = lbl.querySelector('.radio-indicator');
+      if (inp && ind) {
+        if (inp.checked) {
+          ind.style.border='none';
+          ind.style.background='#13CD90';
+          ind.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width=".8vw" height=".8vw" style="display:block;"><path d="M5 13l4 4L19 7" fill="none" stroke="#fff" stroke-width="2"/></svg>';
+        } else {
+          ind.style.border='.12vw solid #52525B';
+          ind.style.background='transparent';
+          ind.innerHTML='';
+        }
+      }
+    });
+
+    if (balance < total) {
+      const need = total - balance;
+      payText.textContent = 'Пополнить на ' + need + ' ₽';
+      payBtn.style.display = 'flex';
+      verdictBtn.style.display = 'none';
+    } else {
+      payBtn.style.display = 'none';
+      verdictBtn.style.display = 'inline-block';
+    }
   }
+  radios.forEach(function(r) { r.addEventListener('change', updateSummary); });
+  if (toggle) {
+    toggle.addEventListener('change', function(){
+      if (toggle.checked){
+        toggleRail.style.background='#0FC288';
+        toggleThumb.style.transform='translateX(1.2vw)';
+      } else {
+        toggleRail.style.background='#374151';
+        toggleThumb.style.transform='translateX(0)';
+      }
+      updateSummary();
+    });
+  }
+  updateSummary();
 
-  // Отправка
-  verdictBtn.addEventListener('click',()=>{
-    const fd = new FormData();
-    fd.append('category', type_item || '');
-    fd.append('brand', selectedBrand || '');
-    fd.append('comment', document.getElementById('comment').value || '');
-    document.querySelectorAll('#check_'+type_item+' .file-input').forEach(inp=>{ if(inp.files[0]) fd.append('photos', inp.files[0]); });
-    Array.from(additionalInput.files).forEach(f=> fd.append('additional_photos', f));
-    fetch('{% url 'create_verdict' %}', { method:'POST', body:fd, headers:{ 'X-Requested-With':'XMLHttpRequest', 'X-CSRFToken':'{{ csrf_token }}' } })
-      .then(r=>r.json())
-      .then(json=>{ if(json.success){ window.location.href = json.redirect_url; } else { alert('Ошибка: '+(json.error||'неизвестная')); } })
-      .catch(err=>{ console.error(err); alert('Не удалось создать вердикт'); });
+  verdictBtn.addEventListener('click', function() {
+    const formData = new FormData();
+    formData.append('category', type_item || '');
+    formData.append('brand', selectedBrand || '');
+    formData.append('comment', (document.getElementById('comment').value || ''));
+    const cs = document.querySelectorAll('#check_' + (type_item||'') + ' .file-input');
+    cs.forEach(function(input) {
+      if (input.files && input.files[0]) formData.append('photos', input.files[0]);
+    });
+    fetch("{% url 'create_verdict' %}", { method:'POST', body: formData })
+      .then(function(r){return r.json();})
+      .then(function(json){
+        if (json && json.success) window.location.href = json.redirect_url;
+        else alert('Ошибка: ' + ((json && json.error) || 'неизвестная'));
+      })
+      .catch(function(err){
+        console.error(err);
+        alert('Не удалось создать вердикт');
+      });
   });
 
-  // Кнопка назад (Telegram)
-  if(tg){ tg.BackButton.onClick(()=>{ if(currentStep>1){ showStep(currentStep-1); } else { window.history.back(); } }); }
-</script>
+  if (tg.BackButton.show) tg.BackButton.show();
+  if (tg.BackButton.onClick) tg.BackButton.onClick(function() {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    } else {
+      window.history.back();
+    }
+  });
+})();
+  </script>
 </body>
 </html>

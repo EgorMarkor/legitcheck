@@ -1,4 +1,15 @@
 {% load static %}
+
+{% if payment_success %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelector('.method_payment').style.display = 'none'
+    document.querySelector('.success_payment').style.display = 'block'
+  })
+</script>
+{% endif %}
+
+
 <!doctype html>
 <html>
 {% include 'head.html' %}
@@ -138,7 +149,7 @@
         type="tel"
         inputmode="numeric"
         pattern="[0-9]*"
-        placeholder="8 160,00 ₽"
+        placeholder="250 ₽"
         class="
           flex-1
           bg-transparent
@@ -321,33 +332,59 @@
           .addEventListener('click', status_payment);
       });
 
-      function status_payment() {
-        value = document.querySelector("#amountInput").value;
-        document.querySelector("#amountInput2").value = value;
-        document.querySelector("#amountInput3").value = value;
-        const method = document.querySelector('.method_payment');
-        const success = document.querySelector('.success_payment');
-
-        // начнём затухание первого
-        method.style.opacity = '0';
-
-        // по окончании анимации спрячем первый и покажем второй
-        method.addEventListener('transitionend', function onFadeOut() {
-          method.style.display = 'none';
-          
-          // подготовим success к появлению
-          success.style.display = 'block';
-          // «форсируем» перерисовку, чтобы transition отработал
-          // (чтобы браузер заметил изменение display до opacity)
-          void success.offsetWidth;
-
-          success.style.opacity = '1';
-
-          // отписываемся, чтобы не реагировать на будущие transitionend
-          method.removeEventListener('transitionend', onFadeOut);
-        });
-      }
     </script>
-    
+    <script>
+async function status_payment() {
+  let raw = document.querySelector("#amountInput").value;
+
+  // ❗ чистим строку
+  let amount = raw
+    .replace(/\s/g, '')   // убираем пробелы
+    .replace('₽', '')     // убираем знак рубля
+    .replace(',', '.');   // запятую -> точка
+
+  if (!amount || isNaN(amount)) {
+    alert("Введите корректную сумму");
+    return;
+  }
+
+  const res = await fetch("/payment/create/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: `amount=${encodeURIComponent(amount)}`
+  });
+
+  if (!res.ok) {
+    alert("Ошибка создания платежа");
+    return;
+  }
+
+  const data = await res.json();
+
+  if (data.url) {
+    window.location.href = data.url; // 🚀 ПЕРЕХОД В ЮKASSA
+  } else {
+    alert("Ошибка оплаты");
+  }
+}
+</script>
+  <script>
+    // инициализируем WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // показываем кнопку "Назад" в заголовке
+    tg.BackButton.show();
+
+    // при клике уходим на предыдущий шаг истории
+    tg.BackButton.onClick(() => {
+      window.history.back();
+      tg.BackButton.hide();
+    });
+  </script>
+
 </body>
 </html>

@@ -31,11 +31,16 @@ class Verdict(models.Model):
     ]
     
     ITEM_CHOICES = [
-        ('boots', 'Кроссовки'),
-        ('pants', 'Штаны'),
-        ('hoodie', 'Худи'),
-        ('belt', 'Ремень'),
-        ('bag', 'Сумка'),
+        ('sneakers', 'Кроссовки'),
+        ('clothes', 'Одежда'),
+        ('bags', 'Сумки'),
+        ('belts', 'Ремни'),
+        ('watch', 'Часы'),
+        ('cosmetics', 'Косметика'),
+        ('jewerly', 'Украшения'),
+        ('toys', 'Игрушки'),
+        ('accsesory', 'Аксессуары'),
+        ('others', 'Другое'),
     ]
 
     user = models.ForeignKey(
@@ -73,6 +78,11 @@ class Verdict(models.Model):
     comment_from_user = models.CharField(max_length=9999, verbose_name="Комментарий пользователя")
     
     code = models.CharField(max_length=5, unique=True)
+    
+    speed = models.CharField(max_length=32)  # 24h / 15min-basic / 15min-expensive
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    with_reason = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"{self.user.name} - {self.get_category_display()}"
@@ -129,6 +139,12 @@ class Payment(models.Model):
         max_digits=10,
         decimal_places=2,
         verbose_name='Сумма платежа'
+    )
+    
+    provider_payment_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
