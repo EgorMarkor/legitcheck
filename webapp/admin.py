@@ -1,7 +1,13 @@
 # admin.py
 from django.contrib import admin
+from django.http import HttpResponse
+from django.urls import path, reverse
+from django.utils.html import format_html
+from django.utils.text import slugify
 from .models import User, Verdict, VerdictPhoto, Payment
 from unfold.admin import ModelAdmin  # вы используете свой класс-расширение
+from io import BytesIO
+import zipfile
 
 class VerdictPhotoInline(admin.TabularInline):
     model = VerdictPhoto
@@ -11,21 +17,100 @@ class VerdictPhotoInline(admin.TabularInline):
     verbose_name_plural = "Фотографии вердикта"
 
 class VerdictAdmin(ModelAdmin):
-    list_display = ['user', 'category', 'created_at']
-    list_filter = ['category', 'created_at']
-    search_fields = ['user__name', 'user__username']
-    actions = ['approve_verdicts', 'reject_verdicts']
+    list_display = [
+        'user_name',
+        'brand',
+        'item_model',
+        'category_display',
+        'status_display',
+        'created_at',
+        'download_verdict_link',
+    ]
+    list_filter = ['status', 'category', 'created_at']
+    search_fields = ['user__name', 'user__username', 'brand', 'item_model', 'code']
+    list_select_related = ['user']
+    actions = ['approve_verdicts', 'reject_verdicts', 'download_selected_archives']
     inlines = [VerdictPhotoInline]  # <-- вот оно!
 
     def approve_verdicts(self, request, queryset):
-        queryset.update(category='legit')
+        queryset.update(status='legit')
         self.message_user(request, "Выбранные вердикты одобрены")
     approve_verdicts.short_description = "Одобрить выбранные вердикты"
 
     def reject_verdicts(self, request, queryset):
-        queryset.update(category='fake')
+        queryset.update(status='fake')
         self.message_user(request, "Выбранные вердикты отклонены")
     reject_verdicts.short_description = "Отклонить выбранные вердикты"
+
+    def user_name(self, obj):
+        return obj.user.name
+    user_name.short_description = "Пользователь"
+
+    def category_display(self, obj):
+        return obj.get_category_display()
+    category_display.short_description = "Категория"
+
+    def status_display(self, obj):
+        return obj.get_status_display()
+    status_display.short_description = "Статус"
+
+    def download_verdict_link(self, obj):
+        url = reverse('admin:webapp_verdict_download', args=[obj.id])
+        return format_html('<a class="button" href="{}">Скачать</a>', url)
+    download_verdict_link.short_description = "Скачать"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:verdict_id>/download/',
+                self.admin_site.admin_view(self.download_verdict),
+                name='webapp_verdict_download',
+            ),
+        ]
+        return custom_urls + urls
+
+    def download_verdict(self, request, verdict_id):
+        verdict = Verdict.objects.prefetch_related('photos').get(pk=verdict_id)
+        response = self._build_zip_response([verdict])
+        filename = f"verdict_{verdict.id}_{verdict.code}.zip"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    def download_selected_archives(self, request, queryset):
+        verdicts = queryset.prefetch_related('photos')
+        response = self._build_zip_response(verdicts)
+        response['Content-Disposition'] = 'attachment; filename="verdicts_archive.zip"'
+        return response
+    download_selected_archives.short_description = "Скачать архив выбранных вердиктов"
+
+    def _build_zip_response(self, verdicts):
+        buffer = BytesIO()
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for verdict in verdicts:
+                folder_name = slugify(f"verdict-{verdict.id}-{verdict.code}") or f"verdict-{verdict.id}"
+                info_lines = [
+                    f"Код: {verdict.code}",
+                    f"Пользователь: {verdict.user.name}",
+                    f"Категория: {verdict.get_category_display()}",
+                    f"Бренд: {verdict.brand}",
+                    f"Модель: {verdict.item_model}",
+                    f"Статус: {verdict.get_status_display()}",
+                    f"Комментарий пользователя: {verdict.comment_from_user}",
+                ]
+                zf.writestr(f"{folder_name}/info.txt", "\n".join(info_lines))
+
+                for photo in verdict.photos.all():
+                    try:
+                        with photo.image.open('rb') as file_data:
+                            filename = photo.image.name.split('/')[-1]
+                            zf.writestr(f"{folder_name}/{filename}", file_data.read())
+                    except FileNotFoundError:
+                        continue
+
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/zip')
+        return response
 
 class UserAdmin(ModelAdmin):
     list_display = ['tgId', 'name', 'username']
