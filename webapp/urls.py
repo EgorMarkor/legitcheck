@@ -45,6 +45,7 @@ urlpatterns = [
     path('articles/', views.articles, name="articles"),
     path('auth_check/', views.auth_check, name="auth_check"),
     path('our_support/', views.our_support, name="our_support"),
+    path('telegram/verdict-webhook/', views.telegram_verdict_webhook, name='telegram_verdict_webhook'),
     path('feedbacks/', views.feedbacks, name="feedbacks"),
     path('start_check/', views.start_check, name="start_check"),
     path("payment/create/", views.create_payment),

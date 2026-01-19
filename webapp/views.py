@@ -18,12 +18,18 @@ from yookassa.domain.notification import WebhookNotification
 from decimal import Decimal, ROUND_HALF_UP
 import traceback
 from .models import Payment
+import json
+import logging
+import urllib.request
 
 
 Configuration.account_id = 1222154
 Configuration.secret_key = "live_E_z0lmFEzaq0D-6XyHfgCIz9WS32jXgMcLQIkdZOZ8s"
 
 TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
+
+logger = logging.getLogger(__name__)
 
 # URL аватарки по умолчанию на случай отсутствия фото у пользователя
 DEFAULT_AVATAR_URL = "/static/avatar.png"
@@ -116,6 +122,49 @@ def _generate_unique_code():
 from decimal import Decimal
 from django.db import transaction
 
+
+def _telegram_api_request(method, payload):
+    if not TELEGRAM_BOT_TOKEN:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            response.read()
+    except Exception:
+        logger.exception("Failed to call Telegram API %s", method)
+
+
+def _send_verdict_to_telegram(verdict):
+    if not TELEGRAM_VERDICT_CHAT_ID:
+        return
+    text = (
+        "Новый вердикт поступил\n"
+        f"Код: {verdict.code}\n"
+        f"Пользователь: {verdict.user.name}\n"
+        f"Категория: {verdict.get_category_display()}\n"
+        f"Бренд: {verdict.brand}\n"
+        f"Модель: {verdict.item_model}\n"
+        f"Комментарий пользователя: {verdict.comment_from_user}"
+    )
+    reply_markup = {
+        "inline_keyboard": [
+            [
+                {"text": "Легит", "callback_data": f"verdict:{verdict.id}:legit"},
+                {"text": "Не легит", "callback_data": f"verdict:{verdict.id}:fake"},
+            ]
+        ]
+    }
+    _telegram_api_request(
+        "sendMessage",
+        {
+            "chat_id": TELEGRAM_VERDICT_CHAT_ID,
+            "text": text,
+            "reply_markup": reply_markup,
+        },
+    )
+
 @csrf_exempt
 @require_POST
 @require_user
@@ -173,6 +222,8 @@ def create_verdict(request):
 
         for f in request.FILES.getlist('photos'):
             VerdictPhoto.objects.create(verdict=verdict, image=f)
+
+        transaction.on_commit(lambda: _send_verdict_to_telegram(verdict))
 
     return JsonResponse({
         "success": True,
@@ -256,6 +307,64 @@ def our_support(request):
     return render(request, 'our_support.html', {
         'tg_user': request.tg_user,
     })
+
+
+@csrf_exempt
+def telegram_verdict_webhook(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Invalid method")
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid payload")
+
+    callback_query = payload.get("callback_query")
+    if not callback_query:
+        return JsonResponse({"ok": True})
+
+    data = callback_query.get("data", "")
+    if not data.startswith("verdict:"):
+        return JsonResponse({"ok": True})
+
+    try:
+        _, verdict_id, decision = data.split(":")
+    except ValueError:
+        return JsonResponse({"ok": True})
+
+    if decision not in {"legit", "fake"}:
+        return JsonResponse({"ok": True})
+
+    try:
+        verdict = Verdict.objects.get(pk=int(verdict_id))
+    except (Verdict.DoesNotExist, ValueError):
+        _telegram_api_request(
+            "answerCallbackQuery",
+            {"callback_query_id": callback_query.get("id"), "text": "Вердикт не найден"},
+        )
+        return JsonResponse({"ok": True})
+
+    verdict.status = decision
+    verdict.save(update_fields=["status"])
+
+    _telegram_api_request(
+        "answerCallbackQuery",
+        {"callback_query_id": callback_query.get("id"), "text": "Вердикт обновлен"},
+    )
+
+    message = callback_query.get("message", {})
+    chat = message.get("chat", {})
+    if chat.get("id") and message.get("message_id"):
+        _telegram_api_request(
+            "editMessageReplyMarkup",
+            {
+                "chat_id": chat.get("id"),
+                "message_id": message.get("message_id"),
+                "reply_markup": {"inline_keyboard": []},
+            },
+        )
+
+    return JsonResponse({"ok": True})
     
 
 @require_user
