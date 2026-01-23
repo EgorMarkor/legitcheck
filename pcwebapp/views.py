@@ -75,6 +75,14 @@ def uslugi(request):
     """
     return render(request, 'pc/list_uslug.html')
 
+
+def public_offer(request):
+    return render(request, 'pc/public_offer.html')
+
+
+def privacy_policy_public(request):
+    return render(request, 'pc/privacy_policy_public.html')
+
 @_require_tg_user
 def start_check(request):
     return render(request, 'pc/check.html', {'tg_user': request.tg_user})

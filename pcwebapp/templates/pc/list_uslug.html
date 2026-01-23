@@ -62,6 +62,16 @@
     /* Разделы/хедеры */
     .section-title { font-size:2rem; font-weight:700; margin:1rem 0; }
     .section-sub { color:#9CA3AF; margin-bottom:1.2rem; }
+
+    /* Юридические блоки */
+    .legal-card { background:linear-gradient(to bottom, #171C24, #11151A); border-radius:1.2rem; padding:1.4rem; margin-top:1.4rem; }
+    .legal-list { display:grid; gap:.6rem; color:#C5CAD3; font-size:1rem; line-height:1.6; }
+    .service-table { display:grid; gap:.8rem; }
+    .service-row { display:grid; grid-template-columns: 2fr 3fr 1fr; gap:1rem; padding:1rem 1.2rem; background:#0C0F14; border-radius:.9rem; }
+    .service-row strong { font-size:1.05rem; }
+    .service-row span { color:#C5CAD3; font-size:.95rem; }
+    .service-row .price { text-align:right; font-weight:700; color:#fff; }
+    @media (max-width:900px){ .service-row{ grid-template-columns:1fr; } .service-row .price{ text-align:left; } }
   </style>
 </head>
 <body>
@@ -93,7 +103,7 @@
         <div class="services-grid">
           <!-- 24 часа -->
           <article class="price-card">
-            <span class="badge">Хит</span>
+            <span class="badge">Стандарт</span>
             <img src="{% static 'lupa.png' %}" alt="" class="icon"/>
             <h3>Проверка — 24 часа</h3>
             <p class="lead">Стандартная проверка с подробным анализом фотографий и факторов оригинальности.</p>
@@ -105,7 +115,7 @@
 
           <!-- 15 минут (быстро) -->
           <article class="price-card">
-            <span class="badge">Самое быстрое</span>
+            <span class="badge">Ускоренная</span>
             <img src="{% static 'clock.png' %}" alt="" class="icon"/>
             <h3>Проверка — 15 минут (премиум)</h3>
             <p class="lead">Экстренный приоритет: эксперт подключится первым делом и даст ответ максимально быстро.</p>
@@ -211,6 +221,81 @@
         </div>
       </section>
 
+      <!-- Юридическая информация -->
+      <section style="margin-top:2.4rem;">
+        <div class="section-title">Услуги</div>
+        <div class="section-sub">Перечень услуг, краткое содержание и стоимость в рублях.</div>
+        <div class="legal-card service-table">
+          <div class="service-row">
+            <strong>Проверка — 24 часа</strong>
+            <span>Аналитическая проверка подлинности по фото с итоговым вердиктом.</span>
+            <div class="price">450 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Проверка — 15 минут (премиум)</strong>
+            <span>Приоритетная очередь, ускоренный анализ и краткий отчет.</span>
+            <div class="price">650 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Проверка — 15 минут (базовая)</strong>
+            <span>Ускоренная проверка без премиум-очереди.</span>
+            <div class="price">600 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Обоснование вердикта</strong>
+            <span>Пояснения по признакам подлинности и ключевым элементам анализа.</span>
+            <div class="price">150 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Дополнительная консультация</strong>
+            <span>Ответы на вопросы по модели и рискам сделки после проверки.</span>
+            <div class="price">200 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Повторная проверка</strong>
+            <span>Переоценка при наличии новых фото в рамках исходного заказа.</span>
+            <div class="price">250 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Официальное заключение PDF</strong>
+            <span>Документ с аргументацией и вложенными фото.</span>
+            <div class="price">900 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Премиум-сопровождение сделки</strong>
+            <span>Персональное сопровождение, рекомендации по безопасной покупке.</span>
+            <div class="price">1 900 ₽</div>
+          </div>
+          <div class="service-row">
+            <strong>Пакет «Безопасная покупка»</strong>
+            <span>Комплекс: проверка, обоснование и повторная проверка.</span>
+            <div class="price">950 ₽</div>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top:2.4rem;">
+        <div class="section-title">Контактная информация</div>
+        <div class="legal-card">
+          <ul class="legal-list">
+            <li><strong>Юридическое лицо:</strong> ООО «Легит Чек»</li>
+            <li><strong>Электронная почта:</strong> support@checkerlegit.com</li>
+            <li><strong>Телефон:</strong> +7 (999) 123-45-67</li>
+          </ul>
+        </div>
+      </section>
+
+      <section style="margin-top:2.4rem;">
+        <div class="section-title">Условия предоставления услуг</div>
+        <div class="legal-card">
+          <ul class="legal-list">
+            <li><strong>Порядок оказания услуг:</strong> Клиент выбирает услугу, направляет фотографии и описание товара, после чего Исполнитель проводит анализ и направляет вердикт в личном кабинете или иным указанным способом.</li>
+            <li><strong>Сроки оказания услуг:</strong> зависят от выбранного тарифа и начинаются с момента получения полного комплекта материалов и оплаты.</li>
+            <li><strong>Ответственность сторон:</strong> Исполнитель отвечает за качество анализа в пределах полученных материалов; Клиент отвечает за достоверность предоставленных данных и принимает решения на свой риск.</li>
+          </ul>
+        </div>
+      </section>
+
       <!-- Примечания -->
       <section style="margin-top:2rem;">
         <div class="muted">
@@ -218,6 +303,15 @@
             <li>• Цены указаны в рублях и могут корректироваться при акциях.</li>
             <li>• «Повторная проверка» доступна при наличии исходного заказа.</li>
             <li>• Для премиум-очереди время считается с момента получения полного пакета фото.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section style="margin-top:2rem;">
+        <div class="muted">
+          <ul style="display:grid; gap:.4rem;">
+            <li><a href="{% url 'pc_public_offer' %}" style="color:#13CD90;">Публичная оферта</a></li>
+            <li><a href="{% url 'pc_privacy_policy_public' %}" style="color:#13CD90;">Политика конфиденциальности и обработки персональных данных</a></li>
           </ul>
         </div>
       </section>
