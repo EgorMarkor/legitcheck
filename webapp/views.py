@@ -28,6 +28,8 @@ Configuration.secret_key = "live_E_z0lmFEzaq0D-6XyHfgCIz9WS32jXgMcLQIkdZOZ8s"
 
 TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
+TELEGRAM_MEDIA_GROUP_LIMIT = 10
+DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +138,19 @@ def _telegram_api_request(method, payload):
         logger.exception("Failed to call Telegram API %s", method)
 
 
+def _build_public_media_url(photo):
+    url = photo.image.url
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    base_url = getattr(settings, "PUBLIC_BASE_URL", DEFAULT_PUBLIC_BASE_URL).rstrip("/")
+    return f"{base_url}{url}"
+
+
+def _chunked(items, size):
+    for idx in range(0, len(items), size):
+        yield items[idx:idx + size]
+
+
 def _send_verdict_to_telegram(verdict):
     if not TELEGRAM_VERDICT_CHAT_ID:
         return
@@ -156,14 +171,44 @@ def _send_verdict_to_telegram(verdict):
             ]
         ]
     }
-    _telegram_api_request(
-        "sendMessage",
-        {
-            "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-            "text": text,
-            "reply_markup": reply_markup,
-        },
-    )
+    photos = list(verdict.photos.all())
+    if photos:
+        first_caption = text
+        for group in _chunked(photos, TELEGRAM_MEDIA_GROUP_LIMIT):
+            media = []
+            for index, photo in enumerate(group):
+                item = {
+                    "type": "photo",
+                    "media": _build_public_media_url(photo),
+                }
+                if first_caption and index == 0:
+                    item["caption"] = first_caption
+                    first_caption = None
+                media.append(item)
+            _telegram_api_request(
+                "sendMediaGroup",
+                {
+                    "chat_id": TELEGRAM_VERDICT_CHAT_ID,
+                    "media": media,
+                },
+            )
+        _telegram_api_request(
+            "sendMessage",
+            {
+                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
+                "text": "Выберите вердикт для позиции.",
+                "reply_markup": reply_markup,
+            },
+        )
+    else:
+        _telegram_api_request(
+            "sendMessage",
+            {
+                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
+                "text": text,
+                "reply_markup": reply_markup,
+            },
+        )
 
 @csrf_exempt
 @require_POST
