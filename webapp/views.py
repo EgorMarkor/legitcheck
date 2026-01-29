@@ -159,6 +159,31 @@ def _build_public_media_url(photo):
     return f"{base_url}{url}"
 
 
+def _build_admin_verdict_url(verdict):
+    base_url = getattr(settings, "PUBLIC_BASE_URL", DEFAULT_PUBLIC_BASE_URL).rstrip("/")
+    return f"{base_url}/admin/webapp/verdict/{verdict.id}/change/"
+
+
+def _build_verdict_message(verdict, include_prompt=False):
+    comment_from_user = verdict.comment_from_user or "—"
+    item_model = verdict.item_model or "—"
+    admin_url = _build_admin_verdict_url(verdict)
+    parts = [
+        "Новый вердикт поступил",
+        f"Код: {verdict.code}",
+        f"Пользователь: {verdict.user.name}",
+        f"Категория: {verdict.get_category_display()}",
+        f"Бренд: {verdict.brand}",
+        f"Модель: {item_model}",
+        f"Комментарий пользователя: {comment_from_user}",
+        f"Статус: {verdict.get_status_display()}",
+        f"Админка: {admin_url}",
+    ]
+    if include_prompt:
+        parts.append("Выберите вердикт для позиции.")
+    return "\n".join(parts)
+
+
 def _chunked(items, size):
     for idx in range(0, len(items), size):
         yield items[idx:idx + size]
@@ -167,15 +192,7 @@ def _chunked(items, size):
 def _send_verdict_to_telegram(verdict):
     if not TELEGRAM_VERDICT_CHAT_ID:
         return
-    text = (
-        "Новый вердикт поступил\n"
-        f"Код: {verdict.code}\n"
-        f"Пользователь: {verdict.user.name}\n"
-        f"Категория: {verdict.get_category_display()}\n"
-        f"Бренд: {verdict.brand}\n"
-        f"Модель: {verdict.item_model}\n"
-        f"Комментарий пользователя: {verdict.comment_from_user}"
-    )
+    text = _build_verdict_message(verdict, include_prompt=True)
     reply_markup = {
         "inline_keyboard": [
             [
@@ -218,7 +235,7 @@ def _send_verdict_to_telegram(verdict):
             "sendMessage",
             {
                 "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-                "text": "Выберите вердикт для позиции.",
+                "text": text,
                 "reply_markup": reply_markup,
             },
         )

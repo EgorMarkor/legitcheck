@@ -3,6 +3,7 @@ import django
 from aiogram import Bot, Dispatcher, executor, types
 from asgiref.sync import sync_to_async
 from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+from django.conf import settings
 
 # --- Инициализация Django ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
@@ -13,6 +14,7 @@ from webapp.models import Verdict
 API_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 bot = Bot(token=API_TOKEN, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot)
+DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
 
 
 # Синхронный доступ к одному Verdict по коду + первая фотография
@@ -39,6 +41,31 @@ def update_verdict_status(verdict_id, decision):
     verdict.status = decision
     verdict.save(update_fields=["status"])
     return verdict
+
+
+def build_admin_verdict_url(verdict):
+    base_url = getattr(settings, "PUBLIC_BASE_URL", DEFAULT_PUBLIC_BASE_URL).rstrip("/")
+    return f"{base_url}/admin/webapp/verdict/{verdict.id}/change/"
+
+
+def build_verdict_message(verdict, include_prompt=False):
+    comment_from_user = verdict.comment_from_user or "—"
+    item_model = verdict.item_model or "—"
+    admin_url = build_admin_verdict_url(verdict)
+    lines = [
+        "Новый вердикт поступил",
+        f"Код: {verdict.code}",
+        f"Пользователь: {verdict.user.name}",
+        f"Категория: {verdict.get_category_display()}",
+        f"Бренд: {verdict.brand}",
+        f"Модель: {item_model}",
+        f"Комментарий пользователя: {comment_from_user}",
+        f"Статус: {verdict.get_status_display()}",
+        f"Админка: {admin_url}",
+    ]
+    if include_prompt:
+        lines.append("Выберите вердикт для позиции.")
+    return "\n".join(lines)
 
 
 @dp.message_handler(commands=['start'])
@@ -103,7 +130,8 @@ async def handle_verdict_callback(query: types.CallbackQuery):
 
     await query.answer("Вердикт обновлен")
     if query.message:
-        await query.message.edit_reply_markup(reply_markup=None)
+        updated_text = build_verdict_message(verdict)
+        await query.message.edit_text(updated_text, parse_mode=None, reply_markup=None)
 
 
 if __name__ == '__main__':
