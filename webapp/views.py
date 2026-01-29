@@ -16,11 +16,13 @@ from django.views.decorators.http import require_POST
 from yookassa import Payment as YooPayment
 from yookassa.domain.notification import WebhookNotification
 from decimal import Decimal, ROUND_HALF_UP
+import os
 import traceback
 from .models import Payment
 import json
 import logging
 import urllib.request
+import requests
 
 
 Configuration.account_id = 1222154
@@ -138,6 +140,17 @@ def _telegram_api_request(method, payload):
         logger.exception("Failed to call Telegram API %s", method)
 
 
+def _telegram_api_request_files(method, payload, files):
+    if not TELEGRAM_BOT_TOKEN:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
+    try:
+        response = requests.post(url, data=payload, files=files, timeout=20)
+        response.raise_for_status()
+    except Exception:
+        logger.exception("Failed to call Telegram API %s with files", method)
+
+
 def _build_public_media_url(photo):
     url = photo.image.url
     if url.startswith("http://") or url.startswith("https://"):
@@ -176,22 +189,31 @@ def _send_verdict_to_telegram(verdict):
         first_caption = text
         for group in _chunked(photos, TELEGRAM_MEDIA_GROUP_LIMIT):
             media = []
+            files = {}
             for index, photo in enumerate(group):
+                file_key = f"photo_{index}"
+                photo_path = getattr(photo.image, "path", "")
+                use_upload = photo_path and os.path.exists(photo_path)
                 item = {
                     "type": "photo",
-                    "media": _build_public_media_url(photo),
+                    "media": f"attach://{file_key}" if use_upload else _build_public_media_url(photo),
                 }
                 if first_caption and index == 0:
                     item["caption"] = first_caption
                     first_caption = None
                 media.append(item)
-            _telegram_api_request(
-                "sendMediaGroup",
-                {
-                    "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-                    "media": media,
-                },
-            )
+                if use_upload:
+                    files[file_key] = open(photo_path, "rb")
+            payload = {
+                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
+                "media": json.dumps(media),
+            }
+            if files:
+                _telegram_api_request_files("sendMediaGroup", payload, files)
+                for file in files.values():
+                    file.close()
+            else:
+                _telegram_api_request("sendMediaGroup", payload)
         _telegram_api_request(
             "sendMessage",
             {
