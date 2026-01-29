@@ -28,6 +28,19 @@ def fetch_verdict_by_code(code):
     return v, photo_path
 
 
+@sync_to_async
+def update_verdict_status(verdict_id, decision):
+    try:
+        verdict = Verdict.objects.get(pk=verdict_id)
+    except Verdict.DoesNotExist:
+        return None
+    if decision not in {"legit", "fake"}:
+        return None
+    verdict.status = decision
+    verdict.save(update_fields=["status"])
+    return verdict
+
+
 @dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
     """
@@ -73,6 +86,24 @@ async def cmd_start(message: types.Message):
         )
     else:
         await message.answer(caption)
+
+
+@dp.callback_query_handler(lambda query: query.data and query.data.startswith("verdict:"))
+async def handle_verdict_callback(query: types.CallbackQuery):
+    try:
+        _, verdict_id, decision = query.data.split(":")
+    except ValueError:
+        await query.answer("Некорректные данные")
+        return
+
+    verdict = await update_verdict_status(int(verdict_id), decision)
+    if not verdict:
+        await query.answer("Вердикт не найден")
+        return
+
+    await query.answer("Вердикт обновлен")
+    if query.message:
+        await query.message.edit_reply_markup(reply_markup=None)
 
 
 if __name__ == '__main__':
