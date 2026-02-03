@@ -49,6 +49,7 @@ urlpatterns = [
     path('feedbacks/', views.feedbacks, name="feedbacks"),
     path('start_check/', views.start_check, name="start_check"),
     path("payment/create/", views.create_payment),
+    path("api/payment/create-yookassa/", views.create_yookassa_payment_api),
     path("yookassa/webhook/", views.yookassa_webhook),
     path("payment/success/", views.payment_success),
     path('verdict/<int:verdict_id>/upload-photo/', views.upload_verdict_photo, name='upload_verdict_photo'),

@@ -607,6 +607,7 @@ def upload_verdict_photo(request, verdict_id):
 
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
 from .models import User, Verdict, VerdictPhoto, Payment
 from .serializers import (
     UserSerializer,
@@ -614,6 +615,79 @@ from .serializers import (
     VerdictPhotoSerializer,
     PaymentSerializer
 )
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def create_yookassa_payment_api(request):
+    raw_amount = str(request.data.get("amount", "")).replace(",", ".")
+    user_id = request.data.get("user_id")
+
+    if not user_id:
+        return JsonResponse({"error": "user_id is required"}, status=400)
+
+    try:
+        user = User.objects.get(tgId=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "user not found"}, status=404)
+
+    try:
+        amount = Decimal(raw_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except Exception:
+        return JsonResponse({"error": "Некорректная сумма"}, status=400)
+
+    if amount < Decimal("10.00"):
+        return JsonResponse({"error": "Минимум 10 ₽"}, status=400)
+
+    try:
+        payment = YooPayment.create(
+            {
+                "amount": {
+                    "value": str(amount),
+                    "currency": "RUB"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": "https://legitcheck.one"
+                },
+                "capture": True,
+                "description": "Пополнение баланса",
+                "receipt": {
+                    "customer": {"email": "no-reply@legitcheck.one"},
+                    "tax_system_code": 2,
+                    "items": [
+                        {
+                            "description": "Пополнение баланса",
+                            "quantity": "1.00",
+                            "amount": {"value": str(amount), "currency": "RUB"},
+                            "vat_code": 1,
+                            "payment_subject": "service",
+                            "payment_mode": "full_payment",
+                        }
+                    ]
+                },
+                "metadata": {
+                    "tg_id": user.tgId
+                }
+            },
+            uuid.uuid4()
+        )
+    except Exception as e:
+        details = e.args[0] if getattr(e, "args", None) else str(e)
+        return JsonResponse({"error": "YooKassa error", "details": details}, status=400)
+
+    local_payment = Payment.objects.create(
+        user=user,
+        amount=amount,
+        status="PENDING",
+        provider_payment_id=payment.id
+    )
+
+    return JsonResponse({
+        "url": payment.confirmation.confirmation_url,
+        "provider_payment_id": payment.id,
+        "payment_uuid": str(local_payment.uuid),
+    })
 
 
 class UserViewSet(viewsets.ModelViewSet):
