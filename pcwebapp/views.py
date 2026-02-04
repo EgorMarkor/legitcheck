@@ -186,6 +186,69 @@ def poll_token(request, token):
 
     return JsonResponse({'authenticated': False})
 
+
+# ---------- API endpoints for mobile/web app auth ----------
+
+@csrf_exempt
+@require_POST
+def api_create_login_token(request):
+    """
+    Create a short-lived login token for Telegram bot auth.
+    Returns JSON with token and expiration timestamp.
+    """
+    ip = _client_ip(request)
+    active = (LoginToken.objects
+              .filter(ip_address=ip,
+                      used_at__isnull=True,
+                      created_at__gte=timezone.now() - timedelta(minutes=5))
+              .count())
+    if active >= 30:
+        return JsonResponse({"error": "Too many active tokens"}, status=429)
+
+    token = get_random_string(6, allowed_chars=ALLOWED_TOKEN_CHARS)
+    expires_at = timezone.now() + timedelta(minutes=5)
+
+    LoginToken.objects.create(
+        token=token,
+        ip_address=ip,
+        expires_at=expires_at,
+    )
+
+    return JsonResponse({
+        "token": token,
+        "expires_at_ts": int(expires_at.timestamp()),
+    })
+
+
+@csrf_exempt
+def api_poll_login_token(request, token):
+    """
+    Poll login token status. Returns authenticated/expired flags.
+    If authenticated, includes minimal user payload.
+    """
+    try:
+        t = LoginToken.objects.select_related("user").get(token=token)
+    except LoginToken.DoesNotExist:
+        return JsonResponse({"authenticated": False})
+
+    if t.is_expired():
+        return JsonResponse({"authenticated": False, "expired": True})
+
+    if t.used_at and t.user:
+        user = t.user
+        return JsonResponse({
+            "authenticated": True,
+            "user": {
+                "tgId": user.tgId,
+                "name": user.name,
+                "username": user.username,
+                "img": user.img,
+                "balance": user.balance,
+            }
+        })
+
+    return JsonResponse({"authenticated": False})
+
 def _generate_unique_code():
     # 5 цифр, гарантированно уникально
     code = get_random_string(5, allowed_chars='0123456789')

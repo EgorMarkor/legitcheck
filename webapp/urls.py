@@ -53,6 +53,8 @@ urlpatterns = [
     path("yookassa/webhook/", views.yookassa_webhook),
     path("payment/success/", views.payment_success),
     path('verdict/<int:verdict_id>/upload-photo/', views.upload_verdict_photo, name='upload_verdict_photo'),
+    path('api/auth/token/', views.api_create_login_token),
+    path('api/auth/poll/<str:token>/', views.api_poll_login_token),
     
     path("manifest.json/", manifest),
     

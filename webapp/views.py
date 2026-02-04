@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
+from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 import uuid
 from yookassa import Configuration, Payment as YooPayment
@@ -19,6 +21,7 @@ from decimal import Decimal, ROUND_HALF_UP
 import os
 import traceback
 from .models import Payment
+from pcwebapp.models import LoginToken
 import json
 import logging
 import urllib.request
@@ -603,6 +606,79 @@ def upload_verdict_photo(request, verdict_id):
         'success': True,
         'image_url': photo.image.url
     })
+
+
+# ---------- API endpoints for Telegram-bot auth (webapp) ----------
+
+ALLOWED_LOGIN_TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+
+def _client_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
+
+
+@csrf_exempt
+@require_POST
+def api_create_login_token(request):
+    """
+    Create a short-lived login token for Telegram bot auth.
+    Returns JSON with token and expiration timestamp.
+    """
+    ip = _client_ip(request)
+    active = (LoginToken.objects
+              .filter(ip_address=ip,
+                      used_at__isnull=True,
+                      created_at__gte=timezone.now() - timedelta(minutes=5))
+              .count())
+    if active >= 30:
+        return JsonResponse({"error": "Too many active tokens"}, status=429)
+
+    token = get_random_string(6, allowed_chars=ALLOWED_LOGIN_TOKEN_CHARS)
+    expires_at = timezone.now() + timedelta(minutes=5)
+
+    LoginToken.objects.create(
+        token=token,
+        ip_address=ip,
+        expires_at=expires_at,
+    )
+
+    return JsonResponse({
+        "token": token,
+        "expires_at_ts": int(expires_at.timestamp()),
+    })
+
+
+@csrf_exempt
+def api_poll_login_token(request, token):
+    """
+    Poll login token status. Returns authenticated/expired flags.
+    If authenticated, includes minimal user payload.
+    """
+    try:
+        t = LoginToken.objects.select_related("user").get(token=token)
+    except LoginToken.DoesNotExist:
+        return JsonResponse({"authenticated": False})
+
+    if t.is_expired():
+        return JsonResponse({"authenticated": False, "expired": True})
+
+    if t.used_at and t.user:
+        user = t.user
+        return JsonResponse({
+            "authenticated": True,
+            "user": {
+                "tgId": user.tgId,
+                "name": user.name,
+                "username": user.username,
+                "img": user.img,
+                "balance": user.balance,
+            }
+        })
+
+    return JsonResponse({"authenticated": False})
 
 
 from rest_framework import viewsets
