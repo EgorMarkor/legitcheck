@@ -29,3 +29,30 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.brand
+
+
+class UploadedVerdictPhoto(models.Model):
+    user = models.ForeignKey(
+        'webapp.User',
+        on_delete=models.CASCADE,
+        related_name='uploaded_verdict_photos',
+    )
+    image = models.ImageField(upload_to='verdicts/uploads')
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    verdict = models.ForeignKey(
+        'webapp.Verdict',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_uploaded_photos',
+    )
+
+    class Meta:
+        verbose_name = "Загруженная фотография вердикта"
+        verbose_name_plural = "Загруженные фотографии вердикта"
+
+    def mark_used(self, verdict):
+        self.verdict = verdict
+        self.used_at = timezone.now()
+        self.save(update_fields=["verdict", "used_at"])

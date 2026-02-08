@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.text import slugify
-from .models import User, Verdict, VerdictPhoto, Payment
+from .models import User, Verdict, VerdictPhoto, UploadedVerdictPhoto, Payment
 from unfold.admin import ModelAdmin  # вы используете свой класс-расширение
 from io import BytesIO
 import zipfile
@@ -122,6 +122,14 @@ class PaymentAdmin(ModelAdmin):
     list_filter = ['status', 'date']
     search_fields = ['user__name', 'uuid']
 
+
+class UploadedVerdictPhotoAdmin(ModelAdmin):
+    list_display = ('id', 'user', 'created_at', 'used_at', 'verdict')
+    list_filter = ('created_at', 'used_at')
+    search_fields = ('user__name', 'user__username', 'user__tgId')
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(Verdict, VerdictAdmin)
+admin.site.register(UploadedVerdictPhoto, UploadedVerdictPhotoAdmin)
 admin.site.register(Payment, PaymentAdmin)

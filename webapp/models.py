@@ -1,5 +1,7 @@
-from django.db import models
 import uuid
+
+from django.db import models
+from django.utils import timezone
 
 class User(models.Model):
     tgId = models.IntegerField(primary_key=True, verbose_name='Telegram ID')
@@ -18,8 +20,6 @@ class User(models.Model):
         
     def __str__(self):
         return f"{self.name} (@{self.username})" if self.username else self.name
-
-from django.db import models
 
 class Verdict(models.Model):
     CATEGORY_CHOICES = [
@@ -111,6 +111,33 @@ class VerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Фотография вердикта"
         verbose_name_plural = "Фотографии вердикта"
+
+
+class UploadedVerdictPhoto(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='uploaded_verdict_photos',
+    )
+    image = models.ImageField(upload_to='verdicts/uploads')
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    verdict = models.ForeignKey(
+        Verdict,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_uploaded_photos',
+    )
+
+    class Meta:
+        verbose_name = "Загруженная фотография вердикта"
+        verbose_name_plural = "Загруженные фотографии вердикта"
+
+    def mark_used(self, verdict):
+        self.verdict = verdict
+        self.used_at = timezone.now()
+        self.save(update_fields=["verdict", "used_at"])
 
 class Payment(models.Model):
     STATUS_CHOICES = [

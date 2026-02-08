@@ -1,6 +1,6 @@
 # pcwebapp/admin.py
 from django.contrib import admin
-from .models import LoginToken, Brand
+from .models import LoginToken, Brand, UploadedVerdictPhoto
 
 @admin.register(LoginToken)
 class LoginTokenAdmin(admin.ModelAdmin):
@@ -13,3 +13,10 @@ class LoginTokenAdmin(admin.ModelAdmin):
 class BrandAdmin(admin.ModelAdmin):
     list_display = ('brand', 'brand_id', 'category')
     search_fields = ('brand', 'brand_id', 'category')
+
+
+@admin.register(UploadedVerdictPhoto)
+class UploadedVerdictPhotoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'created_at', 'used_at', 'verdict')
+    list_filter = ('created_at', 'used_at')
+    search_fields = ('user__name', 'user__username', 'user__tgId')
