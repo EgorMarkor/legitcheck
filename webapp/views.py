@@ -83,22 +83,19 @@ def index(request):
         return redirect("init")
 
     try:
-        webapp_data = parse_web_app_data(
-            TELEGRAM_BOT_TOKEN,
-            raw_init_data
-        )
+        is_valid = parse_web_app_data(TELEGRAM_BOT_TOKEN, raw_init_data)
     except Exception:
         return redirect("init")
 
-    tg_user_data = webapp_data.get("user")
-    if not tg_user_data:
+    if not is_valid:
         return redirect("init")
 
-    if isinstance(tg_user_data, str):
-        try:
-            tg_user_data = json.loads(tg_user_data)
-        except (json.JSONDecodeError, ValueError):
-            return redirect("init")
+    try:
+        from urllib.parse import parse_qsl
+        params = dict(parse_qsl(raw_init_data))
+        tg_user_data = json.loads(params.get("user", "{}"))
+    except (json.JSONDecodeError, ValueError, KeyError):
+        return redirect("init")
 
     tg_id = tg_user_data.get("id")
     if not tg_id:
