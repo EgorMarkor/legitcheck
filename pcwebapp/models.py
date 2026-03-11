@@ -35,7 +35,7 @@ class UploadedVerdictPhoto(models.Model):
     user = models.ForeignKey(
         'webapp.User',
         on_delete=models.CASCADE,
-        related_name='uploaded_verdict_photos',
+        related_name='pc_uploaded_verdict_photos',
     )
     image = models.ImageField(upload_to='verdicts/uploads')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,7 +45,7 @@ class UploadedVerdictPhoto(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='source_uploaded_photos',
+        related_name='pc_source_uploaded_photos',
     )
 
     class Meta:

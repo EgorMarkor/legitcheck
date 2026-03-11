@@ -1,56 +1,54 @@
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
-    <title>Политика конфиденциальности</title>
+    <meta name="theme-color" content="#0c0f16">
+    <!-- PWA / iOS standalone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Checker">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'pwa/apple-touch-icon-180.png' %}">
+    <title>Checker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="/manifest.json">
     <style>
+      /* ─── Убираем скроллбары ───────────────────────────────────────────────── */
       * {
         -webkit-overflow-scrolling: touch;
-        
-        /* 2. Скрыть полосу в Edge/IE */
         -ms-overflow-style: none;
-        
-        /* 3. Скрыть полосу в Firefox */
         scrollbar-width: none;
       }
+      *::-webkit-scrollbar { width: 0; height: 0; }
 
-      /* 4. Скрыть полосу в WebKit-браузерах (Chrome, Safari, Opera) */
-      *::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-      }
-  
+      /* ─── Base ─────────────────────────────────────────────────────────────── */
       html {
         font-size: 3.3vw;
         margin-bottom: 2rem;
       }
-  
-      body { font-family: 'Google Sans', sans-serif;
+
+      body {
+        font-family: 'Google Sans', sans-serif;
         padding-bottom: 2rem;
       }
 
-      * {
-        font-family: 'Google Sans', sans-serif;
-      }
-      
+      * { font-family: 'Google Sans', sans-serif; }
+
       .bg_black {
         background: linear-gradient(180deg, #171C24 0%, #11151A 100%);
       }
 
       html, body {
         margin: 0;
-        height: 100%;
-        /* для старых Safari: */
+        min-height: 100%;
+        /* Safe area для iPhone с «чёлкой» */
         padding-bottom: constant(safe-area-inset-bottom);
-        /* для современных: */
         padding-bottom: env(safe-area-inset-bottom);
-        /* фон страницы должен совпадать с вашим дизайном */
-        background-color: #0c0f16; /* или любой другой ваш цвет */
+        background-color: #0c0f16;
       }
 
   
@@ -94,18 +92,30 @@
 
     
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // сообщаем Telegram, что приложение готово к взаимодействию
-        Telegram.WebApp.ready();
-        // отключаем вертикальные свайпы для сворачивания/закрытия
-        Telegram.WebApp.disableVerticalSwipes();
+      // PWA: service worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (!tg) return;
+
+        tg.ready();
+        if (typeof tg.disableVerticalSwipes === 'function') {
+          tg.disableVerticalSwipes();
+        }
+        if (tg.themeParams) {
+          tg.themeParams.bg_color = "#0c0f16";
+          tg.themeParams.secondary_bg_color = "#0c0f16";
+          if (typeof tg.setHeaderColor === 'function') tg.setHeaderColor("#0c0f16");
+          if (typeof tg.setBottomBarColor === 'function') tg.setBottomBarColor("#0c0f16");
+        }
+        if (typeof tg.expand === 'function') tg.expand();
       });
-      Telegram.WebApp.themeParams.bg_color = "#0c0f16";
-      Telegram.WebApp.themeParams.secondary_bg_color = "#0c0f16";
-
-      Telegram.WebApp.expand();
-
-      Telegram.WebApp.setHeaderColor(Telegram.WebApp.themeParams.bg_color);
-      Telegram.WebApp.setBottomBarColor(Telegram.WebApp.themeParams.bg_color);
     </script>
+    <!-- PWA page transitions + swipe navigation -->
+    <script src="{% static 'pwa/transitions.js' %}"></script>
   </head>

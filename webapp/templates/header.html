@@ -1,21 +1,32 @@
 {% load static %}
-<div class="flex items-center justify-between px-4 py-2 mt-4">
-    <div onclick="Telegram.WebApp.openTelegramLink('https://t.me/legitcheck')" class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-3 rounded-full">
-      <img src="{% static 'telegram.svg' %}" alt="User Avatar" class="w-10 h-10">
+<style>
+  .app-header {
+    padding-top: 1rem;
+  }
+  /* В PWA standalone (и Capacitor) добавляем отступ под Dynamic Island / notch */
+  @media (display-mode: standalone) {
+    .app-header {
+      padding-top: max(env(safe-area-inset-top), 1rem);
+    }
+  }
+</style>
+<div class="app-header flex items-center justify-between px-4 pb-2">
+    <div onclick="(function(){var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink('https://t.me/legitcheck');}else{window.open('https://t.me/legitcheck','_blank','noopener');}})();" class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-3 rounded-full cursor-pointer">
+      <img src="{% static 'telegram.svg' %}" alt="Telegram" class="w-10 h-10">
       <div>
         <div class="lg_check_text">@legitcheck</div>
         <div class="our_tg mt-1">Наш Telegram-канал</div>
       </div>
     </div>
-        <div class="flex items-center space-x-3">
-            <a href="/payment">
-                <div class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-2 rounded-full">
-                    <span class="balance">{{ tg_user.balance }} ₽</span>
-                    <img src="{% static 'balance.svg' %}" alt="User Avatar" class="w-14 h-10">
-                </div>
-            </a>
-            <a href="/account">
-                <img src="{{ tg_user.img }}" alt="User Avatar" class="w-12 h-12 rounded-full object-cover">
-            </a>
-        </div>
-  </div>
+    <div class="flex items-center space-x-3">
+        <a href="/payment" data-no-transition>
+            <div class="flex items-center bg_black text-white text-sm font-medium px-3 py-3 gap-2 rounded-full">
+                <span class="balance">{{ tg_user.balance }} ₽</span>
+                <img src="{% static 'balance.svg' %}" alt="Баланс" class="w-14 h-10">
+            </div>
+        </a>
+        <a href="/account" data-no-transition>
+            <img src="{{ tg_user.img }}" alt="Профиль" class="w-12 h-12 rounded-full object-cover">
+        </a>
+    </div>
+</div>

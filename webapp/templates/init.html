@@ -5,35 +5,219 @@
   <meta charset="UTF-8">
   <title>Инициализация...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0f16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Checker">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'pwa/apple-touch-icon-180.png' %}">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0c0f16;
+      color: #fff;
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: min(420px, 100%);
+      background: linear-gradient(180deg, #171c24 0%, #11151a 100%);
+      border: 1px solid rgba(179, 214, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .muted {
+      color: #8a94a3;
+      font-size: 14px;
+      line-height: 1.35;
+      margin: 0;
+    }
+    .token {
+      margin-top: 16px;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      background: #0b0d11;
+      border: 1px solid rgba(179, 214, 255, 0.08);
+      user-select: all;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      border-radius: 12px;
+      border: 0;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .btn-green {
+      background: linear-gradient(247deg, #0cc88b 19.49%, #1d785b 97.92%);
+    }
+    .btn-dark {
+      background: #0b0d11;
+      border: 1px solid rgba(179, 214, 255, 0.08);
+    }
+    .status {
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: 14px;
+      color: #9aa3b2;
+      text-align: center;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
 
-<script>
-(function () {
+  <main class="card">
+    <h1 class="title">Вход в Checker</h1>
+    <p class="muted">Если вы не в Telegram WebApp, войдите через нашего бота по коду ниже.</p>
+    <div id="login-token" class="token">------</div>
+    <div class="actions">
+      <a id="open-bot" class="btn btn-green" href="https://t.me/LegitLogisticsBot?start=login" target="_blank" rel="noopener noreferrer">Открыть Telegram-бот</a>
+      <button id="copy-token" type="button" class="btn btn-dark">Скопировать код</button>
+      <button id="refresh-token" type="button" class="btn btn-dark">Обновить код</button>
+    </div>
+    <div id="status" class="status">Генерируем код авторизации...</div>
+  </main>
 
-  const homeUrl = "{% url 'home' %}";
-
-  // 🟦 ЕСЛИ ОТКРЫТО В TELEGRAM
-  if (window.Telegram && Telegram.WebApp) {
-    Telegram.WebApp.ready();
-
-    const initData = Telegram.WebApp.initData;
-
-    if (initData && initData.length > 0) {
-      window.location.replace(
-        homeUrl + "?init_data=" + encodeURIComponent(initData)
-      );
-      return;
+  <script>
+  (function () {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      });
     }
-  }
 
-  // 🟨 ЕСЛИ ЭТО ОБЫЧНЫЙ БРАУЗЕР
-  window.location.replace(homeUrl);
+    const homeUrl = "{% url 'home' %}";
+    const tg = window.Telegram && window.Telegram.WebApp;
 
-})();
-</script>
+    // Если открыто внутри Telegram WebApp — стандартный flow init_data.
+    if (tg) {
+      tg.ready();
+      const initData = tg.initData;
+      if (initData && initData.length > 0) {
+        window.location.replace(homeUrl + "?init_data=" + encodeURIComponent(initData));
+        return;
+      }
+    }
+
+    const tokenEl = document.getElementById("login-token");
+    const statusEl = document.getElementById("status");
+    const copyBtn = document.getElementById("copy-token");
+    const refreshBtn = document.getElementById("refresh-token");
+    const openBotLink = document.getElementById("open-bot");
+
+    let token = "";
+    let pollTimer = null;
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    async function finishWebLogin(currentToken) {
+      const response = await fetch(`/api/auth/web-login/${encodeURIComponent(currentToken)}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || "Не удалось завершить вход");
+      }
+      window.location.replace(payload.redirect_url || homeUrl);
+    }
+
+    async function pollToken(currentToken) {
+      const response = await fetch(`/api/auth/poll/${encodeURIComponent(currentToken)}/`, { method: "GET" });
+      const payload = await response.json();
+
+      if (payload.authenticated) {
+        setStatus("Вход подтвержден, открываем приложение...");
+        await finishWebLogin(currentToken);
+        return;
+      }
+
+      if (payload.expired) {
+        setStatus("Код истек. Генерируем новый...");
+        await createToken();
+      }
+    }
+
+    async function createToken() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+
+      setStatus("Генерируем код авторизации...");
+      const response = await fetch("/api/auth/token/", { method: "POST" });
+      const payload = await response.json();
+
+      if (!response.ok || !payload.token) {
+        throw new Error(payload.error || "Не удалось создать код");
+      }
+
+      token = String(payload.token);
+      tokenEl.textContent = token;
+      setStatus("Отправьте этот код боту в Telegram.");
+
+      // Боту нужен ввод кода пользователем, поэтому deep-link без токена.
+      openBotLink.href = "https://t.me/LegitLogisticsBot?start=login";
+
+      pollTimer = setInterval(() => {
+        pollToken(token).catch((error) => {
+          setStatus(error.message || "Ошибка при проверке статуса");
+        });
+      }, 2000);
+    }
+
+    copyBtn.addEventListener("click", async () => {
+      if (!token) return;
+      try {
+        await navigator.clipboard.writeText(token);
+        setStatus("Код скопирован. Отправьте его боту.");
+      } catch {
+        setStatus("Не удалось скопировать код. Скопируйте вручную.");
+      }
+    });
+
+    refreshBtn.addEventListener("click", () => {
+      createToken().catch((error) => setStatus(error.message || "Ошибка генерации кода"));
+    });
+
+    createToken().catch((error) => {
+      setStatus(error.message || "Ошибка генерации кода");
+    });
+  })();
+  </script>
 
 </body>
 </html>

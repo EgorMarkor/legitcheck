@@ -27,10 +27,10 @@ import urllib.request
 import requests
 
 
-Configuration.account_id = 1222154
-Configuration.secret_key = "live_E_z0lmFEzaq0D-6XyHfgCIz9WS32jXgMcLQIkdZOZ8s"
+Configuration.account_id = os.environ.get("YOOKASSA_ACCOUNT_ID", "")
+Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY", "")
 
-TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", getattr(settings, "TELEGRAM_BOT_TOKEN", ""))
 TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
 TELEGRAM_MEDIA_GROUP_LIMIT = 10
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
@@ -57,6 +57,19 @@ def init(request):
     return render(request, 'init.html')
 
 
+def _session_user(request):
+    tg_id = request.session.get("tg_id")
+    if not tg_id:
+        return None
+
+    user = User.objects.filter(tgId=tg_id).first()
+    if user:
+        return user
+
+    request.session.pop("tg_id", None)
+    return None
+
+
 def index(request):
     raw_init_data = (
         request.GET.get("init_data")
@@ -64,6 +77,9 @@ def index(request):
     )
 
     if not raw_init_data:
+        user = _session_user(request)
+        if user:
+            return render(request, "index.html", {"tg_user": user})
         return redirect("init")
 
     try:
@@ -93,6 +109,7 @@ def index(request):
     )
 
     request.session["tg_id"] = tg_id
+    request.session.set_expiry(365 * 24 * 60 * 60)
 
     return render(request, "index.html", {
         "tg_user": user
@@ -101,17 +118,11 @@ def index(request):
 
 def require_user(view_func):
     def wrapped(request, *args, **kwargs):
-        tg_id = request.session.get("tg_id")
-
-        if not tg_id:
+        user = _session_user(request)
+        if not user:
             return redirect("init")
 
-        try:
-            request.tg_user = User.objects.get(tgId=tg_id)
-        except User.DoesNotExist:
-            request.session.pop("tg_id", None)
-            return redirect("init")
-
+        request.tg_user = user
         return view_func(request, *args, **kwargs)
 
     return wrapped
@@ -479,6 +490,43 @@ def _create_verdict_with_assets(user, verdict_payload, direct_files, uploaded_ph
         transaction.on_commit(lambda: _send_verdict_to_telegram(verdict))
 
     return verdict
+
+
+def _serialize_verdict_for_mobile(verdict):
+    photos = []
+    for photo in verdict.photos.all():
+        photos.append(
+            {
+                "id": photo.id,
+                "image_url": _build_public_media_url(photo),
+                "uploaded_at": photo.uploaded_at.isoformat(),
+            }
+        )
+
+    return {
+        "id": verdict.id,
+        "code": verdict.code,
+        "status": verdict.status,
+        "status_display": verdict.get_status_display(),
+        "category": verdict.category,
+        "category_display": verdict.get_category_display(),
+        "brand": verdict.brand,
+        "item_model": verdict.item_model,
+        "comment": verdict.comment,
+        "comment_from_user": verdict.comment_from_user,
+        "created_at": verdict.created_at.isoformat(),
+        "speed": verdict.speed,
+        "price": str(verdict.price),
+        "with_reason": verdict.with_reason,
+        "user": {
+            "tgId": verdict.user.tgId,
+            "name": verdict.user.name,
+            "username": verdict.user.username,
+            "img": verdict.user.img,
+        },
+        "photos": photos,
+        "first_photo_url": photos[0]["image_url"] if photos else None,
+    }
 
 
 @csrf_exempt
@@ -1021,6 +1069,80 @@ def api_mobile_create_verdict(request):
     )
 
 
+@csrf_exempt
+def api_mobile_get_verdict_by_code(request, code):
+    normalized_code = (code or "").strip().upper()
+    if not normalized_code:
+        return JsonResponse({"success": False, "error": "Не указан код вердикта"}, status=400)
+
+    verdict = (
+        Verdict.objects.select_related("user")
+        .prefetch_related("photos")
+        .filter(code__iexact=normalized_code)
+        .first()
+    )
+    if not verdict:
+        return JsonResponse({"success": False, "error": "Вердикт не найден"}, status=404)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "verdict": _serialize_verdict_for_mobile(verdict),
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def api_mobile_upload_verdict_photo(request, verdict_id):
+    request_data = _request_payload(request)
+    if request_data is None:
+        return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
+
+    user, error_response = _resolve_user_by_tg_id(request_data)
+    if error_response:
+        return error_response
+
+    verdict = (
+        Verdict.objects.select_related("user")
+        .prefetch_related("photos")
+        .filter(id=verdict_id, user=user)
+        .first()
+    )
+    if not verdict:
+        return JsonResponse({"success": False, "error": "Вердикт не найден"}, status=404)
+
+    files = _collect_photo_files(request)
+    if not files:
+        return JsonResponse({"success": False, "error": "Файлы не переданы"}, status=400)
+
+    created_photos = []
+    for file_obj in files:
+        photo = VerdictPhoto.objects.create(verdict=verdict, image=file_obj)
+        created_photos.append(
+            {
+                "id": photo.id,
+                "image_url": _build_public_media_url(photo),
+                "uploaded_at": photo.uploaded_at.isoformat(),
+            }
+        )
+
+    verdict = (
+        Verdict.objects.select_related("user")
+        .prefetch_related("photos")
+        .get(id=verdict.id)
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "photos": created_photos,
+            "verdict": _serialize_verdict_for_mobile(verdict),
+        },
+        status=201,
+    )
+
+
 # ---------- API endpoints for Telegram-bot auth (webapp) ----------
 
 ALLOWED_LOGIN_TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -1092,6 +1214,47 @@ def api_poll_login_token(request, token):
         })
 
     return JsonResponse({"authenticated": False})
+
+
+@csrf_exempt
+@require_POST
+def api_web_login_with_token(request, token):
+    """
+    Finalize web login outside Telegram WebApp:
+    if token already confirmed in bot, write tg_id into Django session.
+    """
+    token = (token or "").strip().upper()
+    if not token:
+        return JsonResponse({"success": False, "error": "Токен не указан"}, status=400)
+
+    try:
+        login_token = LoginToken.objects.select_related("user").get(token=token)
+    except LoginToken.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Токен не найден"}, status=404)
+
+    if login_token.is_expired():
+        return JsonResponse({"success": False, "error": "Токен истек"}, status=400)
+
+    if not login_token.used_at or not login_token.user:
+        return JsonResponse({"success": False, "error": "Токен еще не подтвержден"}, status=409)
+
+    request.session["tg_id"] = login_token.user.tgId
+    request.session.set_expiry(365 * 24 * 60 * 60)
+    request.session.cycle_key()
+
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect_url": reverse("home"),
+            "user": {
+                "tgId": login_token.user.tgId,
+                "name": login_token.user.name,
+                "username": login_token.user.username,
+                "img": login_token.user.img,
+                "balance": login_token.user.balance,
+            },
+        }
+    )
 
 
 from rest_framework import viewsets
@@ -1191,10 +1354,17 @@ class VerdictViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
+        queryset = self.queryset.select_related('user').prefetch_related('photos')
         user_id = self.request.query_params.get('user_id')
+        code = (self.request.query_params.get('code') or '').strip()
+
+        if code:
+            queryset = queryset.filter(code__iexact=code)
+
         if user_id:
-            return self.queryset.filter(user__tgId=user_id)
-        return self.queryset
+            queryset = queryset.filter(user__tgId=user_id)
+
+        return queryset
 
 
 class VerdictPhotoViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,6 @@
 from django.urls import path, include
 from . import views
-from django.http import JsonResponse
-import json
+from django.http import HttpResponse
 from pathlib import Path
 from django.urls import re_path
 from django.views.static import serve
@@ -22,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def manifest(request):
     manifest_path = Path(__file__).resolve().parent.parent / "manifest.json"
     with open(manifest_path, encoding="utf-8") as f:
-        return JsonResponse(json.load(f), safe=False)
+        return HttpResponse(f.read(), content_type="application/manifest+json")
     
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -46,6 +45,8 @@ urlpatterns = [
     path('api/verdict/create/', views.api_create_verdict, name='api_create_verdict'),
     path('api/mobile/verdict/photos/upload/', views.api_mobile_upload_verdict_photos, name='api_mobile_upload_verdict_photos'),
     path('api/mobile/verdict/create/', views.api_mobile_create_verdict, name='api_mobile_create_verdict'),
+    path('api/mobile/verdict/by-code/<str:code>/', views.api_mobile_get_verdict_by_code, name='api_mobile_get_verdict_by_code'),
+    path('api/mobile/verdict/<int:verdict_id>/upload-photo/', views.api_mobile_upload_verdict_photo, name='api_mobile_upload_verdict_photo'),
     path('articles/', views.articles, name="articles"),
     path('auth_check/', views.auth_check, name="auth_check"),
     path('our_support/', views.our_support, name="our_support"),
@@ -57,10 +58,13 @@ urlpatterns = [
     path("yookassa/webhook/", views.yookassa_webhook),
     path("payment/success/", views.payment_success),
     path('verdict/<int:verdict_id>/upload-photo/', views.upload_verdict_photo, name='upload_verdict_photo'),
-    path('api/auth/token/', views.api_create_login_token),
-    path('api/auth/poll/<str:token>/', views.api_poll_login_token),
+    path('api/auth/token/', views.api_create_login_token, name='api_create_login_token'),
+    path('api/auth/poll/<str:token>/', views.api_poll_login_token, name='api_poll_login_token'),
+    path('api/auth/web-login/<str:token>/', views.api_web_login_with_token, name='api_web_login_with_token'),
     
+    path("manifest.json", manifest),
     path("manifest.json/", manifest),
+    path("manifest.webmanifest", manifest),
     
     re_path(
         r'^sw\.js$',

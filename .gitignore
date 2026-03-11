@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.tox/
+.pytest_cache/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables — NEVER commit secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv/
+.venv_local/
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Node (mobile-pwa-shell / mobile-native)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Capacitor build artefacts
+mobile-pwa-shell/www/
+mobile-pwa-shell/ios/App/App/public/
+mobile-pwa-shell/android/app/src/main/assets/public/
+mobile-native/www/
+mobile-native/ios/App/App/public/
+mobile-native/android/app/src/main/assets/public/
+
+# iOS build
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Android build
+*.apk
+*.aab
+*.class
+bin/
+gen/
+
+# Misc
+*.bak
+*.tmp
+Thumbs.db

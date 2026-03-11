@@ -35,7 +35,7 @@ class VerdictApiTests(TestCase):
             used_at=timezone.now(),
             expires_at=timezone.now() + timedelta(minutes=5),
         )
-        self.host = "checkerlegit.com"
+        self.host = "legitcheck.one"
 
     def _image_file(self, name="test.gif"):
         content = (
@@ -154,3 +154,127 @@ class VerdictApiTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()["success"])
+
+    def test_mobile_get_verdict_by_code(self):
+        verdict = Verdict.objects.create(
+            user=self.user,
+            status="legit",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="manager comment",
+            comment_from_user="user comment",
+            code="55555",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+
+        response = self.client.get(
+            f"/api/mobile/verdict/by-code/{verdict.code}/",
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertEqual(payload["verdict"]["id"], verdict.id)
+        self.assertEqual(payload["verdict"]["status"], "legit")
+        self.assertEqual(payload["verdict"]["status_display"], "Оригинал")
+        self.assertEqual(payload["verdict"]["code"], "55555")
+
+    def test_verdicts_api_supports_code_filter(self):
+        Verdict.objects.create(
+            user=self.user,
+            status="legit",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="first",
+            comment_from_user="first",
+            code="11111",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+        target_verdict = Verdict.objects.create(
+            user=self.user,
+            status="fake",
+            category="sneakers",
+            brand="Adidas",
+            item_model="Campus",
+            comment="second",
+            comment_from_user="second",
+            code="22222",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+
+        response = self.client.get(
+            "/api/verdicts/?code=22222",
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["id"], target_verdict.id)
+        self.assertEqual(payload[0]["code"], "22222")
+
+    def test_mobile_upload_photo_to_existing_verdict(self):
+        verdict = Verdict.objects.create(
+            user=self.user,
+            status="inpending",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="",
+            comment_from_user="user comment",
+            code="44444",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+
+        response = self.client.post(
+            f"/api/mobile/verdict/{verdict.id}/upload-photo/",
+            {
+                "tg_id": str(self.user.tgId),
+                "photo": self._image_file("verdict-extra.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertEqual(len(payload["photos"]), 1)
+        verdict.refresh_from_db()
+        self.assertEqual(verdict.photos.count(), 1)
+
+    def test_web_login_with_token_sets_session(self):
+        response = self.client.post(
+            f"/api/auth/web-login/{self.login_token.token}/",
+            data="{}",
+            content_type="application/json",
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertEqual(payload["user"]["tgId"], self.user.tgId)
+
+        session = self.client.session
+        self.assertEqual(session.get("tg_id"), self.user.tgId)
+
+    def test_index_renders_by_session_without_init_data(self):
+        session = self.client.session
+        session["tg_id"] = self.user.tgId
+        session.save()
+
+        response = self.client.get("/home/", HTTP_HOST=self.host)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "index.html")

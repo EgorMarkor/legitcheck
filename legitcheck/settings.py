@@ -21,19 +21,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%7t^@^hct!d*e2*-ss7((0wy#+5^ne^=oe)ku_cy4e(c35ta=b'
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-%7t^@^hct!d*e2*-ss7((0wy#+5^ne^=oe)ku_cy4e(c35ta=b",
+)
 
-TELEGRAM_BOT_TOKEN = '7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU'
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+LOCAL_DEV = os.environ.get("LOCAL_DEV") == "1"
+DEBUG = LOCAL_DEV or os.environ.get("DJANGO_DEBUG") == "1"
 
-ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com']
+ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com', '127.0.0.1']
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+if LOCAL_DEV:
+    ALLOWED_HOSTS += ['localhost']
+
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = not LOCAL_DEV
+CSRF_COOKIE_SECURE = not LOCAL_DEV
+
+# Keep users logged in for 1 year; expiry slides on each request
+SESSION_COOKIE_AGE = 365 * 24 * 60 * 60  # seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://legitcheck.one")
+if LOCAL_DEV and "PUBLIC_BASE_URL" not in os.environ:
+    PUBLIC_BASE_URL = "http://127.0.0.1:8000"
 
 STATIC_ROOT = '/srv/legitcheck/static'
 

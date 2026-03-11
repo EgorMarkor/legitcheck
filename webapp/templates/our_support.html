@@ -83,18 +83,17 @@
   </div>
 
     <script>
-    // инициализируем WebApp
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-
-    // показываем кнопку "Назад" в заголовке
-    tg.BackButton.show();
-
-    // при клике уходим на предыдущий шаг истории
-    tg.BackButton.onClick(() => {
-      window.history.back();
-      tg.BackButton.hide();
-    });
-  </script>
+    (function () {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+      if (tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(function () {
+          window.history.back();
+          tg.BackButton.hide();
+        });
+      }
+    })();</script>
 </body>
 </html>

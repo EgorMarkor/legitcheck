@@ -1,0 +1,31 @@
+# ─── Django ───────────────────────────────────────────────────────────────────
+Django==5.2.3
+asgiref==3.8.1
+sqlparse==0.5.1
+
+# ─── Django REST Framework ────────────────────────────────────────────────────
+# 3.15+ required for Django 5.x (3.12.x breaks on parse_header removal)
+djangorestframework==3.16.1
+
+# ─── Django Admin UI ─────────────────────────────────────────────────────────
+django-unfold==0.62.0
+
+# ─── Telegram ─────────────────────────────────────────────────────────────────
+# pyTelegramBotAPI — используется для parse_web_app_data в webapp/views.py
+pyTelegramBotAPI==4.29.1
+# python-telegram-bot — используется в telegram_login_bot.py (бот авторизации)
+python-telegram-bot==20.7
+httpx==0.25.2       # зависимость python-telegram-bot
+
+# ─── Платёжная система ────────────────────────────────────────────────────────
+yookassa==3.5.0
+
+# ─── HTTP / Networking ────────────────────────────────────────────────────────
+requests==2.32.5
+netaddr==1.3.0
+
+# ─── Изображения ─────────────────────────────────────────────────────────────
+Pillow==11.1.0
+
+# ─── Production WSGI сервер ───────────────────────────────────────────────────
+gunicorn==23.0.0
