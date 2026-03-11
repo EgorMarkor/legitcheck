@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   appId: 'one.legitcheck.app',
   appName: 'Checker',
   webDir: 'www',
-  bundledWebRuntime: false,
   server: {
     url: remoteUrl,
     cleartext: remoteUrl.startsWith('http://'),
@@ -22,10 +21,8 @@ const config: CapacitorConfig = {
     ]
   },
   ios: {
-    contentInset: 'automatic',
-    // Отключаем WKWebView-свайп (полноэкранный, дёрганый history.back).
-    // Нативный edge-свайп от левого края остаётся работать через iOS UIGestureRecognizer.
-    swipeBackEnabled: false
+    contentInset: 'never',
+    backgroundColor: '#0c0f16'
   }
 };
 

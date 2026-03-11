@@ -9,11 +9,12 @@ class User(models.Model):
     name = models.CharField(max_length=255, verbose_name='Full Name')
     balance = models.CharField(max_length=255, verbose_name="Баланс")
     username = models.CharField(
-        max_length=255, 
-        null=True, 
-        blank=True, 
+        max_length=255,
+        null=True,
+        blank=True,
         verbose_name='Telegram Username'
     )
+    auth_token = models.UUIDField(default=uuid.uuid4, unique=True)
     
     class Meta:
         verbose_name = "Пользователи"

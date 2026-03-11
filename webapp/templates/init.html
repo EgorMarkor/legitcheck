@@ -129,6 +129,19 @@
       }
     }
 
+    // Очистить невалидный токен если сервер перенаправил с ?clear_token=1
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('clear_token')) {
+      localStorage.removeItem('checker_auth_token');
+    } else {
+      // Попытка восстановить сессию из localStorage (Capacitor persistency)
+      const savedToken = localStorage.getItem('checker_auth_token');
+      if (savedToken) {
+        window.location.replace('/api/auth/restore/' + encodeURIComponent(savedToken) + '/');
+        return;
+      }
+    }
+
     const tokenEl = document.getElementById("login-token");
     const statusEl = document.getElementById("status");
     const copyBtn = document.getElementById("copy-token");

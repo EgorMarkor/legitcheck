@@ -1257,6 +1257,23 @@ def api_web_login_with_token(request, token):
     )
 
 
+def api_auth_restore(request, token):
+    """Restore session from persistent auth_token stored in localStorage."""
+    import uuid as _uuid
+    try:
+        parsed = _uuid.UUID(str(token))
+    except (ValueError, AttributeError):
+        return redirect('/init/?clear_token=1')
+
+    user = User.objects.filter(auth_token=parsed).first()
+    if not user:
+        return redirect('/init/?clear_token=1')
+
+    request.session['tg_id'] = user.tgId
+    request.session.set_expiry(365 * 24 * 60 * 60)
+    return redirect('home')
+
+
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes

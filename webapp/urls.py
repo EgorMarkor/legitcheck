@@ -61,6 +61,7 @@ urlpatterns = [
     path('api/auth/token/', views.api_create_login_token, name='api_create_login_token'),
     path('api/auth/poll/<str:token>/', views.api_poll_login_token, name='api_poll_login_token'),
     path('api/auth/web-login/<str:token>/', views.api_web_login_with_token, name='api_web_login_with_token'),
+    path('api/auth/restore/<str:token>/', views.api_auth_restore, name='api_auth_restore'),
     
     path("manifest.json", manifest),
     path("manifest.json/", manifest),
