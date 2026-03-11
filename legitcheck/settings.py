@@ -31,7 +31,7 @@ TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 LOCAL_DEV = os.environ.get("LOCAL_DEV") == "1"
-DEBUG = LOCAL_DEV or os.environ.get("DJANGO_DEBUG") == "1"
+DEBUG = True
 
 ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com', '127.0.0.1']
 
