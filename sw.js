@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'checker-pwa-v3';
+const CACHE_VERSION = 'checker-pwa-v4';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -96,13 +96,28 @@ async function staleWhileRevalidate(request) {
   return cached || (await fetchPromise) || fetch(request);
 }
 
+// Внешние CDN: кэшируем через stale-while-revalidate
+const CDN_ORIGINS = [
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
+  'https://cdn.jsdelivr.net',
+];
+
 // ─── Fetch: роутинг ───────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Не перехватываем не-GET и кросс-доменные запросы
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  // Внешние CDN → stale-while-revalidate
+  if (CDN_ORIGINS.some((o) => request.url.startsWith(o))) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // Все остальные кросс-доменные запросы — не перехватываем
   if (url.origin !== self.location.origin) return;
 
   // Не кэшируем admin, API-запросы и webhook
