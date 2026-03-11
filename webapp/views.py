@@ -83,19 +83,24 @@ def index(request):
         return redirect("init")
 
     try:
-        is_valid = parse_web_app_data(TELEGRAM_BOT_TOKEN, raw_init_data)
+        webapp_data = parse_web_app_data(TELEGRAM_BOT_TOKEN, raw_init_data)
     except Exception:
+        logger.exception("parse_web_app_data raised, token_set=%s", bool(TELEGRAM_BOT_TOKEN))
         return redirect("init")
 
-    if not is_valid:
+    if not webapp_data:
+        logger.warning("parse_web_app_data returned falsy, token_set=%s", bool(TELEGRAM_BOT_TOKEN))
         return redirect("init")
 
-    try:
-        from urllib.parse import parse_qsl
-        params = dict(parse_qsl(raw_init_data))
-        tg_user_data = json.loads(params.get("user", "{}"))
-    except (json.JSONDecodeError, ValueError, KeyError):
+    tg_user_data = webapp_data.get("user")
+    if not tg_user_data:
         return redirect("init")
+
+    if isinstance(tg_user_data, str):
+        try:
+            tg_user_data = json.loads(tg_user_data)
+        except (json.JSONDecodeError, ValueError):
+            return redirect("init")
 
     tg_id = tg_user_data.get("id")
     if not tg_id:
