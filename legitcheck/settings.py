@@ -42,10 +42,10 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = not LOCAL_DEV
 CSRF_COOKIE_SECURE = not LOCAL_DEV
 
-# Keep users logged in for 1 year; expiry slides on each request
+# Keep users logged in for 1 year
 SESSION_COOKIE_AGE = 365 * 24 * 60 * 60  # seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = False  # сохранять только при изменении сессии
 
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://legitcheck.one")
 if LOCAL_DEV and "PUBLIC_BASE_URL" not in os.environ:
@@ -76,7 +76,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'legitcheck.host_routing_middleware.DomainRoutingMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -93,14 +95,36 @@ CACHES = {
     }
 }
 
+# Whitenoise: отдаёт статику с gzip/br сжатием и Cache-Control: max-age=1 год
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if not LOCAL_DEV
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
+    },
+}
+
 
 ROOT_URLCONF = 'legitcheck.urls'
+
+_TEMPLATE_LOADERS = (
+    [
+        ('django.template.loaders.cached.Loader', [
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader',
+        ]),
+    ]
+    if not LOCAL_DEV else None
+)
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': True,
+        'APP_DIRS': LOCAL_DEV,  # в prod отключаем — используем cached loader
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -108,6 +132,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            **({'loaders': _TEMPLATE_LOADERS} if _TEMPLATE_LOADERS else {}),
         },
     },
 ]
@@ -122,6 +147,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'CONN_MAX_AGE': 60,  # переиспользовать соединение 60 сек
     }
 }
 
