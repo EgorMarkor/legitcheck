@@ -94,6 +94,12 @@ def index(request):
     if not tg_user_data:
         return redirect("init")
 
+    if isinstance(tg_user_data, str):
+        try:
+            tg_user_data = json.loads(tg_user_data)
+        except (json.JSONDecodeError, ValueError):
+            return redirect("init")
+
     tg_id = tg_user_data.get("id")
     if not tg_id:
         return redirect("init")
