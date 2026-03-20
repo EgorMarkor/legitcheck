@@ -1278,11 +1278,11 @@ def api_auth_restore(request, token):
     try:
         parsed = _uuid.UUID(str(token))
     except (ValueError, AttributeError):
-        return redirect('/init/?clear_token=1')
+        return redirect('/?clear_token=1')
 
     user = User.objects.filter(auth_token=parsed).first()
     if not user:
-        return redirect('/init/?clear_token=1')
+        return redirect('/?clear_token=1')
 
     request.session['tg_id'] = user.tgId
     request.session.set_expiry(365 * 24 * 60 * 60)
