@@ -1285,20 +1285,27 @@ def api_web_login_with_token(request, token):
     if not login_token.used_at or not login_token.user:
         return JsonResponse({"success": False, "error": "Токен еще не подтвержден"}, status=409)
 
-    request.session["tg_id"] = login_token.user.tgId
+    user = login_token.user
+    request.session["tg_id"] = user.tgId
     request.session.set_expiry(365 * 24 * 60 * 60)
     request.session.cycle_key()
+
+    # Обновляем аватарку через Bot API при каждом входе
+    fetched = _fetch_tg_avatar(user.tgId)
+    if fetched and user.img != fetched:
+        user.img = fetched
+        user.save(update_fields=["img"])
 
     return JsonResponse(
         {
             "success": True,
             "redirect_url": reverse("home"),
             "user": {
-                "tgId": login_token.user.tgId,
-                "name": login_token.user.name,
-                "username": login_token.user.username,
-                "img": login_token.user.img,
-                "balance": login_token.user.balance,
+                "tgId": user.tgId,
+                "name": user.name,
+                "username": user.username,
+                "img": user.img,
+                "balance": user.balance,
             },
         }
     )
