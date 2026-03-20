@@ -27,10 +27,10 @@ import urllib.request
 import requests
 
 
-Configuration.account_id = os.environ.get("YOOKASSA_ACCOUNT_ID", "")
-Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY", "")
+Configuration.account_id = 1222154
+Configuration.secret_key = "live_Y3wIog3WrIrKkUvTF7HID1XDB6mgztrXZZFdx9VbwjQ"
 
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", getattr(settings, "TELEGRAM_BOT_TOKEN", ""))
+TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
 TELEGRAM_MEDIA_GROUP_LIMIT = 10
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
