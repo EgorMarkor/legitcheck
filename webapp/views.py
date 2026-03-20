@@ -610,7 +610,9 @@ def create_verdict(request):
 @require_user
 def check_verdict(request):
     code = request.GET.get('code', '').upper()
-    verdict = get_object_or_404(Verdict, code=code)
+    verdict = Verdict.objects.filter(code=code).first()
+    if not verdict:
+        return redirect(f"{reverse('verdicts')}?error=not_found&code={code}")
     photos = verdict.photos.all()
 
     # вместо photos[0]

@@ -94,6 +94,11 @@
     <section class="px-6">
         <div class="font-bold text-[1.6rem]">Вердикты</div>
         <div class="font-medium text-[1.2rem] text-[#464F5D]">Введите код вердикта, чтобы проверить оригинальность изделия</div>
+        <div id="error-alert" class="hidden mt-4 flex items-center gap-3 bg-[#2a1a1a] border border-[#ff4444]/40 rounded-[1rem] px-4 py-3 text-[1.1rem]">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0"><circle cx="10" cy="10" r="10" fill="#ff4444" fill-opacity="0.18"/><path d="M10 6v5" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="13.5" r="1" fill="#ff4444"/></svg>
+          <span class="text-[#ff6b6b]">Вердикт с таким кодом не найден. Проверьте код и попробуйте снова.</span>
+        </div>
+
         <div class="code-inputs mt-4">
             <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
             <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
@@ -159,10 +164,24 @@
     window.location.href = "{% url 'verdict' %}?code=" + code;
   });
 
-  // 🔄 Начальный фокус
+  // 🔄 Начальный фокус + обработка ошибки из URL
   window.addEventListener('load', () => {
-    inputs[0].focus();
-    updateButton();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'not_found') {
+      const code = (params.get('code') || '').replace(/\D/g, '').slice(0, 5);
+      code.split('').forEach((char, i) => { if (inputs[i]) inputs[i].value = char; });
+      updateButton();
+      document.getElementById('error-alert').classList.remove('hidden');
+    } else {
+      inputs[0].focus();
+      updateButton();
+    }
+  });
+
+  inputs.forEach(input => {
+    input.addEventListener('input', () => {
+      document.getElementById('error-alert').classList.add('hidden');
+    });
   });
 </script>
 
