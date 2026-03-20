@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const remoteUrl = process.env.PWA_URL || 'https://legitcheck.one';
 
 const config: CapacitorConfig = {
-  appId: 'one.legitcheck.app',
+  appId: 'com.markor.legitcheck',
   appName: 'Checker',
   webDir: 'www',
   server: {

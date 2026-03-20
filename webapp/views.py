@@ -106,7 +106,7 @@ def index(request):
     if not tg_id:
         return redirect("init")
 
-    user, _ = User.objects.get_or_create(
+    user, created = User.objects.get_or_create(
         tgId=tg_id,
         defaults={
             "name": tg_user_data.get("first_name", ""),
@@ -115,6 +115,11 @@ def index(request):
             "balance": "0",
         }
     )
+    if not created:
+        photo_url = tg_user_data.get("photo_url")
+        if photo_url and user.img != photo_url:
+            user.img = photo_url
+            user.save(update_fields=["img"])
 
     request.session["tg_id"] = tg_id
     request.session.set_expiry(365 * 24 * 60 * 60)
