@@ -40,6 +40,37 @@ logger = logging.getLogger(__name__)
 # URL аватарки по умолчанию на случай отсутствия фото у пользователя
 DEFAULT_AVATAR_URL = "/static/avatar.png"
 
+
+def _fetch_tg_avatar(tg_id):
+    """Получить URL аватарки через Bot API. Возвращает None при ошибке."""
+    try:
+        photos_url = (
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+            f"/getUserProfilePhotos?user_id={tg_id}&limit=1"
+        )
+        with urllib.request.urlopen(photos_url, timeout=5) as resp:
+            data = json.loads(resp.read())
+        if not data.get("ok"):
+            return None
+        photos = data.get("result", {}).get("photos", [])
+        if not photos:
+            return None
+        # Берём самый крупный размер первого фото
+        file_id = sorted(photos[0], key=lambda s: s.get("file_size", 0))[-1]["file_id"]
+
+        file_url = (
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+            f"/getFile?file_id={file_id}"
+        )
+        with urllib.request.urlopen(file_url, timeout=5) as resp:
+            data = json.loads(resp.read())
+        file_path = data.get("result", {}).get("file_path")
+        if not file_path:
+            return None
+        return f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
+    except Exception:
+        return None
+
 TARIFF_PRICES = {
     "24h": Decimal("450.00"),
     "15min-expensive": Decimal("650.00"),
@@ -111,15 +142,16 @@ def index(request):
         defaults={
             "name": tg_user_data.get("first_name", ""),
             "username": tg_user_data.get("username"),
-            "img": tg_user_data.get("photo_url") or DEFAULT_AVATAR_URL,
+            "img": DEFAULT_AVATAR_URL,
             "balance": "0",
         }
     )
-    if not created:
-        photo_url = tg_user_data.get("photo_url")
-        if photo_url and user.img != photo_url:
-            user.img = photo_url
-            user.save(update_fields=["img"])
+    # Обновляем аватарку при каждом входе: сначала photo_url из init_data,
+    # если его нет — запрашиваем через Bot API
+    new_img = tg_user_data.get("photo_url") or _fetch_tg_avatar(tg_id)
+    if new_img and user.img != new_img:
+        user.img = new_img
+        user.save(update_fields=["img"])
 
     request.session["tg_id"] = tg_id
     request.session.set_expiry(365 * 24 * 60 * 60)
