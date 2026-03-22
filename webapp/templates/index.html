@@ -76,12 +76,9 @@
       </div>
     </div>
 
-<!-- Подключение Swiper -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"
-  />
-  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<!-- Подключение Swiper (self-hosted) -->
+  <link rel="stylesheet" href="{% static 'vendor/swiper-bundle.min.css' %}" />
+  <script src="{% static 'vendor/swiper-bundle.min.js' %}"></script>
   <script>
     const promoSwiper = new Swiper('.myPromoSwiper', {
       loop: true,

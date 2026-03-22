@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'checker-pwa-v4';
+const CACHE_VERSION = 'checker-pwa-v5';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -11,6 +11,12 @@ const PRECACHE_URLS = [
   '/static/pwa/icon-512.png',
   '/static/pwa/apple-touch-icon-180.png',
   '/static/pwa/transitions.js',
+  '/static/vendor/tailwind-cdn.js',
+  '/static/vendor/google-sans.css',
+  '/static/vendor/fonts/google-sans-cyrillic-700.woff2',
+  '/static/vendor/fonts/google-sans-cyrillic-ext-700.woff2',
+  '/static/vendor/fonts/google-sans-latin-700.woff2',
+  '/static/vendor/fonts/google-sans-latin-ext-700.woff2',
   '/static/telegram.svg',
   '/static/home.svg',
   '/static/home_active.svg',
@@ -96,26 +102,12 @@ async function staleWhileRevalidate(request) {
   return cached || (await fetchPromise) || fetch(request);
 }
 
-// Внешние CDN: кэшируем через stale-while-revalidate
-const CDN_ORIGINS = [
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
-  'https://cdn.jsdelivr.net',
-];
-
 // ─── Fetch: роутинг ───────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-
-  // Внешние CDN → stale-while-revalidate
-  if (CDN_ORIGINS.some((o) => request.url.startsWith(o))) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
-  }
 
   // Все остальные кросс-доменные запросы — не перехватываем
   if (url.origin !== self.location.origin) return;
