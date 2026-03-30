@@ -188,12 +188,14 @@
           </div>
 
           <div class="grid grid-cols-3 gap-2 mt-2 pb-6">
-            <!-- Кнопка добавления — input как прозрачный оверлей, работает в iOS PWA -->
+            <!-- label→input схема: label — область нажатия, input — 1px. Не крашит iOS PWA -->
             <div class="relative h-[8rem] rounded-[1.2rem]
                         bg-[#0B0D11] border border-dashed border-neutral-600
-                        flex items-center justify-center cursor-pointer overflow-hidden">
+                        flex items-center justify-center overflow-hidden">
               <input type="file" id="extra-photo-input" accept="image/*"
-                     style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:5;">
+                     style="position:absolute;width:1px;height:1px;opacity:0;top:0;left:0;overflow:hidden;pointer-events:none;">
+              <label for="extra-photo-input"
+                     style="position:absolute;inset:0;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;"></label>
               <span class="text-neutral-400 text-sm pointer-events-none">+ Добавить фото</span>
             </div>
           </div>
