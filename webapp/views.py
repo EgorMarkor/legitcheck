@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from telebot.util import parse_web_app_data
-from .models import User, Verdict, VerdictPhoto, UploadedVerdictPhoto, Payment
+from .models import User, Verdict, VerdictPhoto, UploadedVerdictPhoto, Payment, EmailOTPToken
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
@@ -23,8 +23,7 @@ import traceback
 from pcwebapp.models import LoginToken
 import json
 import logging
-import urllib.request
-import requests
+from . import telegram as tg_service
 
 
 Configuration.account_id = 1222154
@@ -41,35 +40,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_AVATAR_URL = "/static/avatar.png"
 
 
-def _fetch_tg_avatar(tg_id):
-    """Получить URL аватарки через Bot API. Возвращает None при ошибке."""
-    try:
-        photos_url = (
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
-            f"/getUserProfilePhotos?user_id={tg_id}&limit=1"
-        )
-        with urllib.request.urlopen(photos_url, timeout=5) as resp:
-            data = json.loads(resp.read())
-        if not data.get("ok"):
-            return None
-        photos = data.get("result", {}).get("photos", [])
-        if not photos:
-            return None
-        # Берём самый крупный размер первого фото
-        file_id = sorted(photos[0], key=lambda s: s.get("file_size", 0))[-1]["file_id"]
-
-        file_url = (
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
-            f"/getFile?file_id={file_id}"
-        )
-        with urllib.request.urlopen(file_url, timeout=5) as resp:
-            data = json.loads(resp.read())
-        file_path = data.get("result", {}).get("file_path")
-        if not file_path:
-            return None
-        return f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
-    except Exception:
-        return None
 
 TARIFF_PRICES = {
     "24h": Decimal("450.00"),
@@ -146,10 +116,10 @@ def index(request):
             "balance": "0",
         }
     )
-    # Обновляем аватарку при каждом входе: сначала photo_url из init_data,
-    # если его нет — запрашиваем через Bot API
-    new_img = tg_user_data.get("photo_url") or _fetch_tg_avatar(tg_id)
-    if new_img and user.img != new_img:
+    # Скачиваем аватарку и кэшируем локально (браузер никогда не ходит на api.telegram.org)
+    cached_img = tg_service.download_and_cache_avatar(TELEGRAM_BOT_TOKEN, tg_id)
+    new_img = cached_img or DEFAULT_AVATAR_URL
+    if user.img != new_img:
         user.img = new_img
         user.save(update_fields=["img"])
 
@@ -185,30 +155,11 @@ def _generate_unique_code():
     return code
 
 from django.db import transaction
+from django.core.mail import send_mail
+import random
+import zlib
 
 
-def _telegram_api_request(method, payload):
-    if not TELEGRAM_BOT_TOKEN:
-        return
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
-    data = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            response.read()
-    except Exception:
-        logger.exception("Failed to call Telegram API %s", method)
-
-
-def _telegram_api_request_files(method, payload, files):
-    if not TELEGRAM_BOT_TOKEN:
-        return
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
-    try:
-        response = requests.post(url, data=payload, files=files, timeout=20)
-        response.raise_for_status()
-    except Exception:
-        logger.exception("Failed to call Telegram API %s with files", method)
 
 
 def _build_public_media_url(photo):
@@ -281,32 +232,24 @@ def _send_verdict_to_telegram(verdict):
                 media.append(item)
                 if use_upload:
                     files[file_key] = open(photo_path, "rb")
-            payload = {
-                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-                "media": json.dumps(media),
-            }
             if files:
-                _telegram_api_request_files("sendMediaGroup", payload, files)
+                tg_service.send_media_group(TELEGRAM_BOT_TOKEN, TELEGRAM_VERDICT_CHAT_ID, media, files=files)
                 for file in files.values():
                     file.close()
             else:
-                _telegram_api_request("sendMediaGroup", payload)
-        _telegram_api_request(
-            "sendMessage",
-            {
-                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-                "text": text,
-                "reply_markup": reply_markup,
-            },
+                tg_service.send_media_group(TELEGRAM_BOT_TOKEN, TELEGRAM_VERDICT_CHAT_ID, media)
+        tg_service.send_message(
+            TELEGRAM_BOT_TOKEN,
+            TELEGRAM_VERDICT_CHAT_ID,
+            text,
+            reply_markup=reply_markup,
         )
     else:
-        _telegram_api_request(
-            "sendMessage",
-            {
-                "chat_id": TELEGRAM_VERDICT_CHAT_ID,
-                "text": text,
-                "reply_markup": reply_markup,
-            },
+        tg_service.send_message(
+            TELEGRAM_BOT_TOKEN,
+            TELEGRAM_VERDICT_CHAT_ID,
+            text,
+            reply_markup=reply_markup,
         )
 
 
@@ -749,30 +692,26 @@ def telegram_verdict_webhook(request):
     try:
         verdict = Verdict.objects.get(pk=int(verdict_id))
     except (Verdict.DoesNotExist, ValueError):
-        _telegram_api_request(
-            "answerCallbackQuery",
-            {"callback_query_id": callback_query.get("id"), "text": "Вердикт не найден"},
+        tg_service.answer_callback_query(
+            TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт не найден"
         )
         return JsonResponse({"ok": True})
 
     verdict.status = decision
     verdict.save(update_fields=["status"])
 
-    _telegram_api_request(
-        "answerCallbackQuery",
-        {"callback_query_id": callback_query.get("id"), "text": "Вердикт обновлен"},
+    tg_service.answer_callback_query(
+        TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт обновлен"
     )
 
     message = callback_query.get("message", {})
     chat = message.get("chat", {})
     if chat.get("id") and message.get("message_id"):
-        _telegram_api_request(
-            "editMessageReplyMarkup",
-            {
-                "chat_id": chat.get("id"),
-                "message_id": message.get("message_id"),
-                "reply_markup": {"inline_keyboard": []},
-            },
+        tg_service.edit_message_reply_markup(
+            TELEGRAM_BOT_TOKEN,
+            chat.get("id"),
+            message.get("message_id"),
+            {"inline_keyboard": []},
         )
 
     return JsonResponse({"ok": True})
@@ -1290,10 +1229,10 @@ def api_web_login_with_token(request, token):
     request.session.set_expiry(365 * 24 * 60 * 60)
     request.session.cycle_key()
 
-    # Обновляем аватарку через Bot API при каждом входе
-    fetched = _fetch_tg_avatar(user.tgId)
-    if fetched and user.img != fetched:
-        user.img = fetched
+    # Скачиваем аватарку локально при каждом входе
+    cached_img = tg_service.download_and_cache_avatar(TELEGRAM_BOT_TOKEN, user.tgId)
+    if cached_img and user.img != cached_img:
+        user.img = cached_img
         user.save(update_fields=["img"])
 
     return JsonResponse(
@@ -1454,3 +1393,113 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if user_id:
             return self.queryset.filter(user__tgId=user_id)
         return self.queryset
+
+
+# ─── Email authentication ────────────────────────────────────────────────────
+
+def _email_to_tg_id(email: str) -> int:
+    """Генерирует отрицательный tgId для email-пользователей, чтобы не пересекаться с Telegram ID."""
+    crc = zlib.crc32(email.lower().encode()) & 0x7FFFFFFF
+    synthetic = -(crc or 1)
+    # На случай коллизии — сдвигаем пока не найдём свободный
+    while User.objects.filter(tgId=synthetic).exclude(email=email.lower()).exists():
+        synthetic -= 1
+    return synthetic
+
+
+def email_login_page(request):
+    """Страница ввода email."""
+    if _session_user(request):
+        return redirect("home")
+    error = request.GET.get("error")
+    return render(request, "email_login.html", {"error": error})
+
+
+def email_send_otp(request):
+    """POST: отправляет OTP на email и редиректит на страницу ввода кода."""
+    if request.method != "POST":
+        return redirect("email_login")
+
+    email = request.POST.get("email", "").strip().lower()
+    if not email or "@" not in email:
+        return redirect("/email-login/?error=invalid")
+
+    # Генерируем 6-значный код
+    code = "{:06d}".format(random.randint(0, 999999))
+
+    # Инвалидируем старые неиспользованные коды для этого email
+    EmailOTPToken.objects.filter(email=email, used=False).update(used=True)
+
+    EmailOTPToken.objects.create(email=email, code=code)
+
+    try:
+        send_mail(
+            subject="Ваш код входа в LegitCheck",
+            message=(
+                f"Ваш код для входа: {code}\n\n"
+                f"Код действителен 10 минут.\n"
+                f"Если вы не запрашивали код — игнорируйте это письмо."
+            ),
+            from_email=None,  # берётся из DEFAULT_FROM_EMAIL
+            recipient_list=[email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception("Ошибка отправки OTP на %s", email)
+        return redirect("/email-login/?error=send_failed")
+
+    # Сохраняем email в сессии для страницы верификации
+    request.session["email_otp_pending"] = email
+    return redirect("email_verify")
+
+
+def email_verify_page(request):
+    """Страница ввода OTP-кода."""
+    email = request.session.get("email_otp_pending")
+    if not email:
+        return redirect("email_login")
+    error = request.GET.get("error")
+    return render(request, "email_otp.html", {"email": email, "error": error})
+
+
+def email_verify_otp(request):
+    """POST: проверяет OTP, создаёт сессию."""
+    if request.method != "POST":
+        return redirect("email_verify")
+
+    email = request.session.get("email_otp_pending")
+    if not email:
+        return redirect("email_login")
+
+    code = request.POST.get("code", "").strip()
+
+    token = (
+        EmailOTPToken.objects
+        .filter(email=email, code=code, used=False)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not token or token.is_expired:
+        return redirect("/email/verify/?error=invalid")
+
+    token.used = True
+    token.save(update_fields=["used"])
+
+    # Получаем или создаём пользователя
+    user = User.objects.filter(email=email).first()
+    if not user:
+        tg_id = _email_to_tg_id(email)
+        user = User.objects.create(
+            tgId=tg_id,
+            email=email,
+            name=email.split("@")[0],
+            img=DEFAULT_AVATAR_URL,
+            balance="0",
+        )
+
+    request.session["tg_id"] = user.tgId
+    request.session.set_expiry(365 * 24 * 60 * 60)
+    request.session.pop("email_otp_pending", None)
+
+    return redirect("home")

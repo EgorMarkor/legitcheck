@@ -14,6 +14,13 @@ class User(models.Model):
         blank=True,
         verbose_name='Telegram Username'
     )
+    email = models.EmailField(
+        max_length=255,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name='Email'
+    )
     auth_token = models.UUIDField(default=uuid.uuid4, unique=True)
     
     class Meta:
@@ -139,6 +146,25 @@ class UploadedVerdictPhoto(models.Model):
         self.verdict = verdict
         self.used_at = timezone.now()
         self.save(update_fields=["verdict", "used_at"])
+
+class EmailOTPToken(models.Model):
+    """OTP-код для входа по email. Действует 10 минут, одноразовый."""
+    email = models.EmailField(verbose_name='Email')
+    code = models.CharField(max_length=6, verbose_name='Код')
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Email OTP"
+        verbose_name_plural = "Email OTP"
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.created_at + timezone.timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.email} — {self.code}"
+
 
 class Payment(models.Model):
     STATUS_CHOICES = [

@@ -176,6 +176,10 @@
                     class="relative z-10 w-[3rem] h-auto"
                     alt="check"
                   />
+                  <!-- водяной знак -->
+                  <div class="absolute inset-0 flex items-end justify-end pb-1 pr-2 z-20 pointer-events-none">
+                    <span class="text-white/30 font-bold text-[0.55rem] tracking-widest select-none rotate-[-20deg]">LegitCheck</span>
+                  </div>
                 </div>
               </a>
             {% empty %}
@@ -184,13 +188,14 @@
           </div>
 
           <div class="grid grid-cols-3 gap-2 mt-2 pb-6">
-            <!-- Кнопка добавления -->
-            <label class="relative h-[8rem] rounded-[1.2rem]
-                          bg-[#0B0D11] border border-dashed border-neutral-600
-                          flex items-center justify-center cursor-pointer">
-              <input type="file" id="extra-photo-input" accept="image/*" hidden>
-              <span class="text-neutral-400 text-sm">+ Добавить фото</span>
-            </label>
+            <!-- Кнопка добавления — input как прозрачный оверлей, работает в iOS PWA -->
+            <div class="relative h-[8rem] rounded-[1.2rem]
+                        bg-[#0B0D11] border border-dashed border-neutral-600
+                        flex items-center justify-center cursor-pointer overflow-hidden">
+              <input type="file" id="extra-photo-input" accept="image/*"
+                     style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:5;">
+              <span class="text-neutral-400 text-sm pointer-events-none">+ Добавить фото</span>
+            </div>
           </div>
 
           <script>
@@ -231,6 +236,9 @@
                     <div class="absolute inset-0 bg-black/30 rounded-[1.2rem]"></div>
                     <img src="{% static 'check.png' %}"
                         class="absolute inset-0 m-auto w-[2.5rem]" />
+                    <div class="absolute inset-0 flex items-end justify-end pb-1 pr-2 z-20 pointer-events-none">
+                      <span class="text-white/30 font-bold text-[0.55rem] tracking-widest select-none rotate-[-20deg]">LegitCheck</span>
+                    </div>
                   </div>
                 `;
 
@@ -435,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     })();</script>
-  
+
+  {% include 'sidebar.html' %}
 </body>
 </html>

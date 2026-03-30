@@ -80,4 +80,10 @@ urlpatterns = [
         {'document_root': BASE_DIR}
     ),
     path('api/', include(router.urls)),
+
+    # Email authentication
+    path('email-login/', views.email_login_page, name='email_login'),
+    path('email/send-otp/', views.email_send_otp, name='email_send_otp'),
+    path('email/verify/', views.email_verify_page, name='email_verify'),
+    path('email/verify-otp/', views.email_verify_otp, name='email_verify_otp'),
 ]

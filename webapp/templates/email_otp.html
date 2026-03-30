@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Введите код — LegitCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0f16">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0c0f16;
+      color: #fff;
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: min(420px, 100%);
+      background: linear-gradient(180deg, #171c24 0%, #11151a 100%);
+      border: 1px solid rgba(179, 214, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-sizing: border-box;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .muted {
+      color: #8a94a3;
+      font-size: 14px;
+      line-height: 1.4;
+      margin: 0 0 20px;
+    }
+    .email-badge {
+      display: inline-block;
+      background: #0b0d11;
+      border: 1px solid rgba(179, 214, 255, 0.08);
+      border-radius: 8px;
+      padding: 3px 10px;
+      font-size: 14px;
+      color: #0cc88b;
+      word-break: break-all;
+    }
+    .otp-inputs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 20px 0 16px;
+    }
+    .otp-inputs input {
+      width: 48px;
+      height: 56px;
+      background: #0b0d11;
+      border: 1px solid rgba(179, 214, 255, 0.1);
+      border-radius: 12px;
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .otp-inputs input:focus {
+      border-color: rgba(12, 200, 139, 0.5);
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      min-height: 50px;
+      border-radius: 12px;
+      border: 0;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(12, 200, 139, 0.12);
+      color: #0cc88b;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn.active {
+      background: linear-gradient(247deg, #0cc88b 19.49%, #1d785b 97.92%);
+      color: #fff;
+    }
+    .btn:active { opacity: 0.85; }
+    .error {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #ff8080;
+      margin-bottom: 14px;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      color: #8a94a3;
+      font-size: 14px;
+      text-decoration: none;
+      margin-top: 16px;
+    }
+    .back-link:hover { color: #fff; }
+    .hint {
+      font-size: 13px;
+      color: #464f5d;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1 class="logo">Введите код</h1>
+    <p class="muted">
+      Мы отправили 6-значный код на<br>
+      <span class="email-badge">{{ email }}</span>
+    </p>
+
+    {% if error == 'invalid' %}
+      <div class="error">Неверный или устаревший код. Запросите новый.</div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'email_verify_otp' %}" id="otp-form">
+      {% csrf_token %}
+      <input type="hidden" name="code" id="code-hidden">
+      <div class="otp-inputs" id="otp-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      </div>
+      <button type="submit" class="btn" id="submit-btn" disabled>Войти</button>
+    </form>
+
+    <p class="hint">Код действителен 10 минут</p>
+    <a href="{% url 'email_login' %}" class="back-link">← Изменить email</a>
+  </main>
+
+  <script>
+    const inputs = Array.from(document.querySelectorAll('#otp-inputs input'));
+    const btn = document.getElementById('submit-btn');
+    const hidden = document.getElementById('code-hidden');
+    const form = document.getElementById('otp-form');
+
+    function update() {
+      const code = inputs.map(i => i.value).join('');
+      hidden.value = code;
+      const done = code.length === 6;
+      btn.disabled = !done;
+      btn.classList.toggle('active', done);
+    }
+
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '');
+        if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+        update();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
+      });
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        pasted.split('').forEach((ch, i) => { if (inputs[i]) inputs[i].value = ch; });
+        inputs[Math.min(pasted.length, 5)].focus();
+        update();
+      });
+    });
+
+    form.addEventListener('submit', e => {
+      if (hidden.value.length !== 6) e.preventDefault();
+    });
+
+    inputs[0].focus();
+  </script>
+</body>
+</html>
