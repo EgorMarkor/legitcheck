@@ -922,31 +922,36 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Ресайзит файл до превью через canvas (max 800px) — не крашит PWA на большом фото
+  // Ресайзит файл до превью через canvas.
+  // Используем URL.createObjectURL вместо FileReader.readAsDataURL:
+  // blob URL не копирует файл в JS-heap в виде base64, поэтому не вызывает
+  // OOM-краш PWA на iOS при фото с камеры (10-50 МП).
   function resizeFile(file, maxPx, callback) {
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var imgEl = new Image();
-      imgEl.onload = function() {
-        var w = imgEl.width, h = imgEl.height;
-        if (w > maxPx || h > maxPx) {
-          var ratio = Math.min(maxPx / w, maxPx / h);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
-        }
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(imgEl, 0, 0, w, h);
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        // Освобождаем canvas сразу
-        canvas.width = 1; canvas.height = 1;
-        callback(dataUrl);
-      };
-      imgEl.src = ev.target.result;
+    var blobUrl = URL.createObjectURL(file);
+    var imgEl = new Image();
+    imgEl.onload = function() {
+      // Освобождаем blob URL сразу — память файла уходит обратно браузеру
+      URL.revokeObjectURL(blobUrl);
+      var w = imgEl.naturalWidth, h = imgEl.naturalHeight;
+      if (w > maxPx || h > maxPx) {
+        var ratio = Math.min(maxPx / w, maxPx / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+      // Обнуляем canvas чтобы GC мог собрать пиксельный буфер
+      canvas.width = 1; canvas.height = 1;
+      callback(dataUrl);
     };
-    reader.readAsDataURL(file);
+    imgEl.onerror = function() {
+      URL.revokeObjectURL(blobUrl);
+      callback(null);
+    };
+    imgEl.src = blobUrl;
   }
 
   // Photo upload handler
