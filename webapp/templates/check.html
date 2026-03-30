@@ -954,78 +954,151 @@ document.addEventListener('DOMContentLoaded', function() {
     imgEl.src = blobUrl;
   }
 
-  // ── Кастомный шит выбора фото ─────────────────────────────────────────────
-  // iOS WKWebView (PWA standalone) крашит при системном UIActionSheet который
-  // появляется когда input[type=file][accept="image/*"] показывает
-  // "Take Photo / Photo Library / Files". Единственный надёжный обход:
-  // не давать браузеру показывать этот шит вообще.
-  // Вместо этого показываем свой шит с двумя кнопками, каждая ведёт
-  // на отдельный input: один capture="environment" (прямо камера),
-  // другой без capture и без accept (галерея через системный picker).
+  // ── Выбор фото: кастомный шит + getUserMedia для камеры ──────────────────
+  //
+  // WKWebView внутри shell-приложения крашит при input[type=file] с capture
+  // или с accept="image/*" потому что нативный shell не реализует WKUIDelegate
+  // для показа UIDocumentPickerViewController / UIImagePickerController.
+  //
+  // Решение:
+  //   • Камера  → navigator.mediaDevices.getUserMedia() + свой viewfinder.
+  //               getUserMedia работает через WebRTC, не через UIDocumentPicker,
+  //               поэтому не требует WKUIDelegate и не крашит.
+  //   • Галерея → input[type=file] без accept и без capture.
+  //               Без accept браузер показывает только "Files" picker (не крашит).
 
-  // Создаём оба скрытых input один раз на всю страницу
-  var _inputCamera = document.createElement('input');
-  _inputCamera.type = 'file';
-  _inputCamera.setAttribute('capture', 'environment');
-  // НЕ ставим accept — убираем системный шит, идём прямо в камеру
-  _inputCamera.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
-  document.body.appendChild(_inputCamera);
-
+  // ── Галерея input ──────────────────────────────────────────────────────────
   var _inputGallery = document.createElement('input');
   _inputGallery.type = 'file';
-  // Без accept и без capture — системный галерея/файлы picker (не крашит)
   _inputGallery.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
   document.body.appendChild(_inputGallery);
 
-  // Шит
+  // ── Viewfinder для камеры ──────────────────────────────────────────────────
+  var _vf = document.createElement('div');
+  _vf.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:#000;flex-direction:column;';
+  _vf.innerHTML =
+    '<video id="_vf_video" autoplay playsinline muted style="flex:1;width:100%;object-fit:cover;"></video>'
+    + '<div style="position:absolute;top:1rem;right:1rem;">'
+    +   '<button id="_vf_close" style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:2.5rem;height:2.5rem;color:#fff;font-size:1.2rem;cursor:pointer;">✕</button>'
+    + '</div>'
+    + '<div style="padding:1.5rem;display:flex;justify-content:center;">'
+    +   '<button id="_vf_snap" style="width:5rem;height:5rem;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,0.4);cursor:pointer;"></button>'
+    + '</div>';
+  document.body.appendChild(_vf);
+
+  var _vfVideo   = _vf.querySelector('#_vf_video');
+  var _vfStream  = null;
+
+  function _stopStream() {
+    if (_vfStream) {
+      _vfStream.getTracks().forEach(function(t) { t.stop(); });
+      _vfStream = null;
+    }
+    _vfVideo.srcObject = null;
+    _vf.style.display = 'none';
+  }
+
+  function _openCamera(callback) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      // Fallback: shell не поддерживает getUserMedia — открываем галерею
+      _openGallery(callback);
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(function(stream) {
+        _vfStream = stream;
+        _vfVideo.srcObject = stream;
+        _vf.style.display = 'flex';
+
+        _vf.querySelector('#_vf_close').onclick = function() {
+          _stopStream();
+        };
+
+        _vf.querySelector('#_vf_snap').onclick = function() {
+          var v = _vfVideo;
+          var canvas = document.createElement('canvas');
+          // Берём реальные размеры кадра
+          var w = v.videoWidth  || 1280;
+          var h = v.videoHeight || 720;
+          // Уменьшаем до 1200px по длинной стороне
+          var max = 1200;
+          if (w > max || h > max) {
+            var r = Math.min(max / w, max / h);
+            w = Math.round(w * r);
+            h = Math.round(h * r);
+          }
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(v, 0, 0, w, h);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          canvas.width = 1; canvas.height = 1; // освобождаем буфер
+
+          _stopStream();
+
+          // Конвертируем dataUrl → Blob → File чтобы FormData мог отправить
+          var arr = dataUrl.split(','), mime = 'image/jpeg';
+          var bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+          for (var i = 0; i < n; i++) u8[i] = bstr.charCodeAt(i);
+          var blob = new Blob([u8], { type: mime });
+          var file = new File([blob], 'photo.jpg', { type: mime });
+
+          callback(dataUrl, file);
+        };
+      })
+      .catch(function() {
+        // Нет доступа к камере — fallback на галерею
+        _openGallery(callback);
+      });
+  }
+
+  function _openGallery(callback) {
+    _inputGallery.onchange = function() {
+      var file = _inputGallery.files[0];
+      _inputGallery.value = '';
+      if (!file) return;
+      resizeFile(file, 1200, function(dataUrl) {
+        callback(dataUrl, file);
+      });
+    };
+    _inputGallery.click();
+  }
+
+  // ── Кастомный шит выбора ──────────────────────────────────────────────────
   var _sheet = document.createElement('div');
   _sheet.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;';
-  _sheet.innerHTML = '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);" id="_sheet_bg"></div>'
-    + '<div style="position:absolute;bottom:0;left:0;right:0;background:#1a1f2b;border-radius:1.2rem 1.2rem 0 0;padding:1rem;">'
-    + '<button id="_sheet_camera" style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">📷 Сделать фото</button>'
-    + '<button id="_sheet_gallery" style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">🖼 Выбрать из галереи</button>'
-    + '<button id="_sheet_cancel" style="display:block;width:100%;padding:1rem;background:transparent;border:none;color:#8a94a3;font-size:1rem;font-family:inherit;cursor:pointer;">Отмена</button>'
+  _sheet.innerHTML =
+    '<div id="_sheet_bg" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>'
+    + '<div style="position:absolute;bottom:0;left:0;right:0;background:#1a1f2b;border-radius:1.2rem 1.2rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));">'
+    +   '<button id="_sheet_camera"  style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">📷 Сделать фото</button>'
+    +   '<button id="_sheet_gallery" style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">🖼 Выбрать из галереи</button>'
+    +   '<button id="_sheet_cancel"  style="display:block;width:100%;padding:1rem;background:transparent;border:none;color:#8a94a3;font-size:1rem;font-family:inherit;cursor:pointer;">Отмена</button>'
     + '</div>';
   document.body.appendChild(_sheet);
 
-  var _currentCallback = null;
+  var _sheetCallback = null;
 
   function _openSheet(callback) {
-    _currentCallback = callback;
+    _sheetCallback = callback;
     _sheet.style.display = 'block';
   }
   function _closeSheet() {
     _sheet.style.display = 'none';
-    _currentCallback = null;
+    _sheetCallback = null;
   }
 
   _sheet.querySelector('#_sheet_bg').addEventListener('click', _closeSheet);
   _sheet.querySelector('#_sheet_cancel').addEventListener('click', _closeSheet);
 
   _sheet.querySelector('#_sheet_camera').addEventListener('click', function() {
+    var cb = _sheetCallback;
     _closeSheet();
-    // небольшая задержка чтобы шит успел закрыться до открытия picker
-    setTimeout(function() { _inputCamera.click(); }, 80);
+    _openCamera(cb);
   });
   _sheet.querySelector('#_sheet_gallery').addEventListener('click', function() {
+    var cb = _sheetCallback;
     _closeSheet();
-    setTimeout(function() { _inputGallery.click(); }, 80);
+    setTimeout(function() { _openGallery(cb); }, 80);
   });
-
-  function _bindInputToCallback(input) {
-    input.addEventListener('change', function() {
-      var file = input.files[0];
-      input.value = '';
-      if (!file || !_currentCallback) return;
-      var cb = _currentCallback;
-      _currentCallback = null;
-      // сохраняем оригинальный File для отправки на сервер
-      cb._rawFile = file;
-      resizeFile(file, 800, cb);
-    });
-  }
-  _bindInputToCallback(_inputCamera);
-  _bindInputToCallback(_inputGallery);
 
   // ── Photo upload handler ───────────────────────────────────────────────────
   document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
@@ -1047,10 +1120,9 @@ document.addEventListener('DOMContentLoaded', function() {
       var originalSrc = img.src;
 
       tapArea.addEventListener('click', function() {
-        var callback = function(dataUrl) {
+        _openSheet(function(dataUrl, file) {
           if (!dataUrl) return;
-          // сохраняем оригинальный File для отправки на сервер
-          wrapper._selectedFile = callback._rawFile || null;
+          wrapper._selectedFile = file || null;
 
           img.src = dataUrl;
           img.style.cssText += 'object-fit:cover;width:100%;height:100%;opacity:1;';
@@ -1073,8 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cross.remove();
           });
           wrapper.appendChild(cross);
-        };
-        _openSheet(callback);
+        });
       });
     });
   });
