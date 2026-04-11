@@ -208,3 +208,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "checkercheckerlegit@gmail.com"
 EMAIL_HOST_PASSWORD = "nbuopjebdrgdhzwq"
 DEFAULT_FROM_EMAIL = "LegitCheck <checkercheckerlegit@gmail.com>"
+EMAIL_TIMEOUT = 5  # быстро падаем если SMTP недоступен

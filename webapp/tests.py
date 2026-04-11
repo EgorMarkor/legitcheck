@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from pcwebapp.models import LoginToken
-from webapp.models import UploadedVerdictPhoto, User, Verdict
+from webapp.models import HomePagePopularItem, UploadedVerdictPhoto, User, Verdict
 
 
 TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix="webapp_tests_media_")
@@ -270,6 +270,12 @@ class VerdictApiTests(TestCase):
         self.assertEqual(session.get("tg_id"), self.user.tgId)
 
     def test_index_renders_by_session_without_init_data(self):
+        popular_item = HomePagePopularItem.objects.get(position=1)
+        popular_item.title = "Nike Dunk"
+        popular_item.subtitle = "Panda"
+        popular_item.views_count = 999
+        popular_item.save()
+
         session = self.client.session
         session["tg_id"] = self.user.tgId
         session.save()
@@ -278,3 +284,6 @@ class VerdictApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "index.html")
+        self.assertEqual(len(response.context["popular_models"]), 5)
+        self.assertEqual(response.context["popular_models"][0].title, "Nike Dunk")
+        self.assertContains(response, "Nike Dunk")

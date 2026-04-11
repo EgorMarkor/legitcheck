@@ -1,6 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from telebot.util import parse_web_app_data
-from .models import User, Verdict, VerdictPhoto, UploadedVerdictPhoto, Payment, EmailOTPToken
+from .models import (
+    EmailOTPToken,
+    HomePagePopularItem,
+    Payment,
+    UploadedVerdictPhoto,
+    User,
+    Verdict,
+    VerdictPhoto,
+)
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
@@ -71,7 +79,19 @@ def _session_user(request):
     return None
 
 
+def _homepage_popular_models():
+    items_by_position = {
+        item.position: item
+        for item in HomePagePopularItem.objects.order_by("position")[:5]
+    }
+    items = []
+    for fallback_item in HomePagePopularItem.default_items():
+        items.append(items_by_position.get(fallback_item.position, fallback_item))
+    return items
+
+
 def index(request):
+    popular_models = _homepage_popular_models()
     raw_init_data = (
         request.GET.get("init_data")
         or request.GET.get("tgWebAppData")
@@ -80,7 +100,10 @@ def index(request):
     if not raw_init_data:
         user = _session_user(request)
         if user:
-            return render(request, "index.html", {"tg_user": user})
+            return render(request, "index.html", {
+                "tg_user": user,
+                "popular_models": popular_models,
+            })
         return redirect("init")
 
     try:
@@ -127,7 +150,8 @@ def index(request):
     request.session.set_expiry(365 * 24 * 60 * 60)
 
     return render(request, "index.html", {
-        "tg_user": user
+        "tg_user": user,
+        "popular_models": popular_models,
     })
 
 

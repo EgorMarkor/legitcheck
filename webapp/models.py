@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.templatetags.static import static
 from django.utils import timezone
 
 class User(models.Model):
@@ -146,6 +147,124 @@ class UploadedVerdictPhoto(models.Model):
         self.verdict = verdict
         self.used_at = timezone.now()
         self.save(update_fields=["verdict", "used_at"])
+
+
+class HomePagePopularItem(models.Model):
+    DEFAULT_ITEMS = (
+        {
+            "position": 1,
+            "title": "Balenciaga Track",
+            "subtitle": "White Orange",
+            "fallback_image": "balenciaga_track.png",
+            "views_count": 231,
+            "legit_percent": 43,
+            "fake_percent": 57,
+        },
+        {
+            "position": 2,
+            "title": "Balenciaga Track",
+            "subtitle": "White Orange",
+            "fallback_image": "balenciaga_track.png",
+            "views_count": 231,
+            "legit_percent": 43,
+            "fake_percent": 57,
+        },
+        {
+            "position": 3,
+            "title": "Balenciaga Track",
+            "subtitle": "White Orange",
+            "fallback_image": "balenciaga_track.png",
+            "views_count": 231,
+            "legit_percent": 43,
+            "fake_percent": 57,
+        },
+        {
+            "position": 4,
+            "title": "Balenciaga Track",
+            "subtitle": "White Orange",
+            "fallback_image": "balenciaga_track.png",
+            "views_count": 231,
+            "legit_percent": 43,
+            "fake_percent": 57,
+        },
+        {
+            "position": 5,
+            "title": "Balenciaga Track",
+            "subtitle": "White Orange",
+            "fallback_image": "balenciaga_track.png",
+            "views_count": 231,
+            "legit_percent": 43,
+            "fake_percent": 57,
+        },
+    )
+
+    position = models.PositiveSmallIntegerField(
+        unique=True,
+        verbose_name="Позиция",
+        help_text="Допустимы значения от 1 до 5.",
+    )
+    title = models.CharField(max_length=255, verbose_name="Название модели")
+    subtitle = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Подзаголовок",
+        help_text='Например: White Orange',
+    )
+    image = models.ImageField(
+        upload_to="homepage/popular_models/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение",
+    )
+    fallback_image = models.CharField(
+        max_length=255,
+        default="balenciaga_track.png",
+        verbose_name="Статическое изображение",
+        help_text="Файл из каталога static/, используется если изображение не загружено.",
+    )
+    views_count = models.PositiveIntegerField(default=0, verbose_name="Количество просмотров")
+    legit_percent = models.PositiveSmallIntegerField(default=0, verbose_name="Процент оригинала")
+    fake_percent = models.PositiveSmallIntegerField(default=0, verbose_name="Процент подделок")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
+
+    class Meta:
+        ordering = ["position"]
+        verbose_name = "Популярная модель главной страницы"
+        verbose_name_plural = "Топ-5 моделей главной страницы"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(position__gte=1, position__lte=5),
+                name="webapp_homepagepopularitem_position_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(legit_percent__gte=0, legit_percent__lte=100),
+                name="webapp_homepagepopularitem_legit_percent_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(fake_percent__gte=0, fake_percent__lte=100),
+                name="webapp_homepagepopularitem_fake_percent_range",
+            ),
+        ]
+
+    def __str__(self):
+        return f"#{self.position} {self.full_title}"
+
+    @property
+    def full_title(self):
+        if self.subtitle:
+            return f'{self.title} "{self.subtitle}"'
+        return self.title
+
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        return static(self.fallback_image or "balenciaga_track.png")
+
+    @classmethod
+    def default_items(cls):
+        return [cls(**item_data) for item_data in cls.DEFAULT_ITEMS]
+
 
 class EmailOTPToken(models.Model):
     """OTP-код для входа по email. Действует 10 минут, одноразовый."""

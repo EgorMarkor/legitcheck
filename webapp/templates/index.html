@@ -152,77 +152,25 @@
     </div>
 
     <h3 class="text-sm text-white px-4 mt-5 mb-2">🔥 Самые популярные позиции</h3>
-    <section class="px-4">
+    <section class="px-4 space-y-3">
+      {% for item in popular_models %}
       <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
-        <div class="relative">
-          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#1</div>
-          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" loading="lazy" />
+        <div class="relative shrink-0">
+          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#{{ item.position }}</div>
+          <img src="{{ item.image_url }}" class="w-[13rem] h-[9.6rem] object-cover rounded-[1.2rem]" alt="{{ item.full_title }}" loading="lazy" />
         </div>
-        <div>
-          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
+        <div class="min-w-0 flex-1">
+          <div class="name_pos mt-4">
+            {{ item.title }}{% if item.subtitle %}<br>"{{ item.subtitle }}"{% endif %}
+          </div>
           <div class="flex gap-2 mt-2 items-center justify-between">
-            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" loading="lazy">231</div>
-            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">43%</div>
-            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">57%</div>
+            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" alt="" loading="lazy">{{ item.views_count }}</div>
+            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">{{ item.legit_percent }}%</div>
+            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">{{ item.fake_percent }}%</div>
           </div>
         </div>
       </div>
-      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
-        <div class="relative">
-          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#2</div>
-          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" loading="lazy" />
-        </div>
-        <div>
-          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
-          <div class="flex gap-2 mt-2 items-center justify-between">
-            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" loading="lazy">231</div>
-            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">43%</div>
-            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">57%</div>
-          </div>
-        </div>
-      </div>
-      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
-        <div class="relative">
-          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#3</div>
-          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" loading="lazy" />
-        </div>
-        <div>
-          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
-          <div class="flex gap-2 mt-2 items-center justify-between">
-            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" loading="lazy">231</div>
-            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">43%</div>
-            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">57%</div>
-          </div>
-        </div>
-      </div>
-      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
-        <div class="relative">
-          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#4</div>
-          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" loading="lazy" />
-        </div>
-        <div>
-          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
-          <div class="flex gap-2 mt-2 items-center justify-between">
-            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" loading="lazy">231</div>
-            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">43%</div>
-            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">57%</div>
-          </div>
-        </div>
-      </div>
-      <div class="bg_black rounded-[1.2rem] p-[1rem] flex gap-3">
-        <div class="relative">
-          <div class="absolute w-[2.6rem] h-[2.6rem] flex items-center justify-center top-[0.6rem] left-[0.6rem] rounded-full bg-black">#5</div>
-          <img src="{% static 'balenciaga_track.png' %}" class="w-[13rem] h-auto rounded-[1.2rem]" alt="Scanner" loading="lazy" />
-        </div>
-        <div>
-          <div class="name_pos mt-4">Balenciaga Track<br>"White Orange"</div>
-          <div class="flex gap-2 mt-2 items-center justify-between">
-            <div class="flex items-center p-2 gap-2 bg-black rounded-full"><img class="w-[1.5rem] h-auto" src="{% static 'success_icon.svg' %}" loading="lazy">231</div>
-            <div class="flex items-center p-2 gap-2 text-[#13CD90] bg-[#13CD9026] rounded-full">43%</div>
-            <div class="flex items-center p-2 gap-2 text-[#FF3D41] bg-[#FF414126] rounded-full">57%</div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </section>
 
 
