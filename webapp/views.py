@@ -636,6 +636,12 @@ def cab(request):
     
     
 @require_user
+def promo(request):
+    return render(request, 'promo.html', {
+        'tg_user':  request.tg_user,
+    })
+    
+@require_user
 def articles(request):
     return render(request, 'articles.html', {
         'tg_user':  request.tg_user,

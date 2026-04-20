@@ -1,0 +1,204 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<style>
+  .brend {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .numbers {
+    font-weight: 700;
+    font-size: 1.045rem;
+    line-height: 14.63px;
+    letter-spacing: 0px;
+
+  }
+
+  .name_pos {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6rem;
+    letter-spacing: -5%;
+    vertical-align: middle;
+  }
+
+  .bg_sidebar {
+    background: linear-gradient(180deg, rgba(29, 36, 48, 0.85) 0%, rgba(14, 17, 21, 0.85) 100%);
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .green_button {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+  }
+
+  .bg_card {
+    background: linear-gradient(180deg, rgba(23, 28, 36, 0.75) 0%, rgba(17, 21, 26, 0.75) 100%);
+  }
+
+  .border_card {
+    border: 1px solid;
+    border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
+  }
+
+  .check-btn {
+    transition: .3s ease;
+  }
+
+  .check-btn.bg_active {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%) !important;
+  }
+
+  .code-inputs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .code-inputs input {
+      width: 5rem;
+      height: 5rem;
+      font-size: 1.5rem;
+      text-align: center;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .code-inputs input:not(:placeholder-shown) {
+        color: white;
+    }
+
+    .code-inputs input {
+        width: 5rem;
+        height: 3.6rem;
+        padding: 0;               /* сбросить отступы */
+        box-sizing: border-box;   /* чтобы padding/бордер не ломали размеры */
+        font-size: 1.5rem;
+        line-height: 5rem;        /* == высота, чтобы вертикально центрировать */
+        text-align: center;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+</style>
+<body class="text-gray-100 font-sans">
+  <div class="mx-auto">
+    <!-- Верхняя панель -->
+    {% include 'header.html' %}
+
+    <img src="{% static 'phone.png' %}" class="mt-6 text-center w-full h-auto">
+    <section class="px-6">
+        <div class="font-bold text-[1.6rem]">Активируйте промокод</div>
+        
+        <input
+        id="amountInput"
+        placeholder="Введите промокод"
+        class="
+          flex-1
+          bg-transparent
+          border-none
+          focus:outline-none
+          text-[1.6rem] leading-[1.25rem]
+          font-google-sans font-bold
+          text-white
+          placeholder:text-[#FFF]/50
+        "
+      />
+          <div class="check-btn bg_black px-[10rem] py-[1rem] rounded-[1.2rem] mt-4 font-semibold text-center text-[#464F5D] text-[1.2rem]">
+            Проверить
+          </div>
+        
+        
+          <script>
+  const inputs = document.querySelectorAll('.code-inputs input');
+  const btn = document.querySelector('.check-btn');
+  let prevCount = 0;
+
+  function updateButton() {
+    const filled = Array.from(inputs).filter(i => i.value !== '').length;
+    btn.classList.toggle('bg_active', filled === 5);
+    btn.classList.toggle('text-white', filled === 5);
+    btn.disabled = filled !== 5;
+    prevCount = filled;
+  }
+
+  inputs.forEach((input, idx) => {
+
+    // 🔢 Разрешаем только цифры
+    input.addEventListener('input', e => {
+      input.value = input.value.replace(/\D/g, '');
+
+      // ➡️ авто-переход
+      if (input.value && idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+      }
+      updateButton();
+    });
+
+    // ⬅️ backspace назад
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !input.value && idx > 0) {
+        inputs[idx - 1].focus();
+      }
+    });
+
+    // 📋 Вставка всего кода сразу
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 5);
+      paste.split('').forEach((char, i) => {
+        if (inputs[i]) inputs[i].value = char;
+      });
+      inputs[Math.min(paste.length, 4)].focus();
+      updateButton();
+    });
+  });
+
+  // ▶️ Переход по кнопке
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    const code = Array.from(inputs).map(i => i.value).join('');
+    window.location.href = "{% url 'verdict' %}?code=" + code;
+  });
+
+  // 🔄 Начальный фокус + обработка ошибки из URL
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'not_found') {
+      const code = (params.get('code') || '').replace(/\D/g, '').slice(0, 5);
+      code.split('').forEach((char, i) => { if (inputs[i]) inputs[i].value = char; });
+      updateButton();
+      document.getElementById('error-alert').classList.remove('hidden');
+    } else {
+      inputs[0].focus();
+      updateButton();
+    }
+  });
+</script>
+
+          
+    </section>
+
+  </div>
+
+  <script>
+    (function () {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+      if (tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(function () {
+          window.history.back();
+          tg.BackButton.hide();
+        });
+      }
+    })();</script>
+
+  {% include 'sidebar.html' %}
+</body>
+</html>

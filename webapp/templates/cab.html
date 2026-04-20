@@ -93,6 +93,10 @@
     <h3 class="text-[1.2rem] text-[#464F5D] px-10 mt-5 mb-2 font-medium">Ваш баланс</h3>
 
     <a href="{% url 'payment' %}" class="px-6 overflow-hidden relative flex">
+        <img src="{% static 'promo.png' %}" class="w-full" alt="Scanner" />
+    </a>
+
+    <a href="{% url 'payment' %}" class="px-6 overflow-hidden relative flex">
         <div class="text-[1.8rem] text-[#FFF] font-bold absolute top-[1.8rem] left-[1.8rem] ml-[1.8rem]" style="color: #FFF !important; z-index: 10;">{{ tg_user.balance }} ₽</div>
         <img src="{% static 'balance_p.png' %}" class="w-full" alt="Scanner" />
     </a>
