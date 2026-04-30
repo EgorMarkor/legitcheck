@@ -4,6 +4,8 @@ from .models import (
     EmailOTPToken,
     HomePagePopularItem,
     Payment,
+    PromoCode,
+    PromoCodeRedemption,
     UploadedVerdictPhoto,
     User,
     Verdict,
@@ -637,8 +639,53 @@ def cab(request):
     
 @require_user
 def promo(request):
+    promo_code_value = ""
+    promo_status = "idle"
+    promo_message = ""
+    credited_amount = None
+
+    if request.method == "POST":
+        promo_code_value = (request.POST.get("promo_code") or "").strip().upper()
+        promo = PromoCode.objects.filter(
+            code=promo_code_value,
+            is_active=True,
+        ).first()
+
+        if not promo:
+            promo_status = "invalid"
+            promo_message = "Промокод не найден"
+        elif PromoCodeRedemption.objects.filter(
+            promo_code=promo,
+            user=request.tg_user,
+        ).exists():
+            promo_status = "invalid"
+            promo_message = "Этот промокод уже был активирован"
+        else:
+            reward = promo.reward_amount
+            with transaction.atomic():
+                user = User.objects.select_for_update().get(pk=request.tg_user.pk)
+                current_balance = Decimal(user.balance)
+                new_balance = (current_balance + reward).quantize(Decimal("0.01"))
+                user.balance = str(new_balance)
+                user.save(update_fields=["balance"])
+
+                PromoCodeRedemption.objects.create(
+                    promo_code=promo,
+                    user=user,
+                    amount=reward,
+                )
+
+            request.tg_user = user
+            promo_status = "valid"
+            promo_message = f"Начислено {reward} ₽"
+            credited_amount = reward
+
     return render(request, 'promo.html', {
         'tg_user':  request.tg_user,
+        'promo_code_value': promo_code_value,
+        'promo_status': promo_status,
+        'promo_message': promo_message,
+        'credited_amount': credited_amount,
     })
     
 @require_user

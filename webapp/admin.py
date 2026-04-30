@@ -7,6 +7,8 @@ from django.utils.text import slugify
 from .models import (
     HomePagePopularItem,
     Payment,
+    PromoCode,
+    PromoCodeRedemption,
     UploadedVerdictPhoto,
     User,
     Verdict,
@@ -200,8 +202,30 @@ class HomePagePopularItemAdmin(ModelAdmin):
         return False
 
 
+class PromoCodeAdmin(ModelAdmin):
+    list_display = ("code", "reward_amount", "is_active", "created_at", "updated_at")
+    list_filter = ("is_active", "created_at")
+    search_fields = ("code",)
+    readonly_fields = ("created_at", "updated_at")
+
+
+class PromoCodeRedemptionAdmin(ModelAdmin):
+    list_display = ("promo_code", "user", "amount", "created_at")
+    search_fields = ("promo_code__code", "user__name", "user__username", "user__tgId")
+    list_filter = ("created_at",)
+    readonly_fields = ("promo_code", "user", "amount", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(Verdict, VerdictAdmin)
 admin.site.register(UploadedVerdictPhoto, UploadedVerdictPhotoAdmin)
 admin.site.register(Payment, PaymentAdmin)
 admin.site.register(HomePagePopularItem, HomePagePopularItemAdmin)
+admin.site.register(PromoCode, PromoCodeAdmin)
+admin.site.register(PromoCodeRedemption, PromoCodeRedemptionAdmin)

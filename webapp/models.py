@@ -325,3 +325,62 @@ class Payment(models.Model):
     
     class Meta:
         verbose_name = "Платежи"
+
+
+class PromoCode(models.Model):
+    code = models.CharField(
+        max_length=64,
+        unique=True,
+        verbose_name="Промокод",
+        help_text="Сохраняется в верхнем регистре.",
+    )
+    reward_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Сумма начисления",
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")
+
+    class Meta:
+        verbose_name = "Промокод"
+        verbose_name_plural = "Промокоды"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.code} (+{self.reward_amount})"
+
+    def save(self, *args, **kwargs):
+        self.code = (self.code or "").strip().upper()
+        super().save(*args, **kwargs)
+
+
+class PromoCodeRedemption(models.Model):
+    promo_code = models.ForeignKey(
+        PromoCode,
+        on_delete=models.CASCADE,
+        related_name="redemptions",
+        verbose_name="Промокод",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="promo_code_redemptions",
+        verbose_name="Пользователь",
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Начислено",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Активирован")
+
+    class Meta:
+        verbose_name = "Активация промокода"
+        verbose_name_plural = "Активации промокодов"
+        unique_together = ("promo_code", "user")
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.user} / {self.promo_code.code}"
