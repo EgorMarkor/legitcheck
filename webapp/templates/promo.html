@@ -83,6 +83,15 @@
     background: rgba(255, 58, 61, 0.4);
   }
 
+  .check-btn {
+  transition: all 0.3s ease;
+}
+
+.check-btn.typing {
+  background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%); /* зелёный */
+  color: white;
+}
+
 </style>
 <body class="text-gray-100 font-sans">
   <div class="mx-auto">
@@ -139,13 +148,18 @@
             {% endif %}
           </button>
         </form>
+        <script>
+          const input = document.getElementById('promoCodeInput');
+          const button = document.querySelector('.check-btn');
 
-        <div
-          id="promoMessage"
-          class="mt-3 text-center text-[1rem] font-medium {% if promo_status == 'valid' %}text-[#0CC88B]{% elif promo_status == 'invalid' %}text-[#FB5252]{% else %}hidden{% endif %}"
-        >
-          {{ promo_message }}
-        </div>
+          input.addEventListener('input', () => {
+            if (input.value.trim().length > 0) {
+              button.classList.add('typing');
+            } else {
+              button.classList.remove('typing');
+            }
+          });
+        </script>
 
         <script>
           (function () {
