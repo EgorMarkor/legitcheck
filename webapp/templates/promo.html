@@ -45,11 +45,13 @@
     opacity: 0;
   }
 
+  .check-btn.is-ready,
   .check-btn.is-valid,
   .check-btn.is-invalid {
     color: #FFFFFF;
   }
 
+  .check-btn.is-ready::after,
   .check-btn.is-valid::after,
   .check-btn.is-invalid::after {
     opacity: 1;
@@ -82,6 +84,7 @@
     border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
   }
 
+  .check-btn.is-ready,
   .check-btn.is-valid {
     --promo-button-state: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
   }
@@ -214,6 +217,7 @@
             function setState(status, text, creditedAmount) {
               glow.classList.toggle('is-valid', status === 'valid');
               glow.classList.toggle('is-invalid', status === 'invalid');
+              button.classList.toggle('is-ready', status === 'ready');
               button.classList.toggle('is-valid', status === 'valid');
               button.classList.toggle('is-invalid', status === 'invalid');
 
@@ -226,13 +230,15 @@
                 buttonLabel.textContent = `Активировано +${creditedAmount || ''} ₽`;
               } else if (status === 'invalid') {
                 buttonLabel.textContent = text || 'Данный промокод не найден';
+              } else if (status === 'ready') {
+                buttonLabel.textContent = 'Проверить';
               } else {
                 buttonLabel.textContent = 'Проверить';
               }
             }
 
             input.addEventListener('input', () => {
-              setState('idle', '', null);
+              setState(input.value.trim() ? 'ready' : 'idle', '', null);
             });
 
             form.addEventListener('submit', async (event) => {
