@@ -15,10 +15,44 @@
     letter-spacing: 0px;
 
   }
-  
-
   .check-btn {
-    transition: background 0.45s ease, color 0.45s ease, transform 0.2s ease, opacity 0.2s ease;
+    --promo-button-state: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
+    background: transparent;
+    color: #464F5D;
+    isolation: isolate;
+    overflow: hidden;
+    position: relative;
+    transition: color 0.45s ease, transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .check-btn::before,
+  .check-btn::after {
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    position: absolute;
+    transition: opacity 0.55s ease;
+    z-index: -1;
+  }
+
+  .check-btn::before {
+    background: linear-gradient(180deg, #171C24 0%, #11151A 100%);
+    opacity: 1;
+  }
+
+  .check-btn::after {
+    background: var(--promo-button-state);
+    opacity: 0;
+  }
+
+  .check-btn.is-valid,
+  .check-btn.is-invalid {
+    color: #FFFFFF;
+  }
+
+  .check-btn.is-valid::after,
+  .check-btn.is-invalid::after {
+    opacity: 1;
   }
 
   .name_pos {
@@ -48,21 +82,16 @@
     border-image-source: linear-gradient(180deg, rgba(179, 214, 255, 0.03) 0%, rgba(179, 214, 255, 0) 100%);
   }
 
-  .check-btn {
-    transition: .3s ease;
-  }
-
   .check-btn.is-valid {
-    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%) !important;
-    color: #FFFFFF !important;
+    --promo-button-state: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%);
   }
   .check-btn.is-invalid {
-    background: #FB52521A !important;
+    --promo-button-state: rgba(251, 82, 82, 0.10);
     color: #FB5252 !important;
   }
 
   .gradient-blur {
-  background: rgba(125, 125, 125, 0.29);
+  background-color: rgba(125, 125, 125, 0.29);
   border-radius: 5771.375rem;
   opacity: 0.7;
   width: 13.443000000000001rem;
@@ -72,25 +101,16 @@
   transform-origin: 0 0;
   transform: rotate(9.409deg) scale(1.01, 0.99);
   filter: blur(6rem);
-  transition: background 0.7s ease;
+  transition: background-color 0.7s ease;
 }
 
   .gradient-blur.is-valid {
-    background: rgba(12, 200, 139, 0.29);
+    background-color: rgba(12, 200, 139, 0.29);
   }
 
   .gradient-blur.is-invalid {
-    background: rgba(255, 58, 61, 0.4);
+    background-color: rgba(255, 58, 61, 0.4);
   }
-
-  .check-btn {
-  transition: all 0.3s ease;
-}
-
-.check-btn.typing {
-  background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%); /* зелёный */
-  color: white;
-}
 
 </style>
 <body class="text-gray-100 font-sans">
@@ -130,46 +150,42 @@
           <button
             id="promoSubmitButton"
             type="submit"
-            class="check-btn px-[2rem] py-[1rem] w-full rounded-[1.2rem] mt-4 font-semibold text-center text-[1.2rem]
+            class="check-btn px-[2rem] py-[1rem] w-full rounded-[1.2rem] mt-4 font-semibold text-center text-[1.2rem] active:scale-[0.99]
               {% if promo_status == 'valid' %}
                 is-valid
               {% elif promo_status == 'invalid' %}
                 is-invalid
-              {% else %}
-                bg_black text-[#464F5D]
               {% endif %}"
           >
-            {% if promo_status == 'valid' %}
-              Активировано +{{ credited_amount }} ₽
-            {% elif promo_status == 'invalid' %}
-              Данный промокод не найден
-            {% else %}
-              Проверить
-            {% endif %}
+            <span id="promoSubmitLabel" class="relative z-10">
+              {% if promo_status == 'valid' %}
+                Активировано +{{ credited_amount }} ₽
+              {% elif promo_status == 'invalid' %}
+                Данный промокод не найден
+              {% else %}
+                Проверить
+              {% endif %}
+            </span>
           </button>
         </form>
-        <script>
-          const input = document.getElementById('promoCodeInput');
-          const button = document.querySelector('.check-btn');
 
-          input.addEventListener('input', () => {
-            if (input.value.trim().length > 0) {
-              button.classList.add('typing');
-            } else {
-              button.classList.remove('typing');
-            }
-          });
-        </script>
+        <div
+          id="promoMessage"
+          class="mt-3 text-center text-[1rem] font-medium {% if promo_status == 'valid' %}text-[#0CC88B]{% elif promo_status == 'invalid' %}text-[#FB5252]{% else %}hidden{% endif %}"
+        >
+          {{ promo_message }}
+        </div>
 
         <script>
           (function () {
             const form = document.getElementById('promoForm');
             const input = document.getElementById('promoCodeInput');
             const button = document.getElementById('promoSubmitButton');
+            const buttonLabel = document.getElementById('promoSubmitLabel');
             const glow = document.getElementById('promoGlow');
             const message = document.getElementById('promoMessage');
 
-            if (!form || !input || !button || !glow || !message) return;
+            if (!form || !input || !button || !buttonLabel || !glow || !message) return;
 
             function setState(status, text, creditedAmount) {
               glow.classList.toggle('is-valid', status === 'valid');
@@ -183,11 +199,11 @@
               message.textContent = text || '';
 
               if (status === 'valid') {
-                button.textContent = `Активировано +${creditedAmount || ''} ₽`;
+                buttonLabel.textContent = `Активировано +${creditedAmount || ''} ₽`;
               } else if (status === 'invalid') {
-                button.textContent = text || 'Данный промокод не найден';
+                buttonLabel.textContent = text || 'Данный промокод не найден';
               } else {
-                button.textContent = 'Проверить';
+                buttonLabel.textContent = 'Проверить';
               }
             }
 
@@ -199,8 +215,11 @@
               event.preventDefault();
               if (!input.value.trim()) return;
 
+              setState('idle', '', null);
+              void glow.offsetWidth;
               button.disabled = true;
               button.classList.add('opacity-70');
+              buttonLabel.textContent = 'Проверяем...';
 
               try {
                 const response = await fetch(form.action || window.location.href, {
