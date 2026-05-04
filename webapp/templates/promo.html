@@ -15,6 +15,16 @@
     letter-spacing: 0px;
 
   }
+  
+
+  .check-btn {
+    transition: all 0.3s ease;
+  }
+
+  .check-btn.typing {
+    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%); /* зелёный */
+    color: white;
+  }
 
   .name_pos {
     font-weight: 700;
@@ -56,15 +66,30 @@
     color: #FB5252 !important;
   }
 
+  .gradient-blur {
+  background: rgba(125, 125, 125, 0.29);
+  border-radius: 5771.375rem;
+  opacity: 0.7;
+  width: 13.443000000000001rem;
+  height: 13.916999999999998rem;
+  position: absolute;
+  z-index: 0;
+  transform-origin: 0 0;
+  transform: rotate(9.409deg) scale(1.01, 0.99);
+  filter: blur(6rem);
+}
+
 </style>
 <body class="text-gray-100 font-sans">
   <div class="mx-auto">
     <!-- Верхняя панель -->
     {% include 'header.html' %}
-
-    <img src="{% static 'phone.png' %}" class="mt-6 text-center w-full h-auto">
+    <div class="flex items-center justify-center">
+      <div class="gradient-blur"></div>
+      <img src="{% static 'promo_ticket.png' %}" class="z-99 mt-6 text-center w-[20rem] h-auto">
+    </div>
     <section class="px-6">
-        <div class="font-bold text-[1.6rem]">Активируйте промокод</div>
+        <div class="font-bold text-[1.6rem] text-center">Активируйте промокод</div>
         <form method="post" class="mt-4">
           {% csrf_token %}
           <input
@@ -74,13 +99,16 @@
             placeholder="Введите промокод"
             class="
               w-full
-              bg-transparent
+              bg_black
+              px-6
+              py-4
+              rounded-[12px]
               border-none
               focus:outline-none
-              text-[1.6rem] leading-[1.25rem]
-              font-google-sans font-bold
+              text-[1.2rem] leading-[1.25rem]
+              font-google-sans font-medium
               text-white
-              placeholder:text-[#FFF]/50
+              placeholder:text-[#464F5D]
             "
           />
           <button
@@ -97,18 +125,29 @@
             {% if promo_status == 'valid' %}
               Активировано +{{ credited_amount }} ₽
             {% elif promo_status == 'invalid' %}
-              Промокод не применён
+              Данный промокод не найден
             {% else %}
               Проверить
             {% endif %}
           </button>
         </form>
 
-        {% if promo_message %}
-          <div class="mt-3 text-[1rem] {% if promo_status == 'valid' %}text-[#35E6AD]{% else %}text-[#FB5252]{% endif %}">
-            {{ promo_message }}
-          </div>
-        {% endif %}
+        <script>
+          const input = document.getElementById('promoCodeInput');
+          const button = document.querySelector('.check-btn');
+
+          input.addEventListener('input', () => {
+            if (input.value.trim().length > 0) {
+              button.classList.add('typing');
+            } else {
+              button.classList.remove('typing');
+            }
+          });
+        </script>
+
+        <div class="flex items-center justify-center mt-4 font-medium text-[#0CC88B] ">
+          <button onclick="(function(){var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink('https://t.me/legitcheck');}else{window.open('https://t.me/legitcheck','_blank','noopener');}})();">У меня нет промокода, но хочу получить</button>
+        </div>
 
         <script>
           window.addEventListener('load', () => {
