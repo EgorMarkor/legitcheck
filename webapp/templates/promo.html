@@ -18,12 +18,7 @@
   
 
   .check-btn {
-    transition: all 0.3s ease;
-  }
-
-  .check-btn.typing {
-    background: linear-gradient(247.01deg, #0CC88B 19.49%, #1D785B 97.92%); /* зелёный */
-    color: white;
+    transition: background 0.45s ease, color 0.45s ease, transform 0.2s ease, opacity 0.2s ease;
   }
 
   .name_pos {
@@ -77,20 +72,32 @@
   transform-origin: 0 0;
   transform: rotate(9.409deg) scale(1.01, 0.99);
   filter: blur(6rem);
+  transition: background 0.7s ease;
 }
+
+  .gradient-blur.is-valid {
+    background: rgba(12, 200, 139, 0.29);
+  }
+
+  .gradient-blur.is-invalid {
+    background: rgba(255, 58, 61, 0.4);
+  }
 
 </style>
 <body class="text-gray-100 font-sans">
   <div class="mx-auto">
     <!-- Верхняя панель -->
     {% include 'header.html' %}
-    <div class="flex items-center justify-center">
-      <div class="gradient-blur"></div>
-      <img src="{% static 'promo_ticket.png' %}" class="z-99 mt-6 text-center w-[20rem] h-auto">
+    <div class="relative flex items-center justify-center">
+      <div
+        id="promoGlow"
+        class="gradient-blur {% if promo_status == 'valid' %}is-valid{% elif promo_status == 'invalid' %}is-invalid{% endif %}"
+      ></div>
+      <img src="{% static 'promo_ticket.png' %}" class="relative z-10 mt-6 text-center w-[20rem] h-auto">
     </div>
     <section class="px-6">
         <div class="font-bold text-[1.6rem] text-center">Активируйте промокод</div>
-        <form method="post" class="mt-4">
+        <form id="promoForm" method="post" class="mt-4">
           {% csrf_token %}
           <input
             id="promoCodeInput"
@@ -112,6 +119,7 @@
             "
           />
           <button
+            id="promoSubmitButton"
             type="submit"
             class="check-btn px-[2rem] py-[1rem] w-full rounded-[1.2rem] mt-4 font-semibold text-center text-[1.2rem]
               {% if promo_status == 'valid' %}
@@ -132,17 +140,74 @@
           </button>
         </form>
 
-        <script>
-          const input = document.getElementById('promoCodeInput');
-          const button = document.querySelector('.check-btn');
+        <div
+          id="promoMessage"
+          class="mt-3 text-center text-[1rem] font-medium {% if promo_status == 'valid' %}text-[#0CC88B]{% elif promo_status == 'invalid' %}text-[#FB5252]{% else %}hidden{% endif %}"
+        >
+          {{ promo_message }}
+        </div>
 
-          input.addEventListener('input', () => {
-            if (input.value.trim().length > 0) {
-              button.classList.add('typing');
-            } else {
-              button.classList.remove('typing');
+        <script>
+          (function () {
+            const form = document.getElementById('promoForm');
+            const input = document.getElementById('promoCodeInput');
+            const button = document.getElementById('promoSubmitButton');
+            const glow = document.getElementById('promoGlow');
+            const message = document.getElementById('promoMessage');
+
+            if (!form || !input || !button || !glow || !message) return;
+
+            function setState(status, text, creditedAmount) {
+              glow.classList.toggle('is-valid', status === 'valid');
+              glow.classList.toggle('is-invalid', status === 'invalid');
+              button.classList.toggle('is-valid', status === 'valid');
+              button.classList.toggle('is-invalid', status === 'invalid');
+
+              message.classList.toggle('hidden', !text);
+              message.classList.toggle('text-[#0CC88B]', status === 'valid');
+              message.classList.toggle('text-[#FB5252]', status === 'invalid');
+              message.textContent = text || '';
+
+              if (status === 'valid') {
+                button.textContent = `Активировано +${creditedAmount || ''} ₽`;
+              } else if (status === 'invalid') {
+                button.textContent = text || 'Данный промокод не найден';
+              } else {
+                button.textContent = 'Проверить';
+              }
             }
-          });
+
+            input.addEventListener('input', () => {
+              setState('idle', '', null);
+            });
+
+            form.addEventListener('submit', async (event) => {
+              event.preventDefault();
+              if (!input.value.trim()) return;
+
+              button.disabled = true;
+              button.classList.add('opacity-70');
+
+              try {
+                const response = await fetch(form.action || window.location.href, {
+                  method: 'POST',
+                  body: new FormData(form),
+                  headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                  },
+                  credentials: 'same-origin',
+                });
+
+                const data = await response.json();
+                setState(data.status, data.message, data.credited_amount);
+              } catch (error) {
+                setState('invalid', 'Не удалось проверить промокод', null);
+              } finally {
+                button.disabled = false;
+                button.classList.remove('opacity-70');
+              }
+            });
+          })();
         </script>
 
         <div class="flex items-center justify-center mt-4 font-medium text-[#0CC88B] ">

@@ -680,6 +680,14 @@ def promo(request):
             promo_message = f"Начислено {reward} ₽"
             credited_amount = reward
 
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "status": promo_status,
+            "message": promo_message,
+            "promo_code_value": promo_code_value,
+            "credited_amount": str(credited_amount) if credited_amount is not None else None,
+        })
+
     return render(request, 'promo.html', {
         'tg_user':  request.tg_user,
         'promo_code_value': promo_code_value,
