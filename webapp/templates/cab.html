@@ -90,18 +90,23 @@
             </div>
         </div>
     </div>
-    <h3 class="text-[1.2rem] text-[#464F5D] px-10 mt-5 mb-2 font-medium">Ваш баланс</h3>
-
-    <a href="{% url 'promo' %}" class="px-6 overflow-hidden relative flex">
-        <img src="{% static 'promo.png' %}" class="w-full" alt="Scanner" />
-    </a>
+    <h3 class="text-lg text-[#464F5D] px-10 mt-5 mb-2 font-medium">Ваш баланс</h3>
 
     <a href="{% url 'payment' %}" class="px-6 overflow-hidden relative flex">
         <div class="text-[1.8rem] text-[#FFF] font-bold absolute top-[1.8rem] left-[1.8rem] ml-[1.8rem]" style="color: #FFF !important; z-index: 10;">{{ tg_user.balance }} ₽</div>
         <img src="{% static 'balance_p.png' %}" class="w-full" alt="Scanner" />
     </a>
 
-    <h3 class="text-[1.2rem] text-[#464F5D] px-10 mt-5 font-medium">Заказы</h3>
+    <div class="flex gap-3 px-6 mt-3 mb-4">
+      <a href="{% url 'promo' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+        <img src="{% static 'promo2.png' %}" alt="Scanner"  />
+      </a>
+      <a href="{% url 'check' %}" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+        <img src="{% static 'freecheck2.png' %}" alt="Scanner" />
+      </a>
+    </div>
+
+    <h3 class="text-lg text-[#464F5D] px-10 mt-5 font-medium">Заказы</h3>
     <div class="overflow-x-auto ml-6">
       <div class="flex space-x-2 min-w-max py-2">
         <button class="filter-btn active" data-filter="all">Все</button>
@@ -112,61 +117,66 @@
       </div>
     </div>
 
+    {% if verdicts %}
     <div class="bg_card border_card rounded-[1.2rem] p-[1rem] grid grid-cols-3 gap-2 mx-5">
 
         {% for verdict in verdicts %}
-        <div class="card bg-[#0A0C11] rounded-[1.2rem] mb-4
-          {% if verdict.status == 'inpending' %} processing
-          {% elif verdict.status == 'todo' %} todo
-          {% elif verdict.status == 'legit' or verdict.status == 'fake' %} finish
-          {% endif %}">
-        <a href="{% url 'verdict' %}?code={{ verdict.code }}" class="block">
+            <div class="card bg-[#0A0C11] rounded-[1.2rem] mb-4
+              {% if verdict.status == 'inpending' %} processing
+              {% elif verdict.status == 'todo' %} todo
+              {% elif verdict.status == 'legit' or verdict.status == 'fake' %} finish
+              {% endif %}">
+              
+              <a href="{% url 'verdict' %}?code={{ verdict.code }}" class="block">
 
-              {# Картинка из verdict.photo1 #}
-              <div
-                class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
-                style="background-image: url('{{ verdict.photos.first.image.url }}');"
-              >
+                  <div
+                    class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
+                    style="background-image: url('{{ verdict.photos.first.image.url }}');"
+                  >
 
-              {# Метка LEGIT/FAKE #}
-              <div
-                  class="flex justify-center items-center text-[0.7rem] flex-shrink-0 p-1 mt-2 ml-2 w-[7.3rem] rounded-[801.32px] bg-[rgba(21,26,33,0.8)] font-bold
-                  {% if verdict.status == 'legit' %}
-                    text-[#35E6AD]
-                  {% elif verdict.status == 'fake' %}
-                    text-[#FF5151]
-                  {% endif %}
-                  "
-              >
-                  {{ verdict.get_status_display }}
-              </div>
-              </div>
-
-              <div class="p-[0.5rem]">
-              {# Дата создания #}
-              <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
-                  <img src="{% static 'calendar.svg' %}" class="w-[1.2rem] h-[1.2rem]" alt="Дата">
-                  <div class="text-[0.8rem] font-bold text-[#464F5D]">
-                  {{ verdict.created_at|date:"d.m.Y" }}
+                  <div
+                      class="flex justify-center items-center text-[0.7rem] flex-shrink-0 p-1 mt-2 ml-2 w-[7.3rem] rounded-[801.32px] bg-[rgba(21,26,33,0.8)] font-bold
+                      {% if verdict.status == 'legit' %}
+                        text-[#35E6AD]
+                      {% elif verdict.status == 'fake' %}
+                        text-[#FF5151]
+                      {% endif %}
+                      "
+                  >
+                      {{ verdict.get_status_display }}
                   </div>
-              </div>
-
-              {# Например, выводим комментарий вместо второго блока с NSDFW #}
-              <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
-                  <div class="text-[0.8rem] font-bold text-[#464F5D]">
-                  {{ verdict.code }}
                   </div>
-              </div>
-              </div>
+
+                  <div class="p-[0.5rem]">
+
+                  <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
+                      <img src="{% static 'calendar.svg' %}" class="w-[1.2rem] h-[1.2rem]" alt="">
+                      <div class="text-[0.8rem] font-bold text-[#464F5D]">
+                          {{ verdict.created_at|date:"d.m.Y" }}
+                      </div>
+                  </div>
+
+                  <div class="mt-2 rounded-full px-[0.7rem] py-[0.5rem] flex items-center justify-center gap-2 bg_black">
+                      <div class="text-[0.8rem] font-bold text-[#464F5D]">
+                          {{ verdict.code }}
+                      </div>
+                  </div>
+
+                  </div>
               </a>
-          </div>
-        {% empty %}
-        <p>У этого пользователя ещё нет вердиктов.</p>
+            </div>
         {% endfor %}
 
-    
-
     </div>
+
+    {% else %}
+    <div class="flex flex-col justify-center items-center py-16 mx-5 mt-5 bg_card border_card rounded-[1.2rem] px-[1rem]">
+        <img src="{% static 'icons_phones1.svg' %}" class="mb-2">
+        <h3 class="text-[1.2rem] text-[#464F5D] font-medium text-center">
+            У этого пользователя ещё нету вердиктов
+        </h3>
+    </div>
+    {% endif %}
     
 
     <div class="px-6 mt-4">
@@ -196,8 +206,8 @@
   /* Базовый вид кнопок-чипов */
   .filter-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    height: 3rem; padding: 0 1.5rem; border-radius:999px;
-    font-size:18px; font-weight:500; letter-spacing:.2px; white-space:nowrap;
+    height: 2.5rem; padding: 0 1.5rem; border-radius:999px;
+    font-size:12px; font-weight:500; letter-spacing:.2px; white-space:nowrap;
     color:#464F5D;
     background: linear-gradient(180deg, #171C24 0%, #11151A 100%);
     transition: color .15s ease, background .15s ease, box-shadow .15s ease, transform .05s ease;

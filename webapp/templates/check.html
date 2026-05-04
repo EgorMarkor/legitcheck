@@ -14,7 +14,7 @@
   <!-- Шаг 1: Выбор бренда -->
   <section class="px-4 py-2">
     <h1 id="form-title" class="text-2xl font-bold mb-2">Выберите бренд</h1>
-    <p class="text-neutral-500 mb-4">
+    <p class="text-[#464F5D] mb-4">
       Мы предоставляем широкий ценовой спектр, чтобы каждый смог найти, что подходит именно ему.
     </p>
     <div id="progress-container" class="w-full bg-[#171C23] rounded-[30px] h-2 overflow-hidden mb-6">
@@ -25,9 +25,9 @@
   <section id="brand-section" class="px-4 pb-4 transition-opacity duration-500 ease-in-out">
     <!-- Переключатель -->
     <div id="switch"
-       class="relative mx-auto mb-5 flex w-full max-w-xl items-center rounded-full bg-[#0C0F14] p-2">
+       class="relative mx-auto mb-5 flex w-full max-w-xl items-center rounded-full bg_black p-2">
       <div id="switch-indicator"
-          class="pointer-events-none absolute inset-y-1 left-1 w-1/3 rounded-full bg-[#171C23] transition-transform duration-300 ease-in-out"></div>
+          class="bg-[#0C0F14] pointer-events-none absolute inset-y-1 left-1 w-1/3 rounded-full transition-transform duration-300 ease-in-out"></div>
       <button data-tab="all" class="seg-btn relative z-10 flex-1 py-3 text-center font-semibold">Все</button>
       <button data-tab="basic" class="seg-btn relative z-10 flex-1 py-3 text-center font-medium text-neutral-400">Обычные</button>
       <button data-tab="luxury" class="seg-btn relative z-10 flex-1 py-3 text-center font-medium text-neutral-400">Люкс</button>
@@ -37,7 +37,7 @@
     <!-- Вертикальная A–Z навигация справа -->
     <nav id="az-rail"
          class="pointer-events-none absolute right-0 top-0 hidden h-full select-none md:block">
-      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-neutral-500">
+      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-[#464F5D]">
         <!-- буквы создаст скрипт -->
       </ul>
     </nav>
@@ -48,18 +48,15 @@
           id="brand-search"
           type="text"
           placeholder="Поиск бренда..."
-          class="w-full rounded-full bg-[#0C0F14] px-5 py-3 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
+          class="w-full rounded-full bg-[#11151A] px-7 py-5 text-white placeholder:text-[#464F5D] focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
         />
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.65 5.65a7.5 7.5 0 016 12.99z" />
+        <svg width="12" height="13" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg" class="absolute right-7 top-1/2 -translate-y-1/2 w-5 h-5 text-[#464F5D]">
+          <mask id="path-1-outside-1_624_1662" maskUnits="userSpaceOnUse" x="-0.729736" y="-0.72998" width="13" height="13" fill="black">
+          <rect fill="white" x="-0.729736" y="-0.72998" width="13" height="13"/>
+          <path d="M4.99878 0.27002C7.6103 0.27002 9.72721 2.38703 9.72729 4.99854C9.72729 6.14711 9.31643 7.19885 8.6355 8.01807L11.2185 10.6011C11.4821 10.8649 11.4823 11.2924 11.2185 11.5562C10.9548 11.8198 10.5272 11.8198 10.2634 11.5562L7.63257 8.92529C6.87978 9.4312 5.97399 9.72705 4.99878 9.72705C2.38728 9.72697 0.270264 7.61006 0.270264 4.99854C0.270345 2.38708 2.38733 0.270101 4.99878 0.27002ZM4.99878 1.28369C2.94695 1.28377 1.28402 2.94671 1.28394 4.99854C1.28394 7.05043 2.9469 8.71427 4.99878 8.71436C7.05073 8.71436 8.7146 7.05048 8.7146 4.99854C8.71452 2.94666 7.05068 1.28369 4.99878 1.28369Z"/>
+          </mask>
+          <path d="M4.99878 0.27002C7.6103 0.27002 9.72721 2.38703 9.72729 4.99854C9.72729 6.14711 9.31643 7.19885 8.6355 8.01807L11.2185 10.6011C11.4821 10.8649 11.4823 11.2924 11.2185 11.5562C10.9548 11.8198 10.5272 11.8198 10.2634 11.5562L7.63257 8.92529C6.87978 9.4312 5.97399 9.72705 4.99878 9.72705C2.38728 9.72697 0.270264 7.61006 0.270264 4.99854C0.270345 2.38708 2.38733 0.270101 4.99878 0.27002ZM4.99878 1.28369C2.94695 1.28377 1.28402 2.94671 1.28394 4.99854C1.28394 7.05043 2.9469 8.71427 4.99878 8.71436C7.05073 8.71436 8.7146 7.05048 8.7146 4.99854C8.71452 2.94666 7.05068 1.28369 4.99878 1.28369Z" fill="#464F5D"/>
+          <path d="M4.99878 0.27002V-0.00019002H4.99877L4.99878 0.27002ZM9.72729 4.99854H9.9975V4.99853L9.72729 4.99854ZM8.6355 8.01807L8.4277 7.84534C8.33845 7.95272 8.3457 8.11041 8.44443 8.20913L8.6355 8.01807ZM11.2185 10.6011L11.4096 10.4101L11.4096 10.41L11.2185 10.6011ZM11.2185 11.5562L11.4095 11.7472L11.4096 11.7472L11.2185 11.5562ZM10.2634 11.5562L10.0724 11.7472L10.0724 11.7473L10.2634 11.5562ZM7.63257 8.92529L7.82364 8.73423C7.73229 8.64288 7.58907 8.62897 7.48185 8.70102L7.63257 8.92529ZM4.99878 9.72705L4.99877 9.99726H4.99878V9.72705ZM0.270264 4.99854L5.4121e-05 4.99853V4.99854H0.270264ZM4.99878 1.28369V1.01348H4.99877L4.99878 1.28369ZM1.28394 4.99854L1.01373 4.99852V4.99854H1.28394ZM4.99878 8.71436L4.99877 8.98456H4.99878V8.71436ZM8.7146 4.99854H8.98481V4.99852L8.7146 4.99854ZM4.99878 0.27002V0.540229C7.46106 0.540229 9.45701 2.53626 9.45709 4.99854L9.72729 4.99854L9.9975 4.99853C9.99742 2.23781 7.75954 -0.00019002 4.99878 -0.00019002V0.27002ZM9.72729 4.99854H9.45709C9.45709 6.08142 9.06999 7.07261 8.4277 7.84534L8.6355 8.01807L8.8433 8.19079C9.56287 7.32508 9.9975 6.2128 9.9975 4.99854H9.72729ZM8.6355 8.01807L8.44443 8.20913L11.0274 10.7921L11.2185 10.6011L11.4096 10.41L8.82656 7.827L8.6355 8.01807ZM11.2185 10.6011L11.0274 10.7921C11.1856 10.9505 11.1856 11.2069 11.0274 11.3651L11.2185 11.5562L11.4096 11.7472C11.7789 11.3779 11.7786 10.7793 11.4096 10.4101L11.2185 10.6011ZM11.2185 11.5562L11.0275 11.3651C10.8693 11.5232 10.6128 11.5232 10.4544 11.365L10.2634 11.5562L10.0724 11.7473C10.4417 12.1163 11.0402 12.1165 11.4095 11.7472L11.2185 11.5562ZM10.2634 11.5562L10.4545 11.3651L7.82364 8.73423L7.63257 8.92529L7.4415 9.11636L10.0724 11.7472L10.2634 11.5562ZM7.63257 8.92529L7.48185 8.70102C6.77209 9.17801 5.91849 9.45684 4.99878 9.45684V9.72705V9.99726C6.02948 9.99726 6.98746 9.68439 7.78329 9.14956L7.63257 8.92529ZM4.99878 9.72705L4.99879 9.45684C2.5365 9.45676 0.540473 7.46081 0.540473 4.99854H0.270264H5.4121e-05C5.4121e-05 7.7593 2.23805 9.99717 4.99877 9.99726L4.99878 9.72705ZM0.270264 4.99854L0.540473 4.99854C0.54055 2.53632 2.53656 0.540306 4.99879 0.540229L4.99878 0.27002L4.99877 -0.00019002C2.23809 -0.000103652 0.000140488 2.23785 5.4121e-05 4.99853L0.270264 4.99854ZM4.99878 1.28369L4.99877 1.01348C2.79772 1.01357 1.01381 2.79747 1.01373 4.99852L1.28394 4.99854L1.55415 4.99855C1.55422 3.09594 3.09619 1.55398 4.99879 1.5539L4.99878 1.28369ZM1.28394 4.99854H1.01373C1.01373 7.19958 2.79758 8.98448 4.99877 8.98456L4.99878 8.71436L4.99879 8.44415C3.09622 8.44407 1.55415 6.90128 1.55415 4.99854H1.28394ZM4.99878 8.71436V8.98456C7.19996 8.98456 8.98481 7.19972 8.98481 4.99854H8.7146H8.44439C8.44439 6.90125 6.90149 8.44415 4.99878 8.44415V8.71436ZM8.7146 4.99854L8.98481 4.99852C8.98472 2.79734 7.19983 1.01348 4.99878 1.01348V1.28369V1.5539C6.90153 1.5539 8.44431 3.09597 8.44439 4.99855L8.7146 4.99854Z" fill="#464F5D" mask="url(#path-1-outside-1_624_1662)"/>
         </svg>
       </div>
     </div>
@@ -709,7 +706,7 @@
     id="comment"
     rows="4"
     placeholder="Введите текст..."
-    class="w-full bg-[#0C0F14] rounded-2xl p-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
+    class="w-full bg_black rounded-2xl p-4 text-white placeholder:text-[#464F5D] focus:outline-none focus:ring-2 focus:ring-[#13CD90]"
   ></textarea>
 </section>
 <!-- Кнопка Продолжить -->
@@ -727,11 +724,11 @@
   <div class="bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl p-4 flex items-center space-x-4">
     <div class="bg-[#0B0D11] p-4 rounded-[1.2rem] flex items-center w-full">
       <div class="flex-1 space-y-1">
-        <div class="text-neutral-500 text-sm mb-[-6px]">Категория</div>
+        <div class="text-[#464F5D] text-sm mb-[-6px]">Категория</div>
         <div id="verdict-category" class="text-white text-lg font-semibold">–</div>
-        <div class="text-neutral-500 text-sm mb-[-12px]">Бренд</div>
+        <div class="text-[#464F5D] text-sm mb-[-12px]">Бренд</div>
         <div id="verdict-brand" class="text-white text-lg font-semibold">–</div>
-        <div class="text-neutral-500 text-sm mb-[-18px]">Модель</div>
+        <div class="text-[#464F5D] text-sm mb-[-18px]">Модель</div>
         <div id="verdict-model" class="text-white text-lg font-semibold">–</div>
       </div>
       <!-- Картинка: первая из загруженных -->
@@ -740,12 +737,12 @@
     </div>
   </div>
   <!-- Переключатель «Обоснование вердикта» -->
-  <div class="flex items-center justify-between bg-[#0C0F14] rounded-2xl p-4">
+  <div class="flex items-center justify-between bg_black rounded-2xl py-3 px-6">
     <div class="flex items-center gap-3">
       <div class="text-white font-medium">Обоснование вердикта</div>
       <div class="text-[#13CD90] font-medium">+150&nbsp;₽</div>
     </div>
-    <div>
+    <div class="mt-1">
       <label class="inline-flex items-center cursor-pointer">
         <input type="checkbox" class="sr-only peer" id="verdictToggle">
         <div
@@ -800,7 +797,7 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-neutral-500 text-xs">24 часа</div>
+    <div class="text-[#464F5D] text-xs">24 часа</div>
     <div class="text-white text-lg font-semibold">450 ₽</div>
     <img
       src="{% static 'lupa.png' %}"
@@ -830,7 +827,7 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-neutral-500 text-xs">15 минут</div>
+    <div class="text-[#464F5D] text-xs">15 минут</div>
     <div class="text-white text-lg font-semibold">650 ₽</div>
     <img
       src="{% static 'clock.png' %}"
@@ -860,7 +857,7 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-neutral-500 text-xs">15 минут</div>
+    <div class="text-[#464F5D] text-xs">15 минут</div>
     <div class="text-white text-lg font-semibold">600 ₽</div>
     <img
       src="{% static 'almaz.png' %}"
@@ -883,14 +880,14 @@
   <div class="bg-transparent rounded-2xl w-full w-full">
     <!-- Первая строка -->
     <div class="flex justify-between items-center mb-2">
-      <span class="text-sm text-neutral-500">Сумма заказа</span>
-      <span id="orderSum" class="text-sm text-neutral-500">0 ₽</span>
+      <span class="text-sm text-[#464F5D]">Сумма заказа</span>
+      <span id="orderSum" class="text-sm text-[#464F5D]">0 ₽</span>
     </div>
  
     <!-- Вторая строка -->
     <div class="flex justify-between items-center mb-4">
-      <span class="text-sm text-neutral-500">Обоснование вердикта</span>
-      <span id="verdictSum" class="text-sm text-neutral-500">0 ₽</span>
+      <span class="text-sm text-[#464F5D]">Обоснование вердикта</span>
+      <span id="verdictSum" class="text-sm text-[#464F5D]">0 ₽</span>
     </div>
  
     <!-- Итоговая строка -->
@@ -909,7 +906,7 @@
     <!-- Вертикальная A–Z навигация справа -->
     <nav id="az-rail"
          class="pointer-events-none absolute right-0 top-0 hidden h-full select-none md:block">
-      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-neutral-500">
+      <ul class="pointer-events-auto sticky top-6 flex h-[80vh] flex-col items-center justify-between py-4 pr-2 text-sm text-[#464F5D]">
         <!-- буквы создаст скрипт -->
       </ul>
     </nav>
