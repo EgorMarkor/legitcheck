@@ -92,12 +92,13 @@
 
     .verdict-photo-watermark {
       position: absolute;
-      right: 0.55rem;
-      bottom: 0.55rem;
-      width: 2.4rem;
-      height: 2.9rem;
+      left: 50%;
+      top: 50%;
+      width: 3rem;
+      height: auto;
       object-fit: contain;
-      opacity: 0.34;
+      opacity: 1;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       user-select: none;
       z-index: 20;
@@ -111,12 +112,13 @@
     .fancybox__content::after {
       content: "";
       position: absolute;
-      right: clamp(0.85rem, 3vw, 1.5rem);
-      bottom: clamp(0.85rem, 3vw, 1.5rem);
+      left: 50%;
+      top: 50%;
       width: clamp(3.25rem, 13vw, 7rem);
       aspect-ratio: 376 / 458;
       background: url("{% static 'check23.png' %}") center / contain no-repeat;
-      opacity: 0.32;
+      opacity: 1;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       z-index: 5;
       filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.6));
@@ -202,12 +204,6 @@
                 >
                   <!-- затемняющий слой -->
                   <div class="absolute inset-0 bg-black/50 rounded-[1.2rem]"></div>
-                  <!-- иконка поверх -->
-                  <img
-                    src="{% static 'check23.png' %}"
-                    class="relative z-10 w-[3rem] h-auto"
-                    alt="check"
-                  />
                   <!-- водяной знак -->
                   <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                 </div>
@@ -266,8 +262,6 @@
                               bg-cover bg-center"
                       style="background-image:url('${data.image_url}')">
                     <div class="absolute inset-0 bg-black/30 rounded-[1.2rem]"></div>
-                    <img src="{% static 'check.png' %}"
-                        class="absolute inset-0 m-auto w-[2.5rem]" />
                     <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                   </div>
                 `;
