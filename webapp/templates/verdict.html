@@ -90,6 +90,38 @@
       cursor: pointer;
     }
 
+    .verdict-photo-watermark {
+      position: absolute;
+      right: 0.55rem;
+      bottom: 0.55rem;
+      width: 2.4rem;
+      height: 2.9rem;
+      object-fit: contain;
+      opacity: 0.34;
+      pointer-events: none;
+      user-select: none;
+      z-index: 20;
+      filter: drop-shadow(0 0 0.7rem rgba(0, 0, 0, 0.55));
+    }
+
+    .fancybox__content {
+      position: relative;
+    }
+
+    .fancybox__content::after {
+      content: "";
+      position: absolute;
+      right: clamp(0.85rem, 3vw, 1.5rem);
+      bottom: clamp(0.85rem, 3vw, 1.5rem);
+      width: clamp(3.25rem, 13vw, 7rem);
+      aspect-ratio: 376 / 458;
+      background: url("{% static 'check23.png' %}") center / contain no-repeat;
+      opacity: 0.32;
+      pointer-events: none;
+      z-index: 5;
+      filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.6));
+    }
+
 </style>
 <body class="text-gray-100 font-sans">
   <div class="mx-auto">
@@ -177,9 +209,7 @@
                     alt="check"
                   />
                   <!-- водяной знак -->
-                  <div class="absolute inset-0 flex items-end justify-end pb-1 pr-2 z-20 pointer-events-none">
-                    <span class="text-white/30 font-bold text-[0.55rem] tracking-widest select-none rotate-[-20deg]">LegitCheck</span>
-                  </div>
+                  <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                 </div>
               </a>
             {% empty %}
@@ -238,9 +268,7 @@
                     <div class="absolute inset-0 bg-black/30 rounded-[1.2rem]"></div>
                     <img src="{% static 'check.png' %}"
                         class="absolute inset-0 m-auto w-[2.5rem]" />
-                    <div class="absolute inset-0 flex items-end justify-end pb-1 pr-2 z-20 pointer-events-none">
-                      <span class="text-white/30 font-bold text-[0.55rem] tracking-widest select-none rotate-[-20deg]">LegitCheck</span>
-                    </div>
+                    <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                   </div>
                 `;
 
