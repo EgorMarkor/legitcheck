@@ -60,6 +60,8 @@ TARIFF_PRICES = {
 REASON_PRICE = Decimal("150.00")
 DEFAULT_VERDICT_SPEED = "24h"
 DEFAULT_VERDICT_PRICE = Decimal("0.00")
+FREE_CHECK_SPEED = "12h-free"
+FREE_CHECK_COOLDOWN = timedelta(days=7)
 TRUTHY_VALUES = {"1", "true", "yes", "on"}
 
 
@@ -167,6 +169,39 @@ def require_user(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapped
+
+
+def _refresh_free_check_state(user, save=True):
+    now = timezone.now()
+    next_timestamp = user.next_free_check_timestamp
+    is_available = not next_timestamp or next_timestamp <= now
+    update_fields = []
+
+    if user.is_free_check_available != is_available:
+        user.is_free_check_available = is_available
+        update_fields.append("is_free_check_available")
+
+    if is_available and next_timestamp is not None:
+        user.next_free_check_timestamp = None
+        next_timestamp = None
+        update_fields.append("next_free_check_timestamp")
+
+    if save and update_fields:
+        user.save(update_fields=update_fields)
+
+    return {
+        "is_available": is_available,
+        "next_timestamp": next_timestamp,
+    }
+
+
+def _free_check_json_state(user):
+    state = _refresh_free_check_state(user)
+    next_timestamp = state["next_timestamp"]
+    return {
+        "is_free_check_available": state["is_available"],
+        "next_free_check_timestamp": next_timestamp.isoformat() if next_timestamp else None,
+    }
 
 
 
@@ -608,6 +643,77 @@ def create_verdict(request):
         "redirect_url": reverse("lk")
     })
 
+
+@csrf_exempt
+@require_POST
+@require_user
+def create_free_verdict(request):
+    request_data = request.POST.copy()
+    request_data["speed"] = FREE_CHECK_SPEED
+    request_data["price"] = "0"
+    request_data["with_reason"] = "0"
+
+    verdict_payload, error_response = _build_verdict_payload(request_data)
+    if error_response:
+        return error_response
+
+    verdict_payload.update({
+        "speed": FREE_CHECK_SPEED,
+        "price": Decimal("0.00"),
+        "with_reason": False,
+    })
+    direct_files = _collect_photo_files(request)
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=request.tg_user.pk)
+        state = _refresh_free_check_state(user)
+
+        if not state["is_available"]:
+            next_timestamp = state["next_timestamp"]
+            seconds_remaining = 0
+            if next_timestamp:
+                seconds_remaining = max(0, int((next_timestamp - timezone.now()).total_seconds()))
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Бесплатная проверка будет доступна позже",
+                    "is_free_check_available": False,
+                    "next_free_check_timestamp": next_timestamp.isoformat() if next_timestamp else None,
+                    "seconds_remaining": seconds_remaining,
+                },
+                status=409,
+            )
+
+        next_timestamp = timezone.now() + FREE_CHECK_COOLDOWN
+        user.is_free_check_available = False
+        user.next_free_check_timestamp = next_timestamp
+        user.save(update_fields=["is_free_check_available", "next_free_check_timestamp"])
+
+        verdict = _create_verdict_with_assets(
+            user=user,
+            verdict_payload=verdict_payload,
+            direct_files=direct_files,
+            uploaded_photos=[],
+        )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect_url": reverse("lk"),
+            "verdict": {
+                "id": verdict.id,
+                "code": verdict.code,
+                "category": verdict.category,
+                "brand": verdict.brand,
+            },
+            "is_free_check_available": False,
+            "next_free_check_timestamp": next_timestamp.isoformat(),
+            "balance": user.balance,
+        },
+        status=201,
+    )
+
 @require_user
 def check_verdict(request):
     code = request.GET.get('code', '').upper()
@@ -710,9 +816,12 @@ def verdicts(request):
 
 @require_user
 def check(request):
+    free_check_state = _free_check_json_state(request.tg_user)
     return render(request, 'check.html', {
         'tg_user': request.tg_user,
         'balance': request.tg_user.balance,  # 👈 добавляем
+        'free_check_available': free_check_state["is_free_check_available"],
+        'free_check_next_timestamp': free_check_state["next_free_check_timestamp"],
     })
 
 @require_user

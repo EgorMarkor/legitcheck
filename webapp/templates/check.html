@@ -8,6 +8,69 @@
     object-fit: cover;
     transition: opacity 0.3s ease;
   }
+
+  .free-check-tariff {
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 1.45rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+  }
+
+  .free-check-tariff:focus-visible {
+    outline: 2px solid #13CD90;
+    outline-offset: 3px;
+  }
+
+  .free-check-tariff:not(.free-check-tariff--disabled):active {
+    transform: scale(0.985);
+  }
+
+  .free-check-tariff--disabled {
+    cursor: default;
+  }
+
+  .free-check-tariff--loading {
+    pointer-events: none;
+    opacity: 0.72;
+  }
+
+  .free-check-tariff__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+  }
+
+  .free-check-tariff__locked-copy {
+    position: absolute;
+    left: 6.4%;
+    bottom: 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    pointer-events: none;
+  }
+
+  .free-check-tariff__locked-label {
+    color: #5f6a7a;
+    font-size: clamp(0.95rem, 4.1vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+
+  .free-check-tariff__timer {
+    color: #fff;
+    font-size: clamp(1rem, 4.5vw, 1.7rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
 </style>
 <body class="text-white">
   {% include 'header.html' %}
@@ -770,6 +833,27 @@
       </label>
     </div>
   </div>
+  <div
+    id="free-check-tariff"
+    class="free-check-tariff{% if not free_check_available %} free-check-tariff--disabled{% endif %}"
+    role="button"
+    tabindex="{% if free_check_available %}0{% else %}-1{% endif %}"
+    aria-disabled="{% if free_check_available %}false{% else %}true{% endif %}"
+    aria-label="{% if free_check_available %}Активировать бесплатную проверку{% else %}Бесплатная проверка временно недоступна{% endif %}"
+    data-available="{% if free_check_available %}true{% else %}false{% endif %}"
+  >
+    <img
+      id="free-check-tariff-img"
+      src="{% if free_check_available %}{% static 'free_check_tarif_active.png' %}{% else %}{% static 'free_check_tarif_unactive.png' %}{% endif %}"
+      alt=""
+      class="free-check-tariff__image"
+      draggable="false"
+    />
+    <div id="free-check-locked-copy" class="free-check-tariff__locked-copy{% if free_check_available %} hidden{% endif %}">
+      <div class="free-check-tariff__locked-label">Доступно через</div>
+      <div id="free-check-countdown" class="free-check-tariff__timer">0 д. 00 ч. 00 м. 00 с.</div>
+    </div>
+  </div>
   <!-- Карточки вариантов скорости -->
   <!-- HTML -->
 <div id="options" class="grid grid-cols-3 gap-4">
@@ -915,6 +999,13 @@
 
 <script>
   window.initialBalance = Number("{{ balance|default:'0' }}");
+  window.freeCheckConfig = {
+    isAvailable: {{ free_check_available|yesno:"true,false" }},
+    nextTimestamp: "{{ free_check_next_timestamp|default:''|escapejs }}",
+    activeImageUrl: "{% static 'free_check_tarif_active.png' %}",
+    inactiveImageUrl: "{% static 'free_check_tarif_unactive.png' %}",
+    createUrl: "{% url 'create_free_verdict' %}"
+  };
 </script>
 
 <script>
@@ -1570,10 +1661,140 @@ document.addEventListener('DOMContentLoaded', function() {
   const verdictSumEl = document.getElementById('verdictSum');
   const totalSumEl = document.getElementById('totalSum');
   const verdictBtn = document.getElementById('verdict-continue');
+  const freeCheckConfig = window.freeCheckConfig || {};
+  const freeCheckCard = document.getElementById('free-check-tariff');
+  const freeCheckImg = document.getElementById('free-check-tariff-img');
+  const freeCheckLockedCopy = document.getElementById('free-check-locked-copy');
+  const freeCheckCountdown = document.getElementById('free-check-countdown');
   let selectedBrand = window.__selectedBrand || null;
   let type_item;
   let currentStep = 1;
   let balance = Number(window.initialBalance || 0);
+  let freeCheckTimerId = null;
+  let isFreeCheckSubmitting = false;
+
+  function formatFreeCheckRemaining(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = function(value) { return String(value).padStart(2, '0'); };
+    return `${days} д. ${pad(hours)} ч. ${pad(minutes)} м. ${pad(seconds)} с.`;
+  }
+
+  function setFreeCheckState(isAvailable, nextTimestamp) {
+    if (!freeCheckCard) return;
+
+    freeCheckConfig.isAvailable = Boolean(isAvailable);
+    freeCheckConfig.nextTimestamp = nextTimestamp || '';
+
+    freeCheckCard.dataset.available = freeCheckConfig.isAvailable ? 'true' : 'false';
+    freeCheckCard.classList.toggle('free-check-tariff--disabled', !freeCheckConfig.isAvailable);
+    freeCheckCard.setAttribute('aria-disabled', freeCheckConfig.isAvailable ? 'false' : 'true');
+    freeCheckCard.setAttribute(
+      'aria-label',
+      freeCheckConfig.isAvailable
+        ? 'Активировать бесплатную проверку'
+        : 'Бесплатная проверка временно недоступна'
+    );
+    freeCheckCard.tabIndex = freeCheckConfig.isAvailable ? 0 : -1;
+
+    if (freeCheckImg) {
+      freeCheckImg.src = freeCheckConfig.isAvailable
+        ? freeCheckConfig.activeImageUrl
+        : freeCheckConfig.inactiveImageUrl;
+    }
+    if (freeCheckLockedCopy) {
+      freeCheckLockedCopy.classList.toggle('hidden', freeCheckConfig.isAvailable);
+    }
+
+    if (freeCheckTimerId) {
+      clearInterval(freeCheckTimerId);
+      freeCheckTimerId = null;
+    }
+
+    if (!freeCheckConfig.isAvailable) {
+      tickFreeCheckTimer();
+      freeCheckTimerId = setInterval(tickFreeCheckTimer, 1000);
+    }
+  }
+
+  function tickFreeCheckTimer() {
+    if (!freeCheckCountdown) return;
+
+    const targetTime = Date.parse(freeCheckConfig.nextTimestamp || '');
+    if (!targetTime || Number.isNaN(targetTime)) {
+      freeCheckCountdown.textContent = '0 д. 00 ч. 00 м. 00 с.';
+      return;
+    }
+
+    const remaining = targetTime - Date.now();
+    if (remaining <= 0) {
+      setFreeCheckState(true, '');
+      return;
+    }
+
+    freeCheckCountdown.textContent = formatFreeCheckRemaining(remaining);
+  }
+
+  function buildVerdictFormData() {
+    const formData = new FormData();
+    formData.append('category', type_item || '');
+    formData.append('brand', selectedBrand || '');
+    formData.append('comment', (document.getElementById('comment').value || ''));
+    document.querySelectorAll('#check_' + (type_item||'') + ' [data-photo-wrapper]').forEach(function(w) {
+      if (w._selectedFile) formData.append('photos', w._selectedFile);
+    });
+    return formData;
+  }
+
+  function submitFreeCheck() {
+    if (!freeCheckConfig.isAvailable || isFreeCheckSubmitting || !freeCheckConfig.createUrl) return;
+
+    isFreeCheckSubmitting = true;
+    if (freeCheckCard) freeCheckCard.classList.add('free-check-tariff--loading');
+
+    fetch(freeCheckConfig.createUrl, { method: 'POST', body: buildVerdictFormData() })
+      .then(function(response) {
+        return response.json().then(function(json) {
+          if (!response.ok) {
+            json._status = response.status;
+            throw json;
+          }
+          return json;
+        });
+      })
+      .then(function(json) {
+        if (json && json.success) {
+          setFreeCheckState(false, json.next_free_check_timestamp);
+          window.location.href = json.redirect_url;
+          return;
+        }
+        alert('Ошибка: ' + ((json && json.error) || 'неизвестная'));
+      })
+      .catch(function(err) {
+        if (err && err.next_free_check_timestamp) {
+          setFreeCheckState(false, err.next_free_check_timestamp);
+        }
+        alert('Ошибка: ' + ((err && err.error) || 'Не удалось создать бесплатную проверку'));
+      })
+      .finally(function() {
+        isFreeCheckSubmitting = false;
+        if (freeCheckCard) freeCheckCard.classList.remove('free-check-tariff--loading');
+      });
+  }
+
+  setFreeCheckState(Boolean(freeCheckConfig.isAvailable), freeCheckConfig.nextTimestamp || '');
+
+  if (freeCheckCard) {
+    freeCheckCard.addEventListener('click', submitFreeCheck);
+    freeCheckCard.addEventListener('keydown', function(event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      submitFreeCheck();
+    });
+  }
   // Show step
   function showStep(step) {
     if (step !== 1) { brandSection.classList.add('hidden', 'opacity-0'); }
@@ -1702,16 +1923,15 @@ document.addEventListener('DOMContentLoaded', function() {
   updateSummary();
   // Send
   verdictBtn.addEventListener('click', function() {
-    const formData = new FormData();
-    formData.append('category', type_item || '');
-    formData.append('brand', selectedBrand || '');
-    formData.append('comment', (document.getElementById('comment').value || ''));
-    document.querySelectorAll('#check_' + (type_item||'') + ' [data-photo-wrapper]').forEach(function(w) {
-      if (w._selectedFile) formData.append('photos', w._selectedFile);
-    });
+    const formData = buildVerdictFormData();
     const selectedSpeed = document.querySelector('input[name="speed"]:checked');
     const speedValue = selectedSpeed ? selectedSpeed.value : null;
     const withReason = document.getElementById('verdictToggle')?.checked ? '1' : '0';
+
+    if (!speedValue) {
+      alert('Выберите тариф');
+      return;
+    }
 
     formData.append('speed', speedValue);
     formData.append('with_reason', withReason);

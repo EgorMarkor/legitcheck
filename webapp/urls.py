@@ -42,6 +42,7 @@ urlpatterns = [
     path('license/', views.license, name="license"),
     path('verdict/', views.check_verdict, name="verdict"),
     path('verdict/create/', views.create_verdict, name='create_verdict'),
+    path('verdict/create/free/', views.create_free_verdict, name='create_free_verdict'),
     path('api/verdict/photos/upload/', views.api_upload_verdict_photos, name='api_upload_verdict_photos'),
     path('api/verdict/create/', views.api_create_verdict, name='api_create_verdict'),
     path('api/mobile/verdict/photos/upload/', views.api_mobile_upload_verdict_photos, name='api_mobile_upload_verdict_photos'),

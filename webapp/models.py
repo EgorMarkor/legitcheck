@@ -9,6 +9,15 @@ class User(models.Model):
     img = models.CharField(max_length=255, verbose_name='Profile Image URL')
     name = models.CharField(max_length=255, verbose_name='Full Name')
     balance = models.CharField(max_length=255, verbose_name="Баланс")
+    is_free_check_available = models.BooleanField(
+        default=True,
+        verbose_name="Бесплатная проверка доступна",
+    )
+    next_free_check_timestamp = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Следующая бесплатная проверка",
+    )
     username = models.CharField(
         max_length=255,
         null=True,

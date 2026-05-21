@@ -122,7 +122,8 @@ class VerdictAdmin(ModelAdmin):
         return response
 
 class UserAdmin(ModelAdmin):
-    list_display = ['tgId', 'name', 'username']
+    list_display = ['tgId', 'name', 'username', 'is_free_check_available', 'next_free_check_timestamp']
+    list_filter = ['is_free_check_available']
     search_fields = ['name', 'username']
     list_per_page = 20
 

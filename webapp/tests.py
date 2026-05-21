@@ -45,6 +45,101 @@ class VerdictApiTests(TestCase):
         )
         return SimpleUploadedFile(name, content, content_type="image/gif")
 
+    def _login_web_session(self):
+        session = self.client.session
+        session["tg_id"] = self.user.tgId
+        session.save()
+
+    def test_free_verdict_create_does_not_change_balance_and_starts_cooldown(self):
+        self._login_web_session()
+        balance_before = self.user.balance
+
+        response = self.client.post(
+            "/verdict/create/free/",
+            {
+                "category": "sneakers",
+                "brand": "Nike",
+                "comment": "Free weekly check",
+                "photos": self._image_file("free.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertFalse(payload["is_free_check_available"])
+        self.assertIsNotNone(payload["next_free_check_timestamp"])
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.balance, balance_before)
+        self.assertFalse(self.user.is_free_check_available)
+        self.assertGreater(self.user.next_free_check_timestamp, timezone.now() + timedelta(days=6))
+
+        verdict = Verdict.objects.get(id=payload["verdict"]["id"])
+        self.assertEqual(verdict.user, self.user)
+        self.assertEqual(verdict.speed, "12h-free")
+        self.assertEqual(str(verdict.price), "0.00")
+        self.assertFalse(verdict.with_reason)
+        self.assertEqual(verdict.photos.count(), 1)
+
+    def test_free_verdict_create_rejects_active_cooldown(self):
+        self.user.is_free_check_available = False
+        self.user.next_free_check_timestamp = timezone.now() + timedelta(days=3)
+        self.user.save(update_fields=["is_free_check_available", "next_free_check_timestamp"])
+        self._login_web_session()
+
+        response = self.client.post(
+            "/verdict/create/free/",
+            {
+                "category": "sneakers",
+                "brand": "Nike",
+                "comment": "Blocked free check",
+                "photos": self._image_file("blocked.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 409)
+        payload = response.json()
+        self.assertFalse(payload["success"])
+        self.assertFalse(payload["is_free_check_available"])
+        self.assertIsNotNone(payload["next_free_check_timestamp"])
+        self.assertEqual(Verdict.objects.count(), 0)
+
+    def test_free_verdict_create_allows_after_cooldown_timestamp_passed(self):
+        self.user.is_free_check_available = False
+        self.user.next_free_check_timestamp = timezone.now() - timedelta(seconds=1)
+        self.user.save(update_fields=["is_free_check_available", "next_free_check_timestamp"])
+        self._login_web_session()
+
+        response = self.client.post(
+            "/verdict/create/free/",
+            {
+                "category": "sneakers",
+                "brand": "Nike",
+                "comment": "Expired cooldown",
+                "photos": self._image_file("expired.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.json()["success"])
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_free_check_available)
+        self.assertGreater(self.user.next_free_check_timestamp, timezone.now() + timedelta(days=6))
+
+    def test_check_page_renders_free_check_tariff_state(self):
+        self._login_web_session()
+
+        response = self.client.get("/check/", HTTP_HOST=self.host)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="free-check-tariff"')
+        self.assertContains(response, 'createUrl: "/verdict/create/free/"')
+        self.assertContains(response, 'isAvailable: true')
+
     def test_upload_then_create_verdict_with_uploaded_photo_ids(self):
         upload_response = self.client.post(
             "/api/verdict/photos/upload/",
