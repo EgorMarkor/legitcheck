@@ -140,6 +140,58 @@ class VerdictApiTests(TestCase):
         self.assertContains(response, 'createUrl: "/verdict/create/free/"')
         self.assertContains(response, 'isAvailable: true')
 
+    def test_paid_verdict_uses_basic_tariff_for_regular_brand(self):
+        self._login_web_session()
+
+        response = self.client.post(
+            "/verdict/create/",
+            {
+                "category": "sneakers",
+                "brand": "Nike",
+                "speed": "standard",
+                "with_reason": "0",
+                "photos": self._image_file("basic.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.balance, "851.00")
+
+        verdict = Verdict.objects.latest("id")
+        self.assertEqual(verdict.brand, "Nike")
+        self.assertEqual(verdict.speed, "standard")
+        self.assertEqual(str(verdict.price), "149.00")
+
+    def test_paid_verdict_uses_luxury_tariff_for_luxury_brand(self):
+        self._login_web_session()
+
+        response = self.client.post(
+            "/verdict/create/",
+            {
+                "category": "bags",
+                "brand": "Dior",
+                "speed": "express",
+                "with_reason": "0",
+                "photos": self._image_file("luxury.gif"),
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.balance, "1.00")
+
+        verdict = Verdict.objects.latest("id")
+        self.assertEqual(verdict.brand, "Dior")
+        self.assertEqual(verdict.speed, "express")
+        self.assertEqual(str(verdict.price), "999.00")
+
     def test_upload_then_create_verdict_with_uploaded_photo_ids(self):
         upload_response = self.client.post(
             "/api/verdict/photos/upload/",

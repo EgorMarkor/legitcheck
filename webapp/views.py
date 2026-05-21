@@ -51,18 +51,62 @@ DEFAULT_AVATAR_URL = "/static/avatar.png"
 
 
 
+LUXURY_BRANDS = {
+    "Aesop",
+    "Alexander McQueen",
+    "Alexander Wang",
+    "Audemars Piguet",
+    "Balenciaga",
+    "Cartier",
+    "Celine",
+    "Chrome Hearts",
+    "Chloé",
+    "Dior",
+    "Fendi",
+    "Goyard",
+    "Gucci",
+    "Hermes",
+    "Jil Sander",
+    "Jimmy Choo",
+    "Loro Piana",
+    "Louis Vuitton",
+    "Miu Miu",
+    "Moncler",
+    "Palm Angels",
+    "Prada",
+    "PATEK PHILIPPE",
+    "Rick Owens",
+    "ROLEX",
+    "Vetements",
+}
+
 TARIFF_PRICES = {
-    "24h": Decimal("450.00"),
-    "15min-expensive": Decimal("650.00"),
-    "15min-basic": Decimal("600.00"),
+    "basic": {
+        "standard": Decimal("149.00"),  # 2 часа
+        "fast": Decimal("299.00"),      # 1 час
+        "express": Decimal("499.00"),   # 15-30 минут
+    },
+    "luxury": {
+        "standard": Decimal("299.00"),  # 3 часа
+        "fast": Decimal("599.00"),      # 1 час
+        "express": Decimal("999.00"),   # 15-30 минут
+    },
 }
 
 REASON_PRICE = Decimal("150.00")
-DEFAULT_VERDICT_SPEED = "24h"
+DEFAULT_VERDICT_SPEED = "standard"
 DEFAULT_VERDICT_PRICE = Decimal("0.00")
 FREE_CHECK_SPEED = "12h-free"
 FREE_CHECK_COOLDOWN = timedelta(days=7)
 TRUTHY_VALUES = {"1", "true", "yes", "on"}
+
+
+def _tariff_group_for_brand(brand):
+    return "luxury" if (brand or "").strip() in LUXURY_BRANDS else "basic"
+
+
+def _tariff_price_for_brand(speed, brand):
+    return TARIFF_PRICES.get(_tariff_group_for_brand(brand), {}).get(speed)
 
 
 def init(request):
@@ -596,14 +640,14 @@ def create_verdict(request):
             "error": "Не выбраны все параметры"
         }, status=400)
 
-    if speed not in TARIFF_PRICES:
+    total_price = _tariff_price_for_brand(speed, brand)
+    if total_price is None:
         return JsonResponse({
             "success": False,
             "error": "Неверный тариф"
         }, status=400)
 
     # 💰 считаем сумму НА БЭКЕ
-    total_price = TARIFF_PRICES[speed]
     if with_reason:
         total_price += REASON_PRICE
 

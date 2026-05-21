@@ -857,13 +857,13 @@
   <!-- Карточки вариантов скорости -->
   <!-- HTML -->
 <div id="options" class="grid grid-cols-3 gap-4">
-  <!-- 24 часа -->
+  <!-- Базовый срок -->
   <label class="relative block bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl px-4 pt-4 cursor-pointer">
     <input
       type="radio"
       name="speed"
-      value="24h"
-      data-text="24 часа — 450 ₽"
+      value="standard"
+      data-text="2 часа — 149 ₽"
       class="peer hidden speed-input"
     />
     <!-- индикатор -->
@@ -881,21 +881,21 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-[#464F5D] text-xs">24 часа</div>
-    <div class="text-white text-lg font-semibold">450 ₽</div>
+    <div class="text-[#464F5D] text-xs" data-tariff-time>2 часа</div>
+    <div class="text-white text-lg font-semibold" data-tariff-price>149 ₽</div>
     <img
       src="{% static 'lupa.png' %}"
       alt=""
       class="mt-5 mx-auto w-auto h-auto object-contain peer-checked:brightness-110 transition"
     />
   </label>
-  <!-- 15 минут (дорогой) -->
+  <!-- Быстрый срок -->
   <label class="relative block bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl px-4 pt-4 cursor-pointer">
     <input
       type="radio"
       name="speed"
-      value="15min-expensive"
-      data-text="15 минут (дорогой) — 600 ₽"
+      value="fast"
+      data-text="1 час — 299 ₽"
       class="peer hidden speed-input"
     />
     <div
@@ -911,21 +911,21 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-[#464F5D] text-xs">15 минут</div>
-    <div class="text-white text-lg font-semibold">650 ₽</div>
+    <div class="text-[#464F5D] text-xs" data-tariff-time>1 час</div>
+    <div class="text-white text-lg font-semibold" data-tariff-price>299 ₽</div>
     <img
       src="{% static 'clock.png' %}"
       alt=""
       class="mt-2 mx-auto w-auto h-auto object-contain peer-checked:brightness-110 transition"
     />
   </label>
-  <!-- 15 минут (базовый) -->
+  <!-- Экспресс-срок -->
   <label class="relative block bg-gradient-to-b from-[#171C24] to-[#11151A] rounded-2xl px-4 pt-4 cursor-pointer">
     <input
       type="radio"
       name="speed"
-      value="15min-basic"
-      data-text="15 минут (базовый) — 300 ₽"
+      value="express"
+      data-text="15–30 мин — 499 ₽"
       class="peer hidden speed-input"
     />
     <div
@@ -941,8 +941,8 @@
         <path d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <div class="text-[#464F5D] text-xs">15 минут</div>
-    <div class="text-white text-lg font-semibold">600 ₽</div>
+    <div class="text-[#464F5D] text-xs" data-tariff-time>15–30 мин</div>
+    <div class="text-white text-lg font-semibold" data-tariff-price>499 ₽</div>
     <img
       src="{% static 'almaz.png' %}"
       alt=""
@@ -1005,6 +1005,22 @@
     activeImageUrl: "{% static 'free_check_tarif_active.png' %}",
     inactiveImageUrl: "{% static 'free_check_tarif_unactive.png' %}",
     createUrl: "{% url 'create_free_verdict' %}"
+  };
+  window.luxuryTariffBrands = [
+    "Aesop", "Alexander McQueen", "Alexander Wang", "Audemars Piguet", "Balenciaga",
+    "Cartier", "Celine", "Chrome Hearts", "Chloé", "Dior", "Fendi", "Goyard", "Gucci",
+    "Hermes", "Jil Sander", "Jimmy Choo", "Loro Piana", "Louis Vuitton", "Miu Miu", "Moncler",
+    "Palm Angels", "Prada", "PATEK PHILIPPE", "Rick Owens", "ROLEX", "Vetements"
+  ];
+  window.tariffConfig = {
+    basic: {
+      prices: { standard: 149, fast: 299, express: 499 },
+      times: { standard: "2 часа", fast: "1 час", express: "15–30 мин" }
+    },
+    luxury: {
+      prices: { standard: 299, fast: 599, express: 999 },
+      times: { standard: "3 часа", fast: "1 час", express: "15–30 мин" }
+    }
   };
 </script>
 
@@ -1274,12 +1290,7 @@ document.addEventListener('DOMContentLoaded', function() {
 "Zara","ZENITH","ZIPPO"
     ];
     // Luxury
-    const LUXURY_SET = new Set([
-"Aesop","Alexander McQueen","Alexander Wang","Audemars Piguet","Balenciaga",
-"Cartier","Celine","Chrome Hearts","Chloé","Dior","Fendi","Goyard","Gucci",
-"Hermes","Jil Sander","Jimmy Choo","Loro Piana","Louis Vuitton","Miu Miu","Moncler",
-"Palm Angels","Prada","PATEK PHILIPPE","Rick Owens","ROLEX","Vetements"
-    ]);
+    const LUXURY_SET = new Set(window.luxuryTariffBrands || []);
     const BASIC_SET = new Set(ALL_BRANDS.filter(function(b) { return !LUXURY_SET.has(b); }));
     const LOGO = {
       // A
@@ -1666,6 +1677,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const freeCheckImg = document.getElementById('free-check-tariff-img');
   const freeCheckLockedCopy = document.getElementById('free-check-locked-copy');
   const freeCheckCountdown = document.getElementById('free-check-countdown');
+  const luxuryTariffBrands = new Set(window.luxuryTariffBrands || []);
+  const tariffConfig = window.tariffConfig || {};
   let selectedBrand = window.__selectedBrand || null;
   let type_item;
   let currentStep = 1;
@@ -1747,6 +1760,30 @@ document.addEventListener('DOMContentLoaded', function() {
       if (w._selectedFile) formData.append('photos', w._selectedFile);
     });
     return formData;
+  }
+
+  function getSelectedTariffGroup() {
+    return luxuryTariffBrands.has((selectedBrand || '').trim()) ? 'luxury' : 'basic';
+  }
+
+  function getCurrentTariffConfig() {
+    return tariffConfig[getSelectedTariffGroup()] || tariffConfig.basic || { prices: {}, times: {} };
+  }
+
+  function updateTariffCards() {
+    const group = getCurrentTariffConfig();
+    radios.forEach(function(radio) {
+      const card = radio.closest('label');
+      const price = group.prices[radio.value] || 0;
+      const time = group.times[radio.value] || '';
+      radio.dataset.text = `${time} — ${price} ₽`;
+      if (!card) return;
+
+      const timeEl = card.querySelector('[data-tariff-time]');
+      const priceEl = card.querySelector('[data-tariff-price]');
+      if (timeEl) timeEl.textContent = time;
+      if (priceEl) priceEl.textContent = `${price} ₽`;
+    });
   }
 
   function submitFreeCheck() {
@@ -1888,12 +1925,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('verdict-model').textContent = '-';
     currentStep = 4;
     showStep(currentStep);
+    updateSummary();
     verdictSection.scrollIntoView({ behavior: 'smooth' });
   });
   // Sums
   function updateSummary() {
+    updateTariffCards();
     const checked = document.querySelector('input[name="speed"]:checked');
-    const tariffPrices = { '24h':450, '15min-expensive':650, '15min-basic':600 };
+    const tariffPrices = getCurrentTariffConfig().prices;
     const verdictCost = 150;
     const base = checked ? (tariffPrices[checked.value] || 0) : 0;
     const verdict = (toggle && toggle.checked) ? verdictCost : 0;
