@@ -737,9 +737,12 @@ def check_verdict(request):
 @require_user
 def cab(request):
     verdicts = request.tg_user.verdicts.all().order_by('-created_at')
+    free_check_state = _free_check_json_state(request.tg_user)
     return render(request, 'cab.html', {
         'tg_user':  request.tg_user,
         'verdicts': verdicts,
+        'free_check_available': free_check_state["is_free_check_available"],
+        'free_check_next_timestamp': free_check_state["next_free_check_timestamp"],
     })
     
     
