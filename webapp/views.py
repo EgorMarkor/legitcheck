@@ -760,8 +760,8 @@ def create_free_verdict(request):
 
 @require_user
 def check_verdict(request):
-    code = request.GET.get('code', '').upper()
-    verdict = Verdict.objects.filter(code=code).first()
+    code = request.GET.get('code', '').strip().upper()
+    verdict = Verdict.objects.filter(code=code, user=request.tg_user).first()
     if not verdict:
         return redirect(f"{reverse('verdicts')}?error=not_found&code={code}")
     photos = verdict.photos.all()
@@ -775,6 +775,7 @@ def check_verdict(request):
         'first_photo': first_photo,
         'photos':     photos,
         'code': code,
+        'can_edit_verdict': verdict.user_id == request.tg_user.tgId,
     })
 
 

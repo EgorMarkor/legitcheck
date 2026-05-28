@@ -76,6 +76,12 @@
         transition: border-color 0.2s;
     }
 
+    .code-inputs input:disabled {
+        color: white;
+        opacity: 1;
+        -webkit-text-fill-color: white;
+    }
+
 
     .check-btn {
       background: linear-gradient(247deg, rgba(12,200,139,0.1) 19.49%, rgba(29,120,91,0.1) 97.92%);
@@ -137,13 +143,13 @@
     <img src="{% static 'phone.png' %}" class="hidden mt-6 text-center w-full h-auto">
     <section class="px-6 mt-4">
         <div class="font-bold text-[1.6rem]">Вердикты</div>
-        <div class="font-medium text-[1.2rem] text-[#464F5D]">Введите код вердикта, чтобы проверить оригинальность изделия</div>
+        <div class="font-medium text-[1.2rem] text-[#464F5D]">Код найденного вердикта</div>
         <div class="code-inputs mt-4">
-            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
-            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
-            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
-            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
-            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" placeholder="*" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" value="{{ code|slice:'0:1' }}" disabled readonly aria-disabled="true" tabindex="-1" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" value="{{ code|slice:'1:2' }}" disabled readonly aria-disabled="true" tabindex="-1" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" value="{{ code|slice:'2:3' }}" disabled readonly aria-disabled="true" tabindex="-1" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" value="{{ code|slice:'3:4' }}" disabled readonly aria-disabled="true" tabindex="-1" />
+            <input type="text" maxlength="1" inputmode="numeric" class="bg_black" value="{{ code|slice:'4:5' }}" disabled readonly aria-disabled="true" tabindex="-1" />
           </div>
           {% if verdict.status == 'fake' %}
   <!-- 🔴 Подделка -->
@@ -215,6 +221,7 @@
             {% endfor %}
           </div>
 
+          {% if can_edit_verdict %}
           <div class="grid grid-cols-3 gap-2 mt-2 pb-6">
             <!-- label→input схема: label — область нажатия, input — 1px. Не крашит iOS PWA -->
             <div class="relative h-[8rem] rounded-[1.2rem]
@@ -227,7 +234,9 @@
               <span class="text-neutral-400 text-sm pointer-events-none">+ Добавить фото</span>
             </div>
           </div>
+          {% endif %}
 
+          {% if can_edit_verdict %}
           <script>
             const uploadInput = document.getElementById('extra-photo-input');
 
@@ -274,6 +283,7 @@
               });
             });
             </script>
+          {% endif %}
 
 
           
@@ -298,181 +308,9 @@
             }
           </script>
         
-          <script>
-            const inputs = document.querySelectorAll('.code-inputs input');
-            inputs.forEach((input, idx) => {
-              input.addEventListener('input', () => {
-                // разрешаем только один символ; при вводе — переходим вперёд
-                if (input.value.length > 0 && idx < inputs.length - 1) {
-                  inputs[idx + 1].focus();
-                }
-                updateValue();
-              });
-              input.addEventListener('keydown', (e) => {
-                // при Backspace на пустом — переходим назад
-                if (e.key === 'Backspace' && input.value === '' && idx > 0) {
-                  inputs[idx - 1].focus();
-                }
-              });
-            });
-        
-            document.querySelector('.check-btn').addEventListener('click', () => {
-              const code = Array.from(inputs).map(i => i.value).join('');
-              // здесь можно добавить AJAX-запрос или валидацию
-            });
-        
-            function updateValue() {
-              // можно отслеживать заполненность всех полей и, например, активировать кнопку
-              const allFilled = Array.from(inputs).every(i => i.value !== '');
-              document.querySelector('.check-btn').disabled = !allFilled;
-            }
-        
-            // фокус на первый при загрузке
-            window.addEventListener('load', () => inputs[0].focus());
-
-            function blurOnOutsideTap(e) {
-                // если сейчас в фокусе инпут и тап был НЕ по нему
-                const active = document.activeElement;
-                if (active && active.tagName === 'INPUT' && !e.target.closest('.code-inputs input')) {
-                active.blur();
-                }
-            }
-
-            // Для мобильных: тач
-            document.addEventListener('touchstart', blurOnOutsideTap, { passive: true });
-            // Для десктопа: клик
-            document.addEventListener('click', blurOnOutsideTap);
-
-            // фокус на первый при загрузке
-            window.addEventListener('load', () => inputs[0].focus());
-          </script>
     </section>
 
   </div>
-  <script>
-    const inputs = document.querySelectorAll('.code-inputs input');
-    const btn = document.querySelector('.check-btn');
-  
-    function updateValue() {
-      const allFilled = Array.from(inputs).every(i => i.value !== '');
-      if (allFilled) {
-        btn.disabled = false;
-        btn.classList.add('green_button');
-      } else {
-        btn.disabled = true;
-        btn.classList.remove('green_button');
-      }
-    }
-  
-    inputs.forEach((input, idx) => {
-      input.addEventListener('input', () => {
-        // переход вперёд при вводе
-        if (input.value.length > 0 && idx < inputs.length - 1) {
-          inputs[idx + 1].focus();
-        }
-        updateValue();
-      });
-      input.addEventListener('keydown', (e) => {
-        // при Backspace на пустом — назад
-        if (e.key === 'Backspace' && input.value === '' && idx > 0) {
-          inputs[idx - 1].focus();
-        }
-      });
-    });
-  
-    // клик по кнопке
-    btn.addEventListener('click', () => {
-      if (btn.disabled) return;
-      const code = Array.from(inputs).map(i => i.value).join('');
-      alert('Введённый код: ' + code);
-      // сюда AJAX/валидацию
-    });
-  
-    // при загрузке страницы блокируем кнопку и фокусируем первый ввод
-    window.addEventListener('load', () => {
-      updateValue();
-      inputs[0].focus();
-    });
-  
-    // блюрим инпут при клике вне его (как у вас было)
-    function blurOnOutsideTap(e) {
-      const active = document.activeElement;
-      if (active && active.tagName === 'INPUT' && !e.target.closest('.code-inputs input')) {
-        active.blur();
-      }
-    }
-    document.addEventListener('touchstart', blurOnOutsideTap, { passive: true });
-    document.addEventListener('click', blurOnOutsideTap);
-  </script>
-
-  <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const inputs = document.querySelectorAll('.code-inputs input');
-  const btn = document.querySelector('.check-btn');
-
-  // === КОД ИЗ DJANGO ===
-  const djangoCode = "{{ code|default:'' }}";
-
-  function updateButton() {
-    const filled = Array.from(inputs).filter(i => i.value !== '').length;
-    btn.classList.toggle('bg_active', filled === 5);
-    btn.classList.toggle('text-white', filled === 5);
-    btn.disabled = filled !== 5;
-  }
-
-  // === ВВОД ПО ОДНОЙ ЦИФРЕ ===
-  inputs.forEach((input, idx) => {
-
-    input.addEventListener('input', () => {
-      input.value = input.value.replace(/\D/g, '');
-
-      if (input.value && idx < inputs.length - 1) {
-        inputs[idx + 1].focus();
-      }
-      updateButton();
-    });
-
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !input.value && idx > 0) {
-        inputs[idx - 1].focus();
-      }
-    });
-
-    // === ВСТАВКА СРАЗУ ВСЕГО КОДА ===
-    input.addEventListener('paste', e => {
-      e.preventDefault();
-      const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 5);
-
-      pasted.split('').forEach((char, i) => {
-        if (inputs[i]) inputs[i].value = char;
-      });
-
-      inputs[Math.min(pasted.length, 4)].focus();
-      updateButton();
-    });
-  });
-
-  // === АВТОЗАПОЛНЕНИЕ ИЗ DJANGO ===
-  if (/^\d{5}$/.test(djangoCode)) {
-    djangoCode.split('').forEach((char, i) => {
-      if (inputs[i]) inputs[i].value = char;
-    });
-    updateButton();
-  }
-
-  // === КНОПКА "ПРОВЕРИТЬ" ===
-  btn.addEventListener('click', () => {
-    if (btn.disabled) return;
-    const code = Array.from(inputs).map(i => i.value).join('');
-    window.location.href = "{% url 'verdict' %}?code=" + code;
-  });
-
-  // === НАЧАЛЬНЫЙ ФОКУС ===
-  inputs[0].focus();
-  updateButton();
-});
-</script>
-
 
 <script>
   (function () {

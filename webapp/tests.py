@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from pcwebapp.models import LoginToken
-from webapp.models import HomePagePopularItem, UploadedVerdictPhoto, User, Verdict
+from webapp.models import HomePagePopularItem, UploadedVerdictPhoto, User, Verdict, VerdictPhoto
 
 
 TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix="webapp_tests_media_")
@@ -329,6 +329,95 @@ class VerdictApiTests(TestCase):
         self.assertEqual(payload["verdict"]["status"], "legit")
         self.assertEqual(payload["verdict"]["status_display"], "Оригинал")
         self.assertEqual(payload["verdict"]["code"], "55555")
+
+    def test_web_verdict_page_allows_owner_and_disables_code_inputs(self):
+        self._login_web_session()
+        verdict = Verdict.objects.create(
+            user=self.user,
+            status="legit",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="manager comment",
+            comment_from_user="user comment",
+            code="13579",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+        VerdictPhoto.objects.create(verdict=verdict, image=self._image_file("owner.gif"))
+
+        response = self.client.get(
+            f"/verdict/?code={verdict.code}",
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="1" disabled readonly aria-disabled="true"')
+        self.assertContains(response, 'value="9" disabled readonly aria-disabled="true"')
+        self.assertContains(response, 'id="extra-photo-input"')
+
+    def test_web_verdict_page_does_not_show_other_users_verdict(self):
+        other_user = User.objects.create(
+            tgId=654321,
+            img="https://example.com/other.png",
+            name="Other User",
+            balance="0",
+            username="other",
+        )
+        verdict = Verdict.objects.create(
+            user=other_user,
+            status="legit",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="manager comment",
+            comment_from_user="user comment",
+            code="24680",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+        self._login_web_session()
+
+        response = self.client.get(
+            f"/verdict/?code={verdict.code}",
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], f"/verdicts/?error=not_found&code={verdict.code}")
+
+    def test_web_upload_photo_to_other_users_verdict_is_rejected(self):
+        other_user = User.objects.create(
+            tgId=654322,
+            img="https://example.com/other2.png",
+            name="Other User 2",
+            balance="0",
+            username="other2",
+        )
+        verdict = Verdict.objects.create(
+            user=other_user,
+            status="inpending",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="",
+            comment_from_user="user comment",
+            code="97531",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+        self._login_web_session()
+
+        response = self.client.post(
+            f"/verdict/{verdict.id}/upload-photo/",
+            {"photo": self._image_file("blocked-extra.gif")},
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_verdicts_api_supports_code_filter(self):
         Verdict.objects.create(
