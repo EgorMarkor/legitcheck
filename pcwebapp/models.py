@@ -3,6 +3,8 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
+from webapp.image_utils import apply_verdict_photo_watermark
+
 class LoginToken(models.Model):
     token = models.CharField(max_length=8, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -51,6 +53,11 @@ class UploadedVerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Загруженная фотография вердикта"
         verbose_name_plural = "Загруженные фотографии вердикта"
+
+    def save(self, *args, **kwargs):
+        if self.image and not getattr(self.image, "_committed", True):
+            self.image = apply_verdict_photo_watermark(self.image.file)
+        super().save(*args, **kwargs)
 
     def mark_used(self, verdict):
         self.verdict = verdict

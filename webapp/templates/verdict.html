@@ -90,38 +90,42 @@
       cursor: pointer;
     }
 
-    .verdict-photo-watermark {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 3rem;
-      height: auto;
-      object-fit: contain;
-      opacity: 1;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
+    .verdict-photo-link {
+      display: block;
+      -webkit-touch-callout: none;
+    }
+
+    .verdict-photo-tile {
+      overflow: hidden;
+      transition: transform 0.22s cubic-bezier(.22, 1, .36, 1), filter 0.22s ease;
+      -webkit-touch-callout: none;
+    }
+
+    .verdict-photo-link:active .verdict-photo-tile {
+      transform: scale(0.985);
+      filter: brightness(1.05);
+    }
+
+    .fancybox__toolbar,
+    .fancybox__counter,
+    .fancybox__thumbs,
+    .fancybox__nav,
+    .carousel__button.is-close {
+      display: none !important;
+    }
+
+    .fancybox__slide {
+      padding: max(env(safe-area-inset-top), 1rem) 0 max(env(safe-area-inset-bottom), 1rem) !important;
+    }
+
+    .fancybox__backdrop {
+      background: rgba(5, 8, 13, 0.96) !important;
+    }
+
+    .fancybox__content,
+    .fancybox__image {
+      -webkit-touch-callout: none;
       user-select: none;
-      z-index: 20;
-      filter: drop-shadow(0 0 0.7rem rgba(0, 0, 0, 0.55));
-    }
-
-    .fancybox__content {
-      position: relative;
-    }
-
-    .fancybox__content::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: clamp(3.25rem, 13vw, 7rem);
-      aspect-ratio: 376 / 458;
-      background: url("{% static 'check23.png' %}") center / contain no-repeat;
-      opacity: 1;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 5;
-      filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.6));
     }
 
 </style>
@@ -186,7 +190,7 @@
                 <div id="verdict-model" class="text-white text-lg font-semibold">{{ verdict.comment }}</div>
               </div>
               <!-- Картинка: первая из загруженных -->
-              <img id="verdict-photo" src="{{ first_photo.image.url }}" alt="Sneaker" class="w-32 h-auto rounded-lg object-cover" />
+              <img id="verdict-photo" src="{{ first_photo.image.url }}" alt="Sneaker" class="w-32 h-auto rounded-lg object-cover" draggable="false" />
               <!-- Текстовые данные -->
             </div>
           </div>
@@ -197,15 +201,13 @@
 
           <div class="grid grid-cols-3 gap-2 mt-4  pb-4">
             {% for photo in photos %}
-              <a data-fancybox="gallery" href="{{ photo.image.url }}">
+              <a class="verdict-photo-link" data-fancybox="gallery" data-protect-media href="{{ photo.image.url }}">
                 <div
-                  class="relative h-[8rem] rounded-[1.2rem] bg-no-repeat bg-center bg-cover flex items-center justify-center"
+                  class="verdict-photo-tile relative h-[8rem] rounded-[1.2rem] bg-no-repeat bg-center bg-cover flex items-center justify-center"
                   style="background-image: url('{{ photo.image.url }}');"
                 >
                   <!-- затемняющий слой -->
                   <div class="absolute inset-0 bg-black/50 rounded-[1.2rem]"></div>
-                  <!-- водяной знак -->
-                  <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                 </div>
               </a>
             {% empty %}
@@ -254,15 +256,16 @@
                 const grid = uploadInput.closest('.grid');
 
                 const el = document.createElement('a');
+                el.className = 'verdict-photo-link';
                 el.href = data.image_url;
                 el.setAttribute('data-fancybox', 'gallery');
+                el.setAttribute('data-protect-media', '');
 
                 el.innerHTML = `
-                  <div class="relative h-[8rem] rounded-[1.2rem]
+                  <div class="verdict-photo-tile relative h-[8rem] rounded-[1.2rem]
                               bg-cover bg-center"
                       style="background-image:url('${data.image_url}')">
                     <div class="absolute inset-0 bg-black/30 rounded-[1.2rem]"></div>
-                    <img src="{% static 'check23.png' %}" class="verdict-photo-watermark" alt="" aria-hidden="true" />
                   </div>
                 `;
 
@@ -276,6 +279,24 @@
           
           <link rel="stylesheet" href="{% static 'vendor/fancybox.css' %}" />
           <script src="{% static 'vendor/fancybox.umd.js' %}"></script>
+          <script>
+            if (window.Fancybox) {
+              Fancybox.unbind("[data-fancybox]");
+              Fancybox.bind('[data-fancybox="gallery"]', {
+                Toolbar: false,
+                Thumbs: false,
+                closeButton: false,
+                dragToClose: true,
+                click: "close",
+                Image: {
+                  zoom: false
+                },
+                Carousel: {
+                  friction: 0.88
+                }
+              });
+            }
+          </script>
         
           <script>
             const inputs = document.querySelectorAll('.code-inputs input');

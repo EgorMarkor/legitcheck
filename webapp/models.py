@@ -4,6 +4,8 @@ from django.db import models
 from django.templatetags.static import static
 from django.utils import timezone
 
+from .image_utils import apply_verdict_photo_watermark
+
 class User(models.Model):
     tgId = models.IntegerField(primary_key=True, verbose_name='Telegram ID')
     img = models.CharField(max_length=255, verbose_name='Profile Image URL')
@@ -126,6 +128,11 @@ class VerdictPhoto(models.Model):
     def __str__(self):
         return f"Фото {self.id} для вердикта {self.verdict.id}"
 
+    def save(self, *args, **kwargs):
+        if self.image and not getattr(self.image, "_committed", True):
+            self.image = apply_verdict_photo_watermark(self.image.file)
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Фотография вердикта"
         verbose_name_plural = "Фотографии вердикта"
@@ -151,6 +158,11 @@ class UploadedVerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Загруженная фотография вердикта"
         verbose_name_plural = "Загруженные фотографии вердикта"
+
+    def save(self, *args, **kwargs):
+        if self.image and not getattr(self.image, "_committed", True):
+            self.image = apply_verdict_photo_watermark(self.image.file)
+        super().save(*args, **kwargs)
 
     def mark_used(self, verdict):
         self.verdict = verdict

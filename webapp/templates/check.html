@@ -71,6 +71,12 @@
     letter-spacing: 0;
     white-space: nowrap;
   }
+
+  .photo-extra-filler img {
+    width: 3.4rem;
+    height: auto;
+    opacity: 0.72;
+  }
 </style>
 <body class="text-white">
   {% include 'header.html' %}
@@ -1203,6 +1209,38 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(function() { _openGallery(cb); }, 80);
     }
   });
+
+  function createAdditionalPhotoCard() {
+    var card = document.createElement('div');
+    card.className = 'photo-extra-filler rounded-2xl flex flex-col items-center';
+    card.innerHTML = ''
+      + '<div class="w-30 h-30 bg-[#11151A] rounded-xl flex items-center justify-center mb-2">'
+      +   '<img src="{% static "camera.svg" %}" alt="Дополнительно" class="w-30 h-30 opacity-70">'
+      + '</div>'
+      + '<p class="text-white text-sm text-center leading-snug">Дополнительно</p>';
+    return card;
+  }
+
+  function fillPhotoGridGaps() {
+    document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
+      var headings = Array.from(section.querySelectorAll('h2'));
+      var requiredHeading = headings.find(function(heading) {
+        return heading.textContent.trim() === 'Необходимые фотографии';
+      });
+      if (!requiredHeading) return;
+
+      var grid = requiredHeading.nextElementSibling;
+      if (!grid || !grid.classList.contains('grid')) return;
+
+      var cardsCount = grid.children.length;
+      var missing = (4 - (cardsCount % 4)) % 4;
+      for (var i = 0; i < missing; i++) {
+        grid.appendChild(createAdditionalPhotoCard());
+      }
+    });
+  }
+
+  fillPhotoGridGaps();
 
   // ── Photo upload handler ───────────────────────────────────────────────────
   document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
