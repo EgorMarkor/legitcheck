@@ -15,7 +15,7 @@
     <!-- Google Sans (self-hosted) -->
     <link rel="stylesheet" href="{% static 'vendor/google-sans.css' %}">
     <!-- Telegram WebApp SDK: defer — не блокирует парсинг -->
-    <script src="{% static 'vendor/telegram-web-app.js' %}"></script>
+    <script defer src="{% static 'vendor/telegram-web-app.js' %}"></script>
     <link rel="manifest" href="/manifest.json">
     <style>
       /* ─── Убираем скроллбары ───────────────────────────────────────────────── */
@@ -183,7 +183,7 @@
       });
     </script>
     <!-- PWA page transitions + swipe navigation -->
-    <script src="{% static 'pwa/transitions.js' %}"></script>
+    <script defer src="{% static 'pwa/transitions.js' %}"></script>
     {% if tg_user %}
     <script>
       localStorage.setItem('checker_auth_token', '{{ tg_user.auth_token }}');
