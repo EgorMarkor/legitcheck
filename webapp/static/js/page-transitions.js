@@ -227,12 +227,13 @@
   async function swapPage(page, options) {
     var direction = options.direction === "back" ? "back" : "forward";
     var scrollY = Math.max(0, Number(options.scrollY || 0));
+    var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     root.classList.remove("forward", "back");
     root.classList.add(direction, "app-transitioning");
     cleanupRuntimeArtifacts();
 
-    var update = async function () {
+    var update = async function (hideNextContainer) {
       var currentContainer = document.querySelector(CONTAINER_SELECTOR);
       var nextContainer = page.container;
 
@@ -242,13 +243,21 @@
       currentContainer.replaceWith(nextContainer);
       window.scrollTo(0, scrollY);
 
+      if (hideNextContainer) {
+        nextContainer.style.visibility = "hidden";
+      }
+
       await runPageScripts(nextContainer);
       initKnownComponents(nextContainer);
       dispatchPageReady(nextContainer);
+
+      return nextContainer;
     };
 
-    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      var transition = document.startViewTransition(update);
+    if (document.startViewTransition && !prefersReducedMotion) {
+      var transition = document.startViewTransition(function () {
+        return update(false);
+      });
       try {
         await transition.finished;
       } finally {
@@ -257,11 +266,128 @@
       return;
     }
 
+    if (!prefersReducedMotion) {
+      try {
+        await swapPageWithFallback(update, direction, scrollY);
+      } finally {
+        root.classList.remove("forward", "back", "app-transitioning");
+      }
+      return;
+    }
+
     try {
-      await update();
+      await update(false);
     } finally {
       root.classList.remove("forward", "back", "app-transitioning");
     }
+  }
+
+  async function swapPageWithFallback(update, direction, nextScrollY) {
+    var oldContainer = document.querySelector(CONTAINER_SELECTOR);
+    var oldScrollY = window.scrollY || window.pageYOffset || 0;
+    var oldClone = oldContainer ? clonePageLayer(oldContainer, oldScrollY) : null;
+    var nextContainer = await update(true);
+    var newClone = clonePageLayer(nextContainer, nextScrollY);
+    var overlay = createFallbackOverlay();
+    var isBack = direction === "back";
+    var duration = 380;
+    var easing = "cubic-bezier(.32,.72,0,1)";
+
+    if (!oldClone || !newClone) {
+      nextContainer.style.visibility = "";
+      return;
+    }
+
+    oldClone.layer.style.zIndex = isBack ? "3" : "1";
+    newClone.layer.style.zIndex = isBack ? "1" : "3";
+    overlay.appendChild(newClone.layer);
+    overlay.appendChild(oldClone.layer);
+    document.body.appendChild(overlay);
+
+    if (isBack) {
+      oldClone.layer.style.transform = "translateX(0)";
+      oldClone.layer.style.boxShadow = "-32px 0 80px rgba(0,0,0,.32)";
+      newClone.layer.style.transform = "translateX(-28%) scale(.96)";
+      newClone.layer.style.filter = "brightness(.72)";
+    } else {
+      oldClone.layer.style.transform = "translateX(0) scale(1)";
+      oldClone.layer.style.filter = "brightness(1)";
+      newClone.layer.style.transform = "translateX(100%)";
+      newClone.layer.style.boxShadow = "-32px 0 80px rgba(0,0,0,.42)";
+    }
+
+    forceReflow(overlay);
+
+    [oldClone.layer, newClone.layer].forEach(function (layer) {
+      layer.style.transition =
+        "transform " + duration + "ms " + easing + ", filter " + duration + "ms " + easing + ", box-shadow " + duration + "ms " + easing;
+    });
+
+    requestAnimationFrame(function () {
+      if (isBack) {
+        oldClone.layer.style.transform = "translateX(100%)";
+        oldClone.layer.style.boxShadow = "-12px 0 40px rgba(0,0,0,0)";
+        newClone.layer.style.transform = "translateX(0) scale(1)";
+        newClone.layer.style.filter = "brightness(1)";
+      } else {
+        oldClone.layer.style.transform = "translateX(-28%) scale(.96)";
+        oldClone.layer.style.filter = "brightness(.72)";
+        newClone.layer.style.transform = "translateX(0)";
+        newClone.layer.style.boxShadow = "-12px 0 40px rgba(0,0,0,0)";
+      }
+    });
+
+    await wait(duration + 60);
+    nextContainer.style.visibility = "";
+    overlay.remove();
+  }
+
+  function createFallbackOverlay() {
+    var overlay = document.createElement("div");
+    overlay.setAttribute("data-app-transition-overlay", "");
+    overlay.style.cssText = [
+      "position:fixed",
+      "inset:0",
+      "z-index:2147483000",
+      "overflow:hidden",
+      "pointer-events:none",
+      "background:#0c0f16",
+      "contain:layout style paint",
+      "isolation:isolate"
+    ].join(";");
+    return overlay;
+  }
+
+  function clonePageLayer(container, scrollY) {
+    if (!container) return null;
+
+    var layer = document.createElement("div");
+    var inner = container.cloneNode(true);
+
+    inner.removeAttribute("id");
+    inner.removeAttribute("data-page");
+    inner.setAttribute("aria-hidden", "true");
+
+    layer.style.cssText = [
+      "position:absolute",
+      "inset:0",
+      "width:100%",
+      "min-height:100vh",
+      "overflow:hidden",
+      "background:#0c0f16",
+      "transform:translateX(0)",
+      "transform-origin:center center",
+      "will-change:transform,filter,box-shadow"
+    ].join(";");
+
+    inner.style.margin = "0";
+    inner.style.minHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight) + "px";
+    inner.style.transform = "translateY(" + (-Math.max(0, Number(scrollY || 0))) + "px)";
+    inner.style.transformOrigin = "top left";
+    inner.style.pointerEvents = "none";
+
+    layer.appendChild(inner);
+    return { layer: layer, inner: inner };
   }
 
   function syncPageStyles(doc) {
@@ -526,5 +652,15 @@
 
   function absoluteUrl(value) {
     return new URL(value, window.location.href).href;
+  }
+
+  function forceReflow(element) {
+    return element.offsetHeight;
+  }
+
+  function wait(ms) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
+    });
   }
 })();
