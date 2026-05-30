@@ -182,8 +182,6 @@
         if (typeof tg.expand === 'function') tg.expand();
       });
     </script>
-    <!-- PWA page transitions + swipe navigation -->
-    <script defer src="{% static 'pwa/transitions.js' %}"></script>
     {% if tg_user %}
     <script>
       localStorage.setItem('checker_auth_token', '{{ tg_user.auth_token }}');

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'checker-pwa-v5';
+const CACHE_VERSION = 'checker-pwa-v6';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -10,7 +10,6 @@ const PRECACHE_URLS = [
   '/static/pwa/icon-192.png',
   '/static/pwa/icon-512.png',
   '/static/pwa/apple-touch-icon-180.png',
-  '/static/pwa/transitions.js',
   '/static/vendor/tailwind-cdn.js',
   '/static/vendor/google-sans.css',
   '/static/vendor/fonts/google-sans-cyrillic-700.woff2',
