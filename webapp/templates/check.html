@@ -79,6 +79,7 @@
   }
 </style>
 <body class="text-white">
+  <main id="page-content" data-page>
   {% include 'header.html' %}
   <!-- Шаг 1: Выбор бренда -->
   <section class="px-4 py-2">
@@ -1032,6 +1033,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-check-runtime]').forEach(function(el) { el.remove(); });
+
   // Ресайзит файл до превью через canvas.
   // Используем URL.createObjectURL вместо FileReader.readAsDataURL:
   // blob URL не копирует файл в JS-heap в виде base64, поэтому не вызывает
@@ -1106,6 +1109,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ── 2. getUserMedia viewfinder ────────────────────────────────────────────
   var _vf = document.createElement('div');
+  _vf.setAttribute('data-check-runtime', 'camera-viewfinder');
   _vf.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:#000;flex-direction:column;';
   _vf.innerHTML =
     '<video id="_vf_video" autoplay playsinline muted style="flex:1;width:100%;object-fit:cover;display:block;"></video>'
@@ -1157,6 +1161,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ── 3. Галерея через input[type=file] ─────────────────────────────────────
   var _inputGallery = document.createElement('input');
+  _inputGallery.setAttribute('data-check-runtime', 'gallery-input');
   _inputGallery.type = 'file';
   _inputGallery.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
   document.body.appendChild(_inputGallery);
@@ -1175,6 +1180,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ── Кастомный шит выбора ──────────────────────────────────────────────────
   var _sheet = document.createElement('div');
+  _sheet.setAttribute('data-check-runtime', 'photo-source-sheet');
   _sheet.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;';
   _sheet.innerHTML =
     '<div id="_sheet_bg" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>'
@@ -2038,5 +2044,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% include 'sidebar.html' %}
+  </main>
 </body>
 </html>
