@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'checker-pwa-v7';
+const CACHE_VERSION = 'checker-pwa-v11';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -12,7 +12,7 @@ const PRECACHE_URLS = [
   '/static/pwa/apple-touch-icon-180.png',
   '/static/vendor/tailwind-cdn.js',
   '/static/vendor/google-sans.css',
-  '/static/js/page-transitions.js?v=20260531-2',
+  '/static/js/page-transitions.js?v=20260531-6',
   '/static/vendor/fonts/google-sans-cyrillic-700.woff2',
   '/static/vendor/fonts/google-sans-cyrillic-ext-700.woff2',
   '/static/vendor/fonts/google-sans-latin-700.woff2',
@@ -73,20 +73,30 @@ async function cacheFirst(request) {
 
 // Network-first: HTML-страницы (нужна свежесть, фолбэк на кэш)
 async function networkFirst(request) {
+  const cacheKey = getCacheKey(request);
   const cache = await caches.open(RUNTIME_CACHE);
   try {
     const response = await fetch(request);
     if (response.ok) {
-      cache.put(request, response.clone());
+      cache.put(cacheKey, response.clone());
     }
     return response;
   } catch (_) {
-    const cached = await caches.match(request);
+    const cached = await caches.match(cacheKey);
     if (cached) return cached;
     // Офлайн-заглушка для навигации
     const offlinePage = await caches.match('/');
     return offlinePage || new Response('Offline', { status: 503 });
   }
+}
+
+function getCacheKey(request) {
+  const url = new URL(request.url);
+  if (url.searchParams.has('__spa_fetch')) {
+    url.searchParams.delete('__spa_fetch');
+    return url.href;
+  }
+  return request;
 }
 
 // Stale-while-revalidate: API-запросы и медиа
@@ -121,19 +131,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Сам service worker всегда должен идти из сети, иначе PWA залипает на старой версии.
+  if (url.pathname === '/sw.js') {
+    return;
+  }
+
   // Статические файлы → cache-first
   if (
     url.pathname.startsWith('/static/') ||
     url.pathname.startsWith('/media/')  ||
-    url.pathname === '/manifest.json'   ||
-    url.pathname === '/sw.js'
+    url.pathname === '/manifest.json'
   ) {
     event.respondWith(cacheFirst(request));
     return;
   }
 
-  // HTML-навигация → network-first
-  if (request.mode === 'navigate') {
+  const accept = request.headers.get('accept') || '';
+
+  // HTML-навигация и SPA-fetch страниц → network-first
+  if (request.mode === 'navigate' || accept.includes('text/html')) {
     event.respondWith(networkFirst(request));
     return;
   }

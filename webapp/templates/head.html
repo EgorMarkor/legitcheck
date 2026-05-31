@@ -253,7 +253,9 @@
       // PWA: service worker
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/sw.js").catch(function () {});
+          navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(function (registration) {
+            registration.update().catch(function () {});
+          }).catch(function () {});
         });
       }
 
@@ -291,5 +293,5 @@
       localStorage.setItem('checker_auth_token', '{{ tg_user.auth_token }}');
     </script>
     {% endif %}
-    <script defer src="{% static 'js/page-transitions.js' %}?v=20260531-2"></script>
+    <script defer src="{% static 'js/page-transitions.js' %}?v=20260531-6"></script>
   </head>

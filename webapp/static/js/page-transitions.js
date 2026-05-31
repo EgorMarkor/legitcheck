@@ -31,14 +31,24 @@
   var activeController = null;
   var initialReadySent = false;
   var scrollSaveQueued = false;
+  var debug = isDebugEnabled();
   var loadedExternalScripts = new Set(
     Array.prototype.slice.call(document.scripts)
       .filter(function (script) { return script.src; })
       .map(function (script) { return absoluteUrl(script.src); })
   );
 
-  installTelegramBackButtonProxy();
+  window.__appSpa = {
+    version: "20260531-6",
+    loadedAt: new Date().toISOString(),
+    navigations: 0,
+    lastEvent: "loaded",
+    hasViewTransition: Boolean(document.startViewTransition),
+    hasContainer: Boolean(document.querySelector(CONTAINER_SELECTOR))
+  };
+
   ensureHistoryState();
+  installTelegramBackButtonProxy();
   document.addEventListener("touchstart", function () {}, false);
 
   if ("scrollRestoration" in history) {
@@ -80,6 +90,7 @@
 
     event.preventDefault();
     event.stopImmediatePropagation();
+    markDebug("click-intercepted", url.href);
     navigateTo(url, { direction: "forward", source: "click" });
   }
 
@@ -146,12 +157,14 @@
 
       history.pushState(makeHistoryState(nextIndex, 0), "", finalUrl);
       currentIndex = nextIndex;
+      window.__appSpa.navigations += 1;
       await swapPage(page, {
         direction: options.direction || "forward",
         scrollY: 0
       });
     } catch (error) {
       if (error && error.name === "AbortError") return;
+      markDebug("navigation-fallback", error && error.message);
       window.location.href = url.href;
     } finally {
       isNavigating = false;
@@ -185,6 +198,7 @@
       });
     } catch (error) {
       if (error && error.name === "AbortError") return;
+      markDebug("popstate-fallback", error && error.message);
       window.location.reload();
     } finally {
       isNavigating = false;
@@ -193,9 +207,13 @@
   }
 
   async function fetchPage(url, signal) {
-    var response = await fetch(url.href, {
+    var fetchUrl = new URL(url.href);
+    fetchUrl.searchParams.set("__spa_fetch", String(Date.now()));
+
+    var response = await fetch(fetchUrl.href, {
       method: "GET",
       credentials: "same-origin",
+      cache: "no-store",
       signal: signal,
       headers: {
         "Accept": "text/html",
@@ -220,7 +238,7 @@
       container: container,
       title: doc.title || document.title,
       bodyClass: doc.body ? doc.body.className : "",
-      url: new URL(response.url || url.href, window.location.href)
+      url: cleanNavigationUrl(response.url || url.href)
     };
   }
 
@@ -229,6 +247,7 @@
     var scrollY = Math.max(0, Number(options.scrollY || 0));
     var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    markDebug("swap-start", direction);
     root.classList.remove("forward", "back");
     root.classList.add(direction, "app-transitioning");
     cleanupRuntimeArtifacts();
@@ -255,6 +274,7 @@
     };
 
     if (document.startViewTransition && !prefersReducedMotion) {
+      markDebug("view-transition", direction);
       var transition = document.startViewTransition(function () {
         return update(false);
       });
@@ -268,6 +288,7 @@
 
     if (!prefersReducedMotion) {
       try {
+        markDebug("fallback-transition", direction);
         await swapPageWithFallback(update, direction, scrollY);
       } finally {
         root.classList.remove("forward", "back", "app-transitioning");
@@ -411,7 +432,11 @@
       if (!isExecutableScript(script)) continue;
 
       if (script.src) {
-        await loadExternalScript(script);
+        try {
+          await loadExternalScript(script);
+        } catch (error) {
+          console.error("SPA external script failed", error);
+        }
       } else {
         runInlineScript(script.textContent || "", i);
       }
@@ -503,34 +528,46 @@
   function initKnownComponents(container) {
     if (!container) return;
 
-    if (window.htmx && typeof window.htmx.process === "function") {
-      window.htmx.process(container);
+    try {
+      if (window.htmx && typeof window.htmx.process === "function") {
+        window.htmx.process(container);
+      }
+    } catch (error) {
+      console.error("htmx init failed", error);
     }
 
-    if (window.Swiper) {
-      container.querySelectorAll(".myPromoSwiper").forEach(function (swiperEl) {
-        if (swiperEl.swiper) return;
-        new window.Swiper(swiperEl, {
-          loop: true,
-          autoplay: { delay: 3000 },
-          slidesPerView: 1,
-          pagination: false,
-          navigation: false
+    try {
+      if (window.Swiper) {
+        container.querySelectorAll(".myPromoSwiper").forEach(function (swiperEl) {
+          if (swiperEl.swiper) return;
+          new window.Swiper(swiperEl, {
+            loop: true,
+            autoplay: { delay: 3000 },
+            slidesPerView: 1,
+            pagination: false,
+            navigation: false
+          });
         });
-      });
+      }
+    } catch (error) {
+      console.error("Swiper init failed", error);
     }
 
-    if (window.Fancybox && container.querySelector('[data-fancybox="gallery"]')) {
-      window.Fancybox.unbind("[data-fancybox]");
-      window.Fancybox.bind('[data-fancybox="gallery"]', {
-        Toolbar: false,
-        Thumbs: false,
-        closeButton: false,
-        dragToClose: true,
-        click: "close",
-        Image: { zoom: false },
-        Carousel: { friction: 0.88 }
-      });
+    try {
+      if (window.Fancybox && container.querySelector('[data-fancybox="gallery"]')) {
+        window.Fancybox.unbind("[data-fancybox]");
+        window.Fancybox.bind('[data-fancybox="gallery"]', {
+          Toolbar: false,
+          Thumbs: false,
+          closeButton: false,
+          dragToClose: true,
+          click: "close",
+          Image: { zoom: false },
+          Carousel: { friction: 0.88 }
+        });
+      }
+    } catch (error) {
+      console.error("Fancybox init failed", error);
     }
   }
 
@@ -654,6 +691,12 @@
     return new URL(value, window.location.href).href;
   }
 
+  function cleanNavigationUrl(value) {
+    var cleaned = new URL(value, window.location.href);
+    cleaned.searchParams.delete("__spa_fetch");
+    return cleaned;
+  }
+
   function forceReflow(element) {
     return element.offsetHeight;
   }
@@ -662,5 +705,22 @@
     return new Promise(function (resolve) {
       window.setTimeout(resolve, ms);
     });
+  }
+
+  function isDebugEnabled() {
+    try {
+      return window.localStorage && window.localStorage.getItem("app_spa_debug") === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function markDebug(eventName, detail) {
+    window.__appSpa.lastEvent = eventName;
+    window.__appSpa.lastDetail = detail || "";
+    window.__appSpa.lastAt = new Date().toISOString();
+    if (debug && window.console) {
+      console.log("[app-spa]", eventName, detail || "");
+    }
   }
 })();
