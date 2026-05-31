@@ -1,11 +1,9 @@
-const CACHE_VERSION = 'checker-pwa-v18';
+const CACHE_VERSION = 'checker-pwa-v19';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
 // Ресурсы, которые кэшируем сразу при установке SW
 const PRECACHE_URLS = [
-  '/',
-  '/home/',
   '/manifest.json',
   '/static/pwa/icon-192.png',
   '/static/pwa/icon-512.png',
@@ -43,6 +41,12 @@ self.addEventListener('install', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ─── Activate: удаляем старые кэши ───────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -77,7 +81,7 @@ async function networkFirst(request) {
   const cacheKey = getCacheKey(request);
   const cache = await caches.open(RUNTIME_CACHE);
   try {
-    const response = await fetch(request);
+    const response = await fetch(new Request(request, { cache: 'no-store' }));
     if (response.ok) {
       cache.put(cacheKey, response.clone());
     }
