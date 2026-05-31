@@ -38,7 +38,7 @@
   );
 
   window.__appSpa = {
-    version: "20260531-7",
+    version: "20260531-8",
     loadedAt: new Date().toISOString(),
     navigations: 0,
     lastEvent: "loaded",
@@ -399,6 +399,8 @@
     inner.style.minHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight) + "px";
     inner.style.transform = "translateY(" + (-Math.max(0, Number(scrollY || 0))) + "px)";
     inner.style.transformOrigin = "top left";
+    inner.style.visibility = "visible";
+    inner.style.opacity = "1";
     inner.style.pointerEvents = "none";
 
     layer.appendChild(inner);
