@@ -27,11 +27,15 @@ body #page-content {
 [data-persistent-shell="header"] {
   position: relative;
   z-index: 20;
+  view-transition-name: app-header;
+  contain: layout paint;
 }
 
 [data-persistent-shell="bottom-nav"] {
   position: relative;
-  z-index: 40;
+  z-index: 100;
+  view-transition-name: app-bottom-nav;
+  contain: layout paint;
 }
 
 html.is-page-loading {
@@ -93,6 +97,20 @@ html.is-page-loading [data-spa-href] {
 
 ::view-transition-old(page-content) {
   z-index: 1;
+}
+
+::view-transition-group(app-header),
+::view-transition-group(app-bottom-nav) {
+  z-index: 10;
+}
+
+::view-transition-old(app-header),
+::view-transition-new(app-header),
+::view-transition-old(app-bottom-nav),
+::view-transition-new(app-bottom-nav) {
+  animation: none;
+  opacity: 1;
+  mix-blend-mode: normal;
 }
 
 html[data-transition="forward"]::view-transition-old(page-content) {
