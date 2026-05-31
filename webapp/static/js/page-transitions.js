@@ -1,17 +1,17 @@
 (function () {
   "use strict";
 
-  if (window.AppRouter && window.AppRouter.__active) return;
+  if (window.PageTransitions && window.PageTransitions.__active) return;
 
   var SHELL_SELECTOR = "#app-shell";
   var SCREEN_SELECTOR = "[data-app-screen]";
   var CONTENT_SELECTOR = "#page-content";
+  var PERSISTENT_SELECTOR = "[data-persistent-shell]";
   var READY_EVENT = "app:page-ready";
   var DESTROY_EVENT = "app:page-destroy";
-  var STATE_INDEX = "__appRouterIndex";
-  var SCROLL_PREFIX = "app-router:scroll:";
-  var VERSION = "20260531-3";
-  var TRANSITION_MS = 360;
+  var STATE_INDEX = "__pageTransitionIndex";
+  var SCROLL_PREFIX = "page-transition:scroll:";
+  var VERSION = "20260601-1";
 
   var BLOCKED_EXACT_PATHS = {
     "/": true,
@@ -33,9 +33,10 @@
     "/media/"
   ];
 
+  var FILE_PATH_RE = /\.(?:pdf|zip|xlsx?|docx?|png|jpe?g|webp|gif|svg|mp4|mp3|mov|webm)(?:$|[?#])/i;
+
   var root = document.documentElement;
   var shell = null;
-  var activeScreen = null;
   var currentIndex = getHistoryIndex(history.state);
   var isNavigating = false;
   var activeController = null;
@@ -46,17 +47,40 @@
       .filter(function (script) { return script.src; })
       .map(function (script) { return absoluteUrl(script.src); })
   );
+  var loadedStylesheets = new Set(
+    Array.prototype.slice.call(document.querySelectorAll('link[rel~="stylesheet"][href]'))
+      .map(function (link) { return absoluteUrl(link.href); })
+  );
 
-  window.AppRouter = {
+  window.PageTransitions = {
     __active: true,
     version: VERSION,
-    go: go,
-    reload: function () { return go(window.location.href, { replace: true }); },
-    initPage: initPage,
+    navigateTo: navigateTo,
+    initPageComponents: initPageComponents,
     destroyPage: destroyPage,
-    addCleanup: addCleanup,
-    currentScreen: function () { return activeScreen; }
+    addCleanup: addCleanup
   };
+
+  window.AppRouter = window.AppRouter || {};
+  window.AppRouter.__active = true;
+  window.AppRouter.version = VERSION;
+  window.AppRouter.go = function (href, options) {
+    options = options || {};
+    return navigateTo(href, {
+      direction: options.direction || "forward",
+      push: options.push !== false,
+      replace: options.replace === true,
+      scrollY: options.scrollY || 0
+    });
+  };
+  window.AppRouter.reload = function () {
+    return navigateTo(window.location.href, { replace: true, scrollY: getScrollY() });
+  };
+  window.AppRouter.initPage = initPageComponents;
+  window.AppRouter.destroyPage = destroyPage;
+  window.AppRouter.addCleanup = addCleanup;
+
+  window.initPageComponents = initPageComponents;
 
   installTelegramBackButtonProxy();
 
@@ -68,10 +92,12 @@
 
   function boot() {
     shell = ensureShell();
-    if (!shell || !activeScreen) return;
+    if (!shell || !document.querySelector(CONTENT_SELECTOR)) return;
 
+    ensurePersistentLayout();
     ensureHistoryState();
-    initPage(activeScreen);
+    updateActiveNavigation(window.location.href);
+    initPageComponents(document.querySelector(CONTENT_SELECTOR));
 
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
@@ -83,7 +109,7 @@
     window.addEventListener("scroll", queueScrollSave, { passive: true });
 
     markDebug("boot");
-    dispatchPageReady(activeScreen);
+    dispatchPageReady(document.querySelector(CONTENT_SELECTOR));
   }
 
   function ensureShell() {
@@ -92,36 +118,62 @@
 
     if (!content && !existingShell) return null;
 
-    if (!existingShell) {
-      var parent = content.parentNode;
-      var nextSibling = content.nextSibling;
+    if (!existingShell && content) {
       existingShell = document.createElement("main");
       existingShell.id = "app-shell";
       existingShell.className = "app-shell";
       existingShell.setAttribute("data-app-shell", "");
-
-      var screen = createScreen(content);
-      screen.classList.add("is-active");
-      parent.insertBefore(existingShell, nextSibling);
-      existingShell.appendChild(screen);
-    }
-
-    existingShell.classList.add("app-shell");
-    activeScreen =
-      existingShell.querySelector(SCREEN_SELECTOR + ".is-active") ||
-      (content && content.closest(SCREEN_SELECTOR));
-
-    if (!activeScreen && content) {
-      activeScreen = createScreen(content);
-      activeScreen.classList.add("is-active");
-      existingShell.appendChild(activeScreen);
+      content.parentNode.insertBefore(existingShell, content);
+      existingShell.appendChild(content);
     }
 
     return existingShell;
   }
 
+  function ensurePersistentLayout() {
+    var content = document.querySelector(CONTENT_SELECTOR);
+    if (!content) return;
+
+    var host = content.closest(SCREEN_SELECTOR) || shell || content.parentNode;
+    var persistents = Array.prototype.slice.call(content.querySelectorAll(PERSISTENT_SELECTOR));
+
+    persistents.forEach(function (element) {
+      var key = element.getAttribute("data-persistent-shell");
+      if (!key) return;
+
+      var existing = findPersistentRegion(key, content);
+      if (existing && existing !== element) {
+        element.remove();
+        return;
+      }
+
+      if (key === "header") {
+        host.insertBefore(element, content);
+      } else {
+        host.insertBefore(element, content.nextSibling);
+      }
+    });
+  }
+
+  function findPersistentRegion(key, excludedContent) {
+    var regions = Array.prototype.slice.call(document.querySelectorAll(PERSISTENT_SELECTOR));
+    for (var i = 0; i < regions.length; i += 1) {
+      var region = regions[i];
+      if (region.getAttribute("data-persistent-shell") !== key) continue;
+      if (excludedContent && excludedContent.contains(region)) continue;
+      return region;
+    }
+    return null;
+  }
+
+  function stripPersistentRegions(content) {
+    Array.prototype.slice.call(content.querySelectorAll(PERSISTENT_SELECTOR)).forEach(function (element) {
+      element.remove();
+    });
+  }
+
   function handleDocumentClick(event) {
-    if (!shell || !activeScreen) return;
+    if (!shell) return;
     if (event.defaultPrevented) return;
     if (typeof event.button === "number" && event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -138,8 +190,7 @@
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    if (isNavigating) return;
-    go(url.href, { direction: "forward" });
+    navigateTo(url.href, { direction: "forward", push: true });
   }
 
   function getNavigationUrl(target) {
@@ -160,14 +211,14 @@
   function shouldHandleNavigation(target, url) {
     if (!url || url.origin !== window.location.origin) return false;
     if (url.protocol !== "http:" && url.protocol !== "https:") return false;
-    if (isBlockedPath(url.pathname)) return false;
+    if (isBlockedUrl(url)) return false;
 
-    if (url.hash) {
-      return !(url.pathname === window.location.pathname && url.search === window.location.search);
+    if (url.hash && url.pathname === window.location.pathname && url.search === window.location.search) {
+      return false;
     }
 
     if (target.closest && target.closest("form")) return false;
-    if (target.closest && target.closest("[data-no-router]")) return false;
+    if (target.closest && target.closest("[data-no-transition], [data-no-router]")) return false;
 
     var link = target.matches && target.matches("a[href]")
       ? target
@@ -178,9 +229,11 @@
       if (targetAttr && targetAttr !== "_self") return false;
       if (link.hasAttribute("download")) return false;
       if (link.closest("form")) return false;
+      if (link.hasAttribute("data-no-transition")) return false;
       if (link.getAttribute("data-no-router") === "true") return false;
       if (link.getAttribute("data-no-spa") === "true" || link.getAttribute("data-spa") === "false") return false;
       if (link.hasAttribute("hx-post") || link.hasAttribute("hx-put") || link.hasAttribute("hx-delete")) return false;
+
       var method = (link.getAttribute("data-method") || link.getAttribute("formmethod") || "get").toLowerCase();
       if (method !== "get") return false;
     }
@@ -192,18 +245,22 @@
     return true;
   }
 
-  function isBlockedPath(pathname) {
-    if (BLOCKED_EXACT_PATHS[pathname]) return true;
+  function isBlockedUrl(url) {
+    if (BLOCKED_EXACT_PATHS[url.pathname]) return true;
+    if (FILE_PATH_RE.test(url.pathname)) return true;
+    if (/(^|\/)logout\/?$/i.test(url.pathname)) return true;
+
     return BLOCKED_PREFIXES.some(function (prefix) {
-      return pathname.indexOf(prefix) === 0;
+      return url.pathname.indexOf(prefix) === 0;
     });
   }
 
-  async function go(value, options) {
+  async function navigateTo(value, options) {
     options = options || {};
     var url = safeUrl(value);
-    if (!url || isBlockedPath(url.pathname)) {
-      window.location.href = value;
+
+    if (!url || isBlockedUrl(url)) {
+      hardNavigate(value);
       return;
     }
 
@@ -211,70 +268,63 @@
 
     saveScrollPosition();
     isNavigating = true;
+    root.classList.add("is-page-loading");
 
     if (activeController) activeController.abort();
     activeController = new AbortController();
 
     try {
       var page = await fetchPage(url, activeController.signal);
-      var nextIndex = options.replace ? currentIndex : currentIndex + 1;
-      var nextUrl = page.url.href;
+      var shouldReplace = options.replace === true;
+      var shouldPush = options.push !== false && !shouldReplace;
+      var nextIndex = shouldPush ? currentIndex + 1 : currentIndex;
+      var historyCommitted = false;
 
-      if (options.replace) {
-        history.replaceState(makeHistoryState(nextIndex, nextUrl, 0), "", nextUrl);
-      } else {
-        history.pushState(makeHistoryState(nextIndex, nextUrl, 0), "", nextUrl);
+      function commitHistory() {
+        if (historyCommitted) return;
+        historyCommitted = true;
+
+        if (shouldReplace) {
+          history.replaceState(makeHistoryState(nextIndex, page.url.href, Number(options.scrollY || 0)), "", page.url.href);
+        } else if (shouldPush) {
+          history.pushState(makeHistoryState(nextIndex, page.url.href, 0), "", page.url.href);
+        }
+
+        currentIndex = nextIndex;
       }
 
-      currentIndex = nextIndex;
-
       await transitionTo(page, {
-        direction: options.direction || "forward",
-        scrollY: Number(options.scrollY || 0)
+        direction: normalizeDirection(options.direction),
+        scrollY: Number(options.scrollY || 0),
+        commitHistory: commitHistory
       });
     } catch (error) {
       if (error && error.name === "AbortError") return;
       markDebug("fallback", error && error.message);
-      window.location.href = url.href;
+      hardNavigate(url.href);
     } finally {
       isNavigating = false;
       activeController = null;
+      root.classList.remove("is-page-loading");
     }
   }
 
   async function handlePopState(event) {
-    if (!shell || !activeScreen) return;
+    if (!shell || !document.querySelector(CONTENT_SELECTOR)) return;
 
     if (activeController) activeController.abort();
-    activeController = new AbortController();
+    isNavigating = false;
 
     var nextIndex = getHistoryIndex(event.state);
-    var direction = nextIndex < currentIndex ? "back" : "forward";
+    var direction = nextIndex < currentIndex ? "backward" : "forward";
     currentIndex = nextIndex;
-    isNavigating = true;
 
-    try {
-      var url = new URL(window.location.href);
-      if (isBlockedPath(url.pathname)) {
-        window.location.reload();
-        return;
-      }
-
-      var page = await fetchPage(url, activeController.signal);
-      var restoreY = getSavedScrollY(url.href, event.state && event.state.scrollY);
-
-      await transitionTo(page, {
-        direction: direction,
-        scrollY: restoreY
-      });
-    } catch (error) {
-      if (error && error.name === "AbortError") return;
-      markDebug("popstate-fallback", error && error.message);
-      window.location.reload();
-    } finally {
-      isNavigating = false;
-      activeController = null;
-    }
+    var restoreY = getSavedScrollY(window.location.href, event.state && event.state.scrollY);
+    await navigateTo(window.location.href, {
+      direction: direction,
+      push: false,
+      scrollY: restoreY
+    });
   }
 
   async function fetchPage(url, signal) {
@@ -315,96 +365,67 @@
   }
 
   async function transitionTo(page, options) {
-    var direction = options.direction === "back" ? "back" : "forward";
+    var oldContent = document.querySelector(CONTENT_SELECTOR);
+    if (!oldContent) throw new Error("Current page content is missing");
+
+    var newContent = page.content;
+    var direction = normalizeDirection(options.direction);
     var restoreY = Math.max(0, Number(options.scrollY || 0));
-    var oldScreen = activeScreen;
-    var newScreen = createScreen(page.content);
-    var oldScrollY = getScrollY();
-    var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    preparePageStyles(page.doc);
-    document.title = page.title;
-    if (document.body) document.body.className = page.bodyClass;
+    stripPersistentRegions(newContent);
+    await loadPageStylesheets(page.doc);
 
-    if (prefersReducedMotion) {
-      destroyPage(oldScreen);
-      oldScreen.replaceWith(newScreen);
-      activeScreen = newScreen;
-      newScreen.classList.add("is-active");
-      window.scrollTo(0, restoreY);
+    var updateDOM = function () {
+      preparePageStyles(page.doc);
+      destroyPage(oldContent);
+      oldContent.replaceWith(newContent);
+
+      document.title = page.title;
+      if (document.body) document.body.className = page.bodyClass;
+
+      if (typeof options.commitHistory === "function") {
+        options.commitHistory();
+      }
+
+      updateActiveNavigation(page.url.href);
       commitPageStyles();
-      await hydratePage(newScreen);
-      return;
+      scrollToTargetOrPosition(page.url, restoreY);
+    };
+
+    if (canUseViewTransitions()) {
+      root.dataset.transition = direction;
+
+      try {
+        var transition = document.startViewTransition(updateDOM);
+        await transition.finished;
+      } finally {
+        delete root.dataset.transition;
+      }
+    } else {
+      updateDOM();
     }
 
-    root.classList.add("app-router-transitioning");
-    shell.classList.add("is-transitioning");
-
-    var newTop = oldScrollY - restoreY;
-    newScreen.setAttribute("aria-hidden", "true");
-    newScreen.classList.add(direction === "back" ? "enter-from-left" : "enter-from-right");
-    shell.appendChild(newScreen);
-
-    var minHeight = Math.max(
-      document.documentElement.scrollHeight,
-      oldScreen.scrollHeight,
-      newTop + newScreen.scrollHeight,
-      oldScrollY + window.innerHeight,
-      window.innerHeight
-    );
-
-    shell.style.minHeight = minHeight + "px";
-    oldScreen.style.top = "0px";
-    newScreen.style.top = newTop + "px";
-
-    forceReflow(newScreen);
-
-    requestAnimationFrame(function () {
-      oldScreen.classList.add(direction === "back" ? "leave-to-right" : "leave-to-left");
-      newScreen.classList.add("enter-active");
-    });
-
-    await waitForScreenTransition(newScreen);
-
-    destroyPage(oldScreen);
-    oldScreen.remove();
-
-    newScreen.removeAttribute("aria-hidden");
-    newScreen.classList.remove("enter-from-right", "enter-from-left", "enter-active");
-    newScreen.classList.add("is-active");
-    newScreen.style.top = "";
-    shell.classList.remove("is-transitioning");
-    shell.style.minHeight = "";
-    root.classList.remove("app-router-transitioning");
-    activeScreen = newScreen;
-
-    window.scrollTo(0, restoreY);
-    commitPageStyles();
-    await hydratePage(newScreen);
+    await hydratePage(newContent);
   }
 
-  function createScreen(content) {
-    var screen = document.createElement("section");
-    screen.className = "app-screen";
-    screen.setAttribute("data-app-screen", "");
-    screen.appendChild(content);
-    return screen;
+  function canUseViewTransitions() {
+    return typeof document.startViewTransition === "function";
   }
 
-  async function hydratePage(screen) {
-    await runPageScripts(screen);
-    initPage(screen);
-    dispatchPageReady(screen);
+  async function hydratePage(content) {
+    await runPageScripts(content);
+    initPageComponents(content);
+    dispatchPageReady(content);
   }
 
-  function initPage(screen) {
-    if (!screen) return;
-    screen.__appRouterCleanups = screen.__appRouterCleanups || [];
+  function initPageComponents(rootNode) {
+    rootNode = rootNode || document;
 
     try {
       if (window.Swiper) {
-        screen.querySelectorAll(".myPromoSwiper").forEach(function (swiperEl) {
+        rootNode.querySelectorAll(".myPromoSwiper").forEach(function (swiperEl) {
           if (swiperEl.swiper) return;
+          swiperEl.dataset.initialized = "true";
           new window.Swiper(swiperEl, {
             loop: true,
             autoplay: { delay: 3000 },
@@ -415,11 +436,11 @@
         });
       }
     } catch (error) {
-      console.error("AppRouter Swiper init failed", error);
+      console.error("PageTransitions Swiper init failed", error);
     }
 
     try {
-      if (window.Fancybox && screen.querySelector('[data-fancybox="gallery"]')) {
+      if (window.Fancybox && rootNode.querySelector('[data-fancybox="gallery"]')) {
         window.Fancybox.unbind("[data-fancybox]");
         window.Fancybox.bind('[data-fancybox="gallery"]', {
           Toolbar: false,
@@ -432,29 +453,29 @@
         });
       }
     } catch (error) {
-      console.error("AppRouter Fancybox init failed", error);
+      console.error("PageTransitions Fancybox init failed", error);
     }
 
-    screen.querySelectorAll("img[loading='lazy']").forEach(function (img) {
+    rootNode.querySelectorAll("img[loading='lazy']").forEach(function (img) {
       img.decoding = "async";
     });
   }
 
-  function destroyPage(screen) {
-    if (!screen) return;
+  function destroyPage(rootNode) {
+    if (!rootNode) return;
 
     document.dispatchEvent(new CustomEvent(DESTROY_EVENT, {
-      detail: { screen: screen, url: window.location.href }
+      detail: { container: rootNode, url: window.location.href }
     }));
 
     try {
-      screen.querySelectorAll(".swiper").forEach(function (swiperEl) {
+      rootNode.querySelectorAll(".swiper").forEach(function (swiperEl) {
         if (swiperEl.swiper && typeof swiperEl.swiper.destroy === "function") {
           swiperEl.swiper.destroy(true, true);
         }
       });
     } catch (error) {
-      console.error("AppRouter Swiper destroy failed", error);
+      console.error("PageTransitions Swiper destroy failed", error);
     }
 
     try {
@@ -463,36 +484,36 @@
         window.Fancybox.unbind("[data-fancybox]");
       }
     } catch (error) {
-      console.error("AppRouter Fancybox destroy failed", error);
+      console.error("PageTransitions Fancybox destroy failed", error);
     }
 
     document.querySelectorAll("[data-check-runtime]").forEach(function (element) {
       element.remove();
     });
 
-    runCleanups(screen);
+    runCleanups(rootNode);
   }
 
-  function addCleanup(screen, cleanup) {
-    if (!screen || typeof cleanup !== "function") return;
-    screen.__appRouterCleanups = screen.__appRouterCleanups || [];
-    screen.__appRouterCleanups.push(cleanup);
+  function addCleanup(rootNode, cleanup) {
+    if (!rootNode || typeof cleanup !== "function") return;
+    rootNode.__pageTransitionCleanups = rootNode.__pageTransitionCleanups || [];
+    rootNode.__pageTransitionCleanups.push(cleanup);
   }
 
-  function runCleanups(screen) {
-    var cleanups = screen.__appRouterCleanups || [];
+  function runCleanups(rootNode) {
+    var cleanups = rootNode.__pageTransitionCleanups || [];
     while (cleanups.length) {
       var cleanup = cleanups.pop();
       try {
         cleanup();
       } catch (error) {
-        console.error("AppRouter cleanup failed", error);
+        console.error("PageTransitions cleanup failed", error);
       }
     }
   }
 
-  async function runPageScripts(screen) {
-    var scripts = Array.prototype.slice.call(screen.querySelectorAll("script"));
+  async function runPageScripts(content) {
+    var scripts = Array.prototype.slice.call(content.querySelectorAll("script"));
 
     for (var i = 0; i < scripts.length; i += 1) {
       var script = scripts[i];
@@ -501,7 +522,7 @@
       if (script.src) {
         await loadExternalScript(script);
       } else {
-        runInlineScript(screen, script.textContent || "", i);
+        runInlineScript(content, script.textContent || "", i);
       }
     }
   }
@@ -537,19 +558,54 @@
     });
   }
 
-  function runInlineScript(screen, code, index) {
+  function loadPageStylesheets(doc) {
+    var links = Array.prototype.slice.call(doc.querySelectorAll('link[rel~="stylesheet"][href]'));
+    return Promise.all(links.map(function (link) {
+      return loadStylesheet(link).catch(function (error) {
+        console.error("PageTransitions stylesheet load failed", error);
+      });
+    }));
+  }
+
+  function loadStylesheet(sourceLink) {
+    var href = absoluteUrl(sourceLink.href);
+    if (loadedStylesheets.has(href)) return Promise.resolve();
+
+    return new Promise(function (resolve, reject) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+
+      ["media", "crossorigin", "integrity", "referrerpolicy"].forEach(function (attr) {
+        if (sourceLink.hasAttribute(attr)) {
+          link.setAttribute(attr, sourceLink.getAttribute(attr));
+        }
+      });
+
+      link.onload = function () {
+        loadedStylesheets.add(href);
+        resolve();
+      };
+      link.onerror = function () {
+        reject(new Error("Failed to load stylesheet: " + href));
+      };
+      document.head.appendChild(link);
+    });
+  }
+
+  function runInlineScript(content, code, index) {
     if (!code || !code.trim()) return;
 
-    withPageRuntime(screen, function () {
+    withPageRuntime(content, function () {
       try {
-        new Function(code + "\n//# sourceURL=app-router-inline-" + index + ".js")();
+        new Function(code + "\n//# sourceURL=page-transition-inline-" + index + ".js")();
       } catch (error) {
-        console.error("AppRouter inline script failed", error);
+        console.error("PageTransitions inline script failed", error);
       }
     });
   }
 
-  function withPageRuntime(screen, callback) {
+  function withPageRuntime(content, callback) {
     var originalTargetAdd = EventTarget.prototype.addEventListener;
     var originalTargetRemove = EventTarget.prototype.removeEventListener;
     var originalDocumentAdd = document.addEventListener;
@@ -559,8 +615,8 @@
 
     EventTarget.prototype.addEventListener = function (type, listener, options) {
       originalTargetAdd.call(this, type, listener, options);
-      if (shouldTrackRuntimeTarget(screen, this)) {
-        addCleanup(screen, function () {
+      if (shouldTrackRuntimeTarget(content, this)) {
+        addCleanup(content, function () {
           originalTargetRemove.call(this, type, listener, options);
         }.bind(this));
       }
@@ -572,7 +628,7 @@
         return;
       }
       originalDocumentAdd.call(document, type, listener, options);
-      addCleanup(screen, function () {
+      addCleanup(content, function () {
         document.removeEventListener(type, listener, options);
       });
     };
@@ -583,20 +639,20 @@
         return;
       }
       originalWindowAdd.call(window, type, listener, options);
-      addCleanup(screen, function () {
+      addCleanup(content, function () {
         window.removeEventListener(type, listener, options);
       });
     };
 
     window.setTimeout = function () {
       var id = originalSetTimeout.apply(window, arguments);
-      addCleanup(screen, function () { window.clearTimeout(id); });
+      addCleanup(content, function () { window.clearTimeout(id); });
       return id;
     };
 
     window.setInterval = function () {
       var id = originalSetInterval.apply(window, arguments);
-      addCleanup(screen, function () { window.clearInterval(id); });
+      addCleanup(content, function () { window.clearInterval(id); });
       return id;
     };
 
@@ -612,11 +668,11 @@
     }
   }
 
-  function shouldTrackRuntimeTarget(screen, target) {
+  function shouldTrackRuntimeTarget(content, target) {
     if (target === window || target === document) return true;
     if (!target || !target.nodeType) return false;
-    if (target === screen) return true;
-    return typeof screen.contains === "function" && screen.contains(target);
+    if (target === content) return true;
+    return typeof content.contains === "function" && content.contains(target);
   }
 
   function callReadyListener(listener, target, type) {
@@ -629,33 +685,71 @@
   }
 
   function preparePageStyles(doc) {
-    document.querySelectorAll("style[data-app-next-style]").forEach(function (style) {
+    document.querySelectorAll("style[data-page-transition-next]").forEach(function (style) {
       style.remove();
     });
 
     doc.querySelectorAll("style").forEach(function (style) {
       var clone = style.cloneNode(true);
-      clone.setAttribute("data-app-next-style", "");
+      clone.setAttribute("data-page-transition-next", "");
       document.head.appendChild(clone);
     });
   }
 
   function commitPageStyles() {
-    document.querySelectorAll("style[data-app-page-style]").forEach(function (style) {
+    document.querySelectorAll("style[data-page-transition-style]").forEach(function (style) {
       style.remove();
     });
 
-    document.querySelectorAll("style[data-app-next-style]").forEach(function (style) {
-      style.removeAttribute("data-app-next-style");
-      style.setAttribute("data-app-page-style", "");
+    document.querySelectorAll("style[data-page-transition-next]").forEach(function (style) {
+      style.removeAttribute("data-page-transition-next");
+      style.setAttribute("data-page-transition-style", "");
     });
   }
 
-  function dispatchPageReady(screen) {
+  function updateActiveNavigation(url) {
+    var currentUrl = safeUrl(url);
+    if (!currentUrl) return;
+
+    var currentPath = normalizePath(currentUrl.pathname);
+    var links = document.querySelectorAll('[data-persistent-shell="bottom-nav"] a[href], nav[aria-label="Bottom Navigation"] a[href]');
+
+    links.forEach(function (link) {
+      var linkUrl = safeUrl(link.getAttribute("href"));
+      if (!linkUrl || linkUrl.origin !== window.location.origin) return;
+
+      var isActive = normalizePath(linkUrl.pathname) === currentPath;
+      link.classList.toggle("is-active", isActive);
+
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+
+      var img = link.querySelector("img[src]");
+      if (img) {
+        setSvgActive(img, isActive);
+      }
+    });
+  }
+
+  function setSvgActive(img, isActive) {
+    var src = img.getAttribute("src") || "";
+    if (src.indexOf(".svg") === -1) return;
+
+    var parts = src.split("?");
+    var path = parts[0].replace(/_active\.svg$/i, ".svg");
+    if (isActive) {
+      path = path.replace(/\.svg$/i, "_active.svg");
+    }
+    img.setAttribute("src", path + (parts[1] ? "?" + parts[1] : ""));
+  }
+
+  function dispatchPageReady(content) {
     document.dispatchEvent(new CustomEvent(READY_EVENT, {
       detail: {
-        screen: screen,
-        container: screen ? screen.querySelector(CONTENT_SELECTOR) : null,
+        container: content,
         url: window.location.href
       }
     }));
@@ -694,6 +788,20 @@
     return Number.isFinite(value) ? Math.max(0, value) : 0;
   }
 
+  function scrollToTargetOrPosition(url, fallbackY) {
+    var y = Math.max(0, Number(fallbackY || 0));
+
+    if (url && url.hash) {
+      var id = decodeURIComponent(url.hash.slice(1));
+      var target = document.getElementById(id) || document.querySelector('[name="' + cssStringEscape(id) + '"]');
+      if (target && typeof target.getBoundingClientRect === "function") {
+        y = target.getBoundingClientRect().top + getScrollY();
+      }
+    }
+
+    window.scrollTo(0, y);
+  }
+
   function ensureHistoryState() {
     var state = history.state || {};
     var index = getHistoryIndex(state);
@@ -706,7 +814,7 @@
 
   function makeHistoryState(index, url, scrollY, baseState) {
     return Object.assign({}, baseState || {}, {
-      __appRouter: true,
+      __pageTransitions: true,
       url: url,
       scrollY: Number(scrollY || 0),
       [STATE_INDEX]: Number(index || 0)
@@ -721,7 +829,7 @@
   function installTelegramBackButtonProxy() {
     var tg = window.Telegram && window.Telegram.WebApp;
     var backButton = tg && tg.BackButton;
-    if (!backButton || backButton.__appRouterBackButtonProxyInstalled) return;
+    if (!backButton || backButton.__pageTransitionsBackButtonProxyInstalled) return;
 
     var originalOnClick = typeof backButton.onClick === "function" ? backButton.onClick.bind(backButton) : null;
     var originalOffClick = typeof backButton.offClick === "function" ? backButton.offClick.bind(backButton) : null;
@@ -744,30 +852,22 @@
       };
     }
 
-    backButton.__appRouterBackButtonProxyInstalled = true;
+    backButton.__pageTransitionsBackButtonProxyInstalled = true;
   }
 
-  function waitForScreenTransition(screen) {
-    return new Promise(function (resolve) {
-      var done = false;
-      var timer = window.setTimeout(finish, TRANSITION_MS + 120);
+  function normalizeDirection(value) {
+    return value === "back" || value === "backward" ? "backward" : "forward";
+  }
 
-      function finish() {
-        if (done) return;
-        done = true;
-        window.clearTimeout(timer);
-        screen.removeEventListener("transitionend", onTransitionEnd);
-        resolve();
-      }
+  function normalizePath(pathname) {
+    if (pathname.length > 1 && pathname.slice(-1) === "/") {
+      return pathname.slice(0, -1);
+    }
+    return pathname;
+  }
 
-      function onTransitionEnd(event) {
-        if (event.target === screen && event.propertyName === "transform") {
-          finish();
-        }
-      }
-
-      screen.addEventListener("transitionend", onTransitionEnd);
-    });
+  function hardNavigate(href) {
+    window.location.href = href;
   }
 
   function safeUrl(value) {
@@ -788,17 +888,17 @@
     return cleaned;
   }
 
-  function forceReflow(element) {
-    return element.offsetHeight;
-  }
-
   function getScrollY() {
     return window.scrollY || window.pageYOffset || 0;
   }
 
+  function cssStringEscape(value) {
+    return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  }
+
   function isDebugEnabled() {
     try {
-      return window.localStorage && window.localStorage.getItem("app_router_debug") === "1";
+      return window.localStorage && window.localStorage.getItem("page_transitions_debug") === "1";
     } catch (error) {
       return false;
     }
@@ -806,6 +906,6 @@
 
   function markDebug(eventName, detail) {
     if (!debug || !window.console) return;
-    console.log("[app-router]", eventName, detail || "");
+    console.log("[page-transitions]", eventName, detail || "");
   }
 })();

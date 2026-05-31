@@ -1,0 +1,119 @@
+:root {
+  --page-bg: #0c0f16;
+}
+
+#app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--page-bg);
+  isolation: isolate;
+}
+
+.app-screen {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+body #page-content {
+  min-height: 100vh;
+  background: var(--page-bg);
+  view-transition-name: page-content;
+  contain: layout paint;
+  isolation: isolate;
+}
+
+[data-persistent-shell="header"] {
+  position: relative;
+  z-index: 20;
+}
+
+[data-persistent-shell="bottom-nav"] {
+  position: relative;
+  z-index: 40;
+}
+
+html.is-page-loading {
+  cursor: progress;
+}
+
+html.is-page-loading a,
+html.is-page-loading button,
+html.is-page-loading [data-router-href],
+html.is-page-loading [data-spa-href] {
+  pointer-events: none;
+}
+
+@keyframes slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-to-left {
+  to {
+    transform: translateX(-24%);
+    opacity: 0.85;
+  }
+}
+
+@keyframes slide-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-to-right {
+  to {
+    transform: translateX(24%);
+    opacity: 0.85;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(page-content),
+::view-transition-new(page-content) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+  background: var(--page-bg);
+  backface-visibility: hidden;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(page-content) {
+  z-index: 2;
+}
+
+::view-transition-old(page-content) {
+  z-index: 1;
+}
+
+html[data-transition="forward"]::view-transition-old(page-content) {
+  animation-name: slide-to-left;
+}
+
+html[data-transition="forward"]::view-transition-new(page-content) {
+  animation-name: slide-from-right;
+}
+
+html[data-transition="backward"]::view-transition-old(page-content) {
+  animation-name: slide-to-right;
+}
+
+html[data-transition="backward"]::view-transition-new(page-content) {
+  animation-name: slide-from-left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(page-content),
+  ::view-transition-new(page-content) {
+    animation: none;
+  }
+}

@@ -5,7 +5,9 @@
 <body class="{% block body_class %}text-gray-100 font-sans{% endblock %}">
   <main id="app-shell" class="app-shell" data-app-shell>
     <section class="app-screen is-active" data-app-screen>
-      {% block content %}{% endblock %}
+      <main id="page-content" data-page>
+        {% block content %}{% endblock %}
+      </main>
     </section>
   </main>
 </body>
