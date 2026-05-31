@@ -11,7 +11,7 @@
   var DESTROY_EVENT = "app:page-destroy";
   var STATE_INDEX = "__pageTransitionIndex";
   var SCROLL_PREFIX = "page-transition:scroll:";
-  var VERSION = "20260601-1";
+  var VERSION = "20260601-2";
 
   var BLOCKED_EXACT_PATHS = {
     "/": true,
@@ -66,12 +66,13 @@
   window.AppRouter.version = VERSION;
   window.AppRouter.go = function (href, options) {
     options = options || {};
-    return navigateTo(href, {
-      direction: options.direction || "forward",
-      push: options.push !== false,
-      replace: options.replace === true,
-      scrollY: options.scrollY || 0
-    });
+      return navigateTo(href, {
+        direction: options.direction || "forward",
+        push: options.push !== false,
+        replace: options.replace === true,
+        scrollY: options.scrollY || 0,
+        skipTransition: options.skipTransition === true
+      });
   };
   window.AppRouter.reload = function () {
     return navigateTo(window.location.href, { replace: true, scrollY: getScrollY() });
@@ -296,6 +297,7 @@
       await transitionTo(page, {
         direction: normalizeDirection(options.direction),
         scrollY: Number(options.scrollY || 0),
+        skipTransition: options.skipTransition === true,
         commitHistory: commitHistory
       });
     } catch (error) {
@@ -323,7 +325,8 @@
     await navigateTo(window.location.href, {
       direction: direction,
       push: false,
-      scrollY: restoreY
+      scrollY: restoreY,
+      skipTransition: isIOS()
     });
   }
 
@@ -392,7 +395,7 @@
       scrollToTargetOrPosition(page.url, restoreY);
     };
 
-    if (canUseViewTransitions()) {
+    if (!options.skipTransition && canUseViewTransitions()) {
       root.dataset.transition = direction;
 
       try {
@@ -864,6 +867,12 @@
       return pathname.slice(0, -1);
     }
     return pathname;
+  }
+
+  function isIOS() {
+    var ua = navigator.userAgent || "";
+    var platform = navigator.platform || "";
+    return /iPad|iPhone|iPod/.test(ua) || (platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
   function hardNavigate(href) {
