@@ -86,7 +86,9 @@
 
 </style>
 <body class="text-gray-100 font-sans">
-  <main id="page-content" data-page>
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
   <div class="mx-auto">
     <!-- Верхняя панель -->
     {% include 'header.html' %}
@@ -162,7 +164,9 @@
   btn.addEventListener('click', () => {
     if (btn.disabled) return;
     const code = Array.from(inputs).map(i => i.value).join('');
-    window.location.href = "{% url 'verdict' %}?code=" + code;
+    const verdictUrl = "{% url 'verdict' %}?code=" + code;
+    if (window.AppRouter) window.AppRouter.go(verdictUrl);
+    else window.location.href = verdictUrl;
   });
 
   // 🔄 Начальный фокус + обработка ошибки из URL
@@ -200,6 +204,8 @@
     })();</script>
 
   {% include 'sidebar.html' %}
+      </main>
+    </section>
   </main>
 </body>
 </html>

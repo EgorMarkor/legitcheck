@@ -136,7 +136,9 @@
 
 </style>
 <body class="text-gray-100 font-sans">
-  <main id="page-content" data-page>
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
   <div class="mx-auto">
     <!-- Верхняя панель -->
     {% include 'header.html' %}
@@ -328,6 +330,8 @@
     })();</script>
 
   {% include 'sidebar.html' %}
+      </main>
+    </section>
   </main>
 </body>
 </html>

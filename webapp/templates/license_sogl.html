@@ -3,7 +3,9 @@
 <html lang="ru">
 {% include 'head.html' %}
 <body class="text-[#D8D8DF]">
-  <main id="page-content" data-page>
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
 
   {% include 'header.html' %}
 
@@ -67,6 +69,8 @@
   </div>
 
   {% include 'sidebar.html' %}
+      </main>
+    </section>
   </main>
 </body>
 </html>

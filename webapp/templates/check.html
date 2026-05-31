@@ -79,7 +79,9 @@
   }
 </style>
 <body class="text-white">
-  <main id="page-content" data-page>
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
   {% include 'header.html' %}
   <!-- Шаг 1: Выбор бренда -->
   <section class="px-4 py-2">
@@ -1849,7 +1851,8 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(function(json) {
         if (json && json.success) {
           setFreeCheckState(false, json.next_free_check_timestamp);
-          window.location.href = json.redirect_url;
+          if (window.AppRouter) window.AppRouter.go(json.redirect_url);
+          else window.location.href = json.redirect_url;
           return;
         }
         alert('Ошибка: ' + ((json && json.error) || 'неизвестная'));
@@ -2022,7 +2025,10 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch("{% url 'create_verdict' %}", { method:'POST', body: formData })
       .then(function(r){return r.json();})
       .then(function(json){
-        if (json && json.success) window.location.href = json.redirect_url;
+        if (json && json.success) {
+          if (window.AppRouter) window.AppRouter.go(json.redirect_url);
+          else window.location.href = json.redirect_url;
+        }
         else alert('Ошибка: ' + ((json && json.error) || 'неизвестная'));
       })
       .catch(function(err){
@@ -2044,6 +2050,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% include 'sidebar.html' %}
+      </main>
+    </section>
   </main>
 </body>
 </html>

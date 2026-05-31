@@ -14,6 +14,7 @@
     <script src="{% static 'vendor/tailwind-cdn.js' %}"></script>
     <!-- Google Sans (self-hosted) -->
     <link rel="stylesheet" href="{% static 'vendor/google-sans.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app-router.css' %}?v=20260531-2">
     <!-- Telegram WebApp SDK: defer — не блокирует парсинг -->
     <script defer src="{% static 'vendor/telegram-web-app.js' %}"></script>
     <link rel="manifest" href="/manifest.json">
@@ -145,106 +146,6 @@
 
       #page-content {
         min-height: 100vh;
-        view-transition-name: page;
-      }
-
-      html.app-transitioning,
-      html.app-transitioning body {
-        overflow-x: hidden;
-      }
-
-      @supports (view-transition-name: page) {
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-          animation: none;
-        }
-
-        ::view-transition-group(page) {
-          animation-duration: .38s;
-          animation-timing-function: cubic-bezier(.32,.72,0,1);
-          overflow: clip;
-        }
-
-        ::view-transition-old(page),
-        ::view-transition-new(page) {
-          backface-visibility: hidden;
-          mix-blend-mode: normal;
-        }
-
-        html.forward::view-transition-old(page) {
-          animation: page-old-forward .38s cubic-bezier(.32,.72,0,1) both;
-        }
-
-        html.forward::view-transition-new(page) {
-          animation: page-new-forward .38s cubic-bezier(.32,.72,0,1) both;
-        }
-
-        html.back::view-transition-old(page) {
-          animation: page-old-back .38s cubic-bezier(.32,.72,0,1) both;
-        }
-
-        html.back::view-transition-new(page) {
-          animation: page-new-back .38s cubic-bezier(.32,.72,0,1) both;
-        }
-
-        @keyframes page-old-forward {
-          from {
-            transform: translateX(0) scale(1);
-            filter: brightness(1);
-          }
-
-          to {
-            transform: translateX(-28%) scale(.96);
-            filter: brightness(.72);
-          }
-        }
-
-        @keyframes page-new-forward {
-          from {
-            transform: translateX(100%);
-            box-shadow: -32px 0 80px rgba(0,0,0,.42);
-          }
-
-          to {
-            transform: translateX(0);
-            box-shadow: -12px 0 40px rgba(0,0,0,0);
-          }
-        }
-
-        @keyframes page-old-back {
-          from {
-            transform: translateX(0);
-            box-shadow: -32px 0 80px rgba(0,0,0,.32);
-          }
-
-          to {
-            transform: translateX(100%);
-          }
-        }
-
-        @keyframes page-new-back {
-          from {
-            transform: translateX(-28%) scale(.96);
-            filter: brightness(.72);
-          }
-
-          to {
-            transform: translateX(0) scale(1);
-            filter: brightness(1);
-          }
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        #page-content {
-          view-transition-name: none;
-        }
-
-        ::view-transition-group(*),
-        ::view-transition-old(*),
-        ::view-transition-new(*) {
-          animation-duration: 1ms !important;
-        }
       }
     </style>
 
@@ -293,5 +194,5 @@
       localStorage.setItem('checker_auth_token', '{{ tg_user.auth_token }}');
     </script>
     {% endif %}
-    <script defer src="{% static 'js/page-transitions.js' %}?v=20260531-8"></script>
+    <script defer src="{% static 'js/app-router.js' %}?v=20260531-2"></script>
   </head>

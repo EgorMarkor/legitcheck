@@ -1,0 +1,84 @@
+#app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--page-bg, #0c0f16);
+  isolation: isolate;
+}
+
+.app-screen {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--page-bg, #0c0f16);
+}
+
+.app-screen.is-active {
+  position: relative;
+  z-index: 1;
+}
+
+#app-shell.is-transitioning {
+  overflow: hidden;
+}
+
+#app-shell.is-transitioning .app-screen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-height: 100vh;
+  transform: translateX(0);
+  backface-visibility: hidden;
+  contain: layout paint;
+  transition:
+    transform 360ms cubic-bezier(.22,.61,.36,1),
+    opacity 360ms ease,
+    filter 360ms ease,
+    box-shadow 360ms cubic-bezier(.22,.61,.36,1);
+  will-change: transform, opacity, filter, box-shadow;
+}
+
+.app-screen.enter-from-right {
+  transform: translateX(100%);
+  z-index: 3;
+  box-shadow: -28px 0 70px rgba(0,0,0,.42);
+}
+
+.app-screen.enter-from-left {
+  transform: translateX(-24%) scale(.98);
+  z-index: 1;
+  filter: brightness(.76);
+}
+
+.app-screen.enter-active {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  filter: brightness(1);
+  box-shadow: -10px 0 35px rgba(0,0,0,0);
+}
+
+.app-screen.leave-to-left {
+  transform: translateX(-24%) scale(.98);
+  opacity: .96;
+  filter: brightness(.76);
+  z-index: 1;
+}
+
+.app-screen.leave-to-right {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 3;
+  box-shadow: -20px 0 60px rgba(0,0,0,.24);
+}
+
+html.app-router-transitioning,
+html.app-router-transitioning body {
+  overflow-x: hidden;
+  background: var(--page-bg, #0c0f16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-shell.is-transitioning .app-screen {
+    transition-duration: 1ms !important;
+  }
+}

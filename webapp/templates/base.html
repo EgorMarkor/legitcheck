@@ -1,0 +1,12 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+{% include 'head.html' %}
+<body class="{% block body_class %}text-gray-100 font-sans{% endblock %}">
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</body>
+</html>
