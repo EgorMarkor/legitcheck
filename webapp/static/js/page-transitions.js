@@ -7,15 +7,14 @@
   var SCROLL_PREFIX = "app:scroll:";
   var BLOCKED_EXACT_PATHS = {
     "/": true,
-    "/payment": true,
-    "/payment/": true,
     "/email-login": true,
     "/email-login/": true
   };
   var BLOCKED_PREFIXES = [
     "/admin/",
     "/api/",
-    "/payment/",
+    "/payment/create/",
+    "/payment/success/",
     "/email/",
     "/checkout",
     "/login",
@@ -39,7 +38,7 @@
   );
 
   window.__appSpa = {
-    version: "20260531-6",
+    version: "20260531-7",
     loadedAt: new Date().toISOString(),
     navigations: 0,
     lastEvent: "loaded",
@@ -77,7 +76,8 @@
 
   function handleDocumentClick(event) {
     if (!document.querySelector(CONTAINER_SELECTOR)) return;
-    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.defaultPrevented) return;
+    if (typeof event.button === "number" && event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
     var target = event.target.closest
@@ -252,44 +252,10 @@
     root.classList.add(direction, "app-transitioning");
     cleanupRuntimeArtifacts();
 
-    var update = async function (hideNextContainer) {
-      var currentContainer = document.querySelector(CONTAINER_SELECTOR);
-      var nextContainer = page.container;
-
-      syncPageStyles(page.doc);
-      document.title = page.title;
-      if (document.body) document.body.className = page.bodyClass;
-      currentContainer.replaceWith(nextContainer);
-      window.scrollTo(0, scrollY);
-
-      if (hideNextContainer) {
-        nextContainer.style.visibility = "hidden";
-      }
-
-      await runPageScripts(nextContainer);
-      initKnownComponents(nextContainer);
-      dispatchPageReady(nextContainer);
-
-      return nextContainer;
-    };
-
-    if (document.startViewTransition && !prefersReducedMotion) {
-      markDebug("view-transition", direction);
-      var transition = document.startViewTransition(function () {
-        return update(false);
-      });
-      try {
-        await transition.finished;
-      } finally {
-        root.classList.remove("forward", "back", "app-transitioning");
-      }
-      return;
-    }
-
     if (!prefersReducedMotion) {
       try {
-        markDebug("fallback-transition", direction);
-        await swapPageWithFallback(update, direction, scrollY);
+        markDebug("slide-transition", direction);
+        await swapPageWithFallback(page, direction, scrollY);
       } finally {
         root.classList.remove("forward", "back", "app-transitioning");
       }
@@ -297,17 +263,18 @@
     }
 
     try {
-      await update(false);
+      var nextContainer = replacePageShell(page, scrollY, false);
+      await hydratePage(nextContainer);
     } finally {
       root.classList.remove("forward", "back", "app-transitioning");
     }
   }
 
-  async function swapPageWithFallback(update, direction, nextScrollY) {
+  async function swapPageWithFallback(page, direction, nextScrollY) {
     var oldContainer = document.querySelector(CONTAINER_SELECTOR);
     var oldScrollY = window.scrollY || window.pageYOffset || 0;
     var oldClone = oldContainer ? clonePageLayer(oldContainer, oldScrollY) : null;
-    var nextContainer = await update(true);
+    var nextContainer = replacePageShell(page, nextScrollY, true);
     var newClone = clonePageLayer(nextContainer, nextScrollY);
     var overlay = createFallbackOverlay();
     var isBack = direction === "back";
@@ -315,6 +282,7 @@
     var easing = "cubic-bezier(.32,.72,0,1)";
 
     if (!oldClone || !newClone) {
+      await hydratePage(nextContainer);
       nextContainer.style.visibility = "";
       return;
     }
@@ -358,9 +326,35 @@
       }
     });
 
-    await wait(duration + 60);
+    await Promise.all([
+      wait(duration + 60),
+      hydratePage(nextContainer)
+    ]);
     nextContainer.style.visibility = "";
     overlay.remove();
+  }
+
+  function replacePageShell(page, scrollY, hideNextContainer) {
+    var currentContainer = document.querySelector(CONTAINER_SELECTOR);
+    var nextContainer = page.container;
+
+    syncPageStyles(page.doc);
+    document.title = page.title;
+    if (document.body) document.body.className = page.bodyClass;
+    currentContainer.replaceWith(nextContainer);
+    window.scrollTo(0, scrollY);
+
+    if (hideNextContainer) {
+      nextContainer.style.visibility = "hidden";
+    }
+
+    return nextContainer;
+  }
+
+  async function hydratePage(container) {
+    await runPageScripts(container);
+    initKnownComponents(container);
+    dispatchPageReady(container);
   }
 
   function createFallbackOverlay() {
