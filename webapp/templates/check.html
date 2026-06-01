@@ -55,6 +55,10 @@
     pointer-events: none;
   }
 
+  .free-check-tariff__locked-copy.hidden {
+    display: none;
+  }
+
   .free-check-tariff__locked-label {
     color: #5f6a7a;
     font-size: clamp(0.95rem, 4.1vw, 1.35rem);
@@ -1772,6 +1776,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function setFreeCheckCopyHidden(isHidden) {
     if (freeCheckLockedCopy) {
       freeCheckLockedCopy.classList.toggle('hidden', isHidden);
+      freeCheckLockedCopy.style.display = isHidden ? 'none' : 'flex';
+      freeCheckLockedCopy.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
     }
   }
 
@@ -1816,7 +1822,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const targetTime = Date.parse(freeCheckConfig.nextTimestamp || '');
     if (!targetTime || Number.isNaN(targetTime)) {
       freeCheckCountdown.textContent = '0 д. 00 ч. 00 м. 00 с.';
-      setFreeCheckCopyHidden(Boolean(freeCheckConfig.isAvailable));
+      setFreeCheckCopyHidden(true);
+      if (!freeCheckConfig.isAvailable) {
+        setFreeCheckState(true, '');
+      }
       return;
     }
 
