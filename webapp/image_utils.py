@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 
-WATERMARK_STATIC_NAME = "check23.png"
+WATERMARK_STATIC_NAME = "my_watermark.png"
 WATERMARK_OPACITY = 0.28
 WATERMARK_WIDTH_RATIO = 0.28
 
