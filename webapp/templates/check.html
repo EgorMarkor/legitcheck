@@ -77,6 +77,12 @@
     height: auto;
     opacity: 0.72;
   }
+
+  .required-photo-missing {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
+  }
 </style>
 <body class="text-white">
   <main id="app-shell" class="app-shell" data-app-shell>
@@ -1273,6 +1279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         _openSheet(function(dataUrl, file) {
           if (!dataUrl) return;
           wrapper._selectedFile = file || null;
+          wrapper.classList.remove('required-photo-missing');
 
           img.src = dataUrl;
           img.style.cssText += 'object-fit:cover;width:100%;height:100%;opacity:1;';
@@ -1291,6 +1298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             img.style.opacity = '0.7';
             img.classList.remove('preview-img');
             wrapper._selectedFile = null;
+            wrapper.classList.remove('required-photo-missing');
             tapArea.style.zIndex = '5';
             cross.remove();
           });
@@ -1808,6 +1816,39 @@ document.addEventListener('DOMContentLoaded', function() {
     return formData;
   }
 
+  function getRequiredPhotoWrappers(category) {
+    const section = document.getElementById('check_' + (category || ''));
+    if (!section) return [];
+
+    const headings = Array.from(section.querySelectorAll('h2'));
+    const requiredHeading = headings.find(function(heading) {
+      return heading.textContent.trim() === 'Необходимые фотографии';
+    });
+    if (!requiredHeading) return [];
+
+    const grid = requiredHeading.nextElementSibling;
+    if (!grid) return [];
+
+    return Array.from(grid.querySelectorAll('.rounded-2xl:not(.photo-extra-filler) [data-photo-wrapper]'));
+  }
+
+  function validateRequiredPhotos() {
+    const wrappers = getRequiredPhotoWrappers(type_item);
+    const missing = wrappers.filter(function(wrapper) {
+      return !wrapper._selectedFile;
+    });
+
+    wrappers.forEach(function(wrapper) {
+      wrapper.classList.toggle('required-photo-missing', missing.includes(wrapper));
+    });
+
+    if (!missing.length) return true;
+
+    alert('Заполните все обязательные фотографии.');
+    missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+
   function getSelectedTariffGroup() {
     return luxuryTariffBrands.has((selectedBrand || '').trim()) ? 'luxury' : 'basic';
   }
@@ -1948,6 +1989,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   // Continue
   continueBtn.addEventListener('click', function() {
+    if (!validateRequiredPhotos()) return;
+
     const checkSection = document.getElementById('check_' + type_item);
     const imgEl = checkSection ? checkSection.querySelector('img.preview-img') : null;
     const photo = imgEl ? imgEl.src : '';
