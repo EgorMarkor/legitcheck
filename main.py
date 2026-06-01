@@ -11,8 +11,15 @@ django.setup()
 
 from webapp.models import Verdict
 
-API_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
-bot = Bot(token=API_TOKEN, parse_mode=types.ParseMode.HTML)
+API_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "") or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+TELEGRAM_API_PROXY = getattr(settings, "TELEGRAM_API_PROXY", "")
+bot_kwargs = {
+    "token": API_TOKEN,
+    "parse_mode": types.ParseMode.HTML,
+}
+if TELEGRAM_API_PROXY:
+    bot_kwargs["proxy"] = TELEGRAM_API_PROXY
+bot = Bot(**bot_kwargs)
 dp = Dispatcher(bot)
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
 

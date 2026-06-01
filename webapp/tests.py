@@ -166,6 +166,38 @@ class VerdictApiTests(TestCase):
         self.assertEqual(verdict.speed, "standard")
         self.assertEqual(str(verdict.price), "149.00")
 
+    def test_paid_verdict_is_idempotent_for_repeated_submit(self):
+        self._login_web_session()
+
+        payload = {
+            "category": "sneakers",
+            "brand": "Nike",
+            "speed": "standard",
+            "with_reason": "0",
+            "idempotency_key": "paid-repeat-1",
+        }
+        first_response = self.client.post(
+            "/verdict/create/",
+            {**payload, "photos": self._image_file("first.gif")},
+            HTTP_HOST=self.host,
+        )
+        second_response = self.client.post(
+            "/verdict/create/",
+            {**payload, "photos": self._image_file("second.gif")},
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertTrue(first_response.json()["success"])
+        self.assertTrue(second_response.json()["success"])
+        self.assertTrue(second_response.json()["duplicate"])
+        self.assertEqual(Verdict.objects.count(), 1)
+        self.assertEqual(VerdictPhoto.objects.count(), 1)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.balance, "851.00")
+
     def test_paid_verdict_uses_luxury_tariff_for_luxury_brand(self):
         self._login_web_session()
 
@@ -230,6 +262,50 @@ class VerdictApiTests(TestCase):
         uploaded = UploadedVerdictPhoto.objects.get(id=photo_id)
         self.assertEqual(uploaded.verdict_id, verdict.id)
         self.assertIsNotNone(uploaded.used_at)
+
+    def test_api_create_verdict_is_idempotent_after_uploaded_photo_used(self):
+        upload_response = self.client.post(
+            "/api/verdict/photos/upload/",
+            {"photo": self._image_file("api-once.gif")},
+            HTTP_HOST=self.host,
+            HTTP_X_AUTH_TOKEN=self.login_token.token,
+        )
+        self.assertEqual(upload_response.status_code, 201)
+        photo_id = upload_response.json()["photo_ids"][0]
+
+        create_payload = {
+            "category": "sneakers",
+            "brand": "Nike",
+            "comment": "API repeat",
+            "photo_ids": [photo_id],
+            "idempotency_key": "api-repeat-1",
+        }
+        first_response = self.client.post(
+            "/api/verdict/create/",
+            data=json.dumps(create_payload),
+            content_type="application/json",
+            HTTP_HOST=self.host,
+            HTTP_X_AUTH_TOKEN=self.login_token.token,
+        )
+        second_response = self.client.post(
+            "/api/verdict/create/",
+            data=json.dumps(create_payload),
+            content_type="application/json",
+            HTTP_HOST=self.host,
+            HTTP_X_AUTH_TOKEN=self.login_token.token,
+        )
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertTrue(first_response.json()["success"])
+        self.assertTrue(second_response.json()["success"])
+        self.assertTrue(second_response.json()["duplicate"])
+        self.assertEqual(
+            first_response.json()["verdict"]["id"],
+            second_response.json()["verdict"]["id"],
+        )
+        self.assertEqual(Verdict.objects.count(), 1)
+        self.assertEqual(VerdictPhoto.objects.count(), 1)
 
     def test_api_create_verdict_requires_photos(self):
         payload = {

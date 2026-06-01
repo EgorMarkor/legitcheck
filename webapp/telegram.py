@@ -27,6 +27,12 @@ def _get_session():
     global _session
     if _session is None:
         _session = requests.Session()
+        proxy_url = getattr(settings, "TELEGRAM_API_PROXY", "")
+        if proxy_url:
+            _session.proxies.update({
+                "http": proxy_url,
+                "https": proxy_url,
+            })
     return _session
 
 

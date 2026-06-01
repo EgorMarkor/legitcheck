@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.db.models import Q
 from django.templatetags.static import static
 from django.utils import timezone
 
@@ -102,6 +103,7 @@ class Verdict(models.Model):
     speed = models.CharField(max_length=32)  # 24h / 15min-basic / 15min-expensive
     price = models.DecimalField(max_digits=10, decimal_places=2)
     with_reason = models.BooleanField(default=False)
+    idempotency_key = models.CharField(max_length=64, null=True, blank=True, db_index=True)
 
 
     def __str__(self):
@@ -110,6 +112,13 @@ class Verdict(models.Model):
     class Meta:
         verbose_name = "Вердикты"
         verbose_name_plural = "Вердикты"  # Для корректного отображения множественного числа
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "idempotency_key"],
+                condition=Q(idempotency_key__isnull=False),
+                name="unique_verdict_idempotency_key_per_user",
+            ),
+        ]
         
         
 class VerdictPhoto(models.Model):

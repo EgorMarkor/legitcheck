@@ -28,6 +28,7 @@ SECRET_KEY = os.environ.get(
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
+TELEGRAM_API_PROXY = os.environ.get("TELEGRAM_API_PROXY", "")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 LOCAL_DEV = os.environ.get("LOCAL_DEV") == "1"

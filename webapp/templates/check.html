@@ -1241,12 +1241,12 @@ document.addEventListener('DOMContentLoaded', function() {
   function fillPhotoGridGaps() {
     document.querySelectorAll('section[id^="check_"]').forEach(function(section) {
       var headings = Array.from(section.querySelectorAll('h2'));
-      var requiredHeading = headings.find(function(heading) {
-        return heading.textContent.trim() === 'Необходимые фотографии';
+      var additionalHeading = headings.find(function(heading) {
+        return heading.textContent.trim() === 'Дополнительные фотографии';
       });
-      if (!requiredHeading) return;
+      if (!additionalHeading) return;
 
-      var grid = requiredHeading.nextElementSibling;
+      var grid = additionalHeading.nextElementSibling;
       if (!grid || !grid.classList.contains('grid')) return;
 
       var cardsCount = grid.children.length;
@@ -1742,6 +1742,19 @@ document.addEventListener('DOMContentLoaded', function() {
   let balance = Number(window.initialBalance || 0);
   let freeCheckTimerId = null;
   let isFreeCheckSubmitting = false;
+  let isVerdictSubmitting = false;
+  let verdictSubmissionKey = null;
+
+  function getVerdictSubmissionKey() {
+    if (!verdictSubmissionKey) {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        verdictSubmissionKey = window.crypto.randomUUID();
+      } else {
+        verdictSubmissionKey = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+    }
+    return verdictSubmissionKey;
+  }
 
   function formatFreeCheckRemaining(ms) {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -1813,6 +1826,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append('category', type_item || '');
     formData.append('brand', selectedBrand || '');
     formData.append('comment', (document.getElementById('comment').value || ''));
+    formData.append('idempotency_key', getVerdictSubmissionKey());
     document.querySelectorAll('#check_' + (type_item||'') + ' [data-photo-wrapper]').forEach(function(w) {
       if (w._selectedFile) formData.append('photos', w._selectedFile);
     });
@@ -2055,6 +2069,8 @@ document.addEventListener('DOMContentLoaded', function() {
   updateSummary();
   // Send
   verdictBtn.addEventListener('click', function() {
+    if (isVerdictSubmitting) return;
+
     const formData = buildVerdictFormData();
     const selectedSpeed = document.querySelector('input[name="speed"]:checked');
     const speedValue = selectedSpeed ? selectedSpeed.value : null;
@@ -2068,6 +2084,10 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append('speed', speedValue);
     formData.append('with_reason', withReason);
 
+    isVerdictSubmitting = true;
+    verdictBtn.disabled = true;
+    verdictBtn.classList.add('opacity-70', 'pointer-events-none');
+
     fetch("{% url 'create_verdict' %}", { method:'POST', body: formData })
       .then(function(r){return r.json();})
       .then(function(json){
@@ -2080,6 +2100,11 @@ document.addEventListener('DOMContentLoaded', function() {
       .catch(function(err){
         console.error(err);
         alert('Не удалось создать вердикт');
+      })
+      .finally(function() {
+        isVerdictSubmitting = false;
+        verdictBtn.disabled = false;
+        verdictBtn.classList.remove('opacity-70', 'pointer-events-none');
       });
   });
   // Back button

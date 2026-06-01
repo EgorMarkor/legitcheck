@@ -8,8 +8,10 @@ from datetime import timedelta
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.db import transaction
+from django.conf import settings
 
 from telegram import Update
+from telegram.request import HTTPXRequest
 from telegram.ext import (
     ApplicationBuilder, MessageHandler, CommandHandler,
     ContextTypes, filters
@@ -20,6 +22,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
 django.setup()
 
 from webapp.models import User
+from webapp import telegram as tg_service
 from pcwebapp.models import LoginToken
 
 logging.basicConfig(level=logging.INFO)
@@ -193,8 +196,10 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     tg_user = update.effective_user
 
-    # Получаем аватар (не блокируем, но ждём)
-    photo_url = await fetch_avatar_url(tg_user.id, context)
+    # Получаем аватар через общий Telegram API клиент и кешируем локально.
+    photo_url = await sync_to_async(tg_service.download_and_cache_avatar)(context.bot.token, tg_user.id)
+    if not photo_url:
+        photo_url = DEFAULT_AVATAR_URL
 
     full_name = (tg_user.first_name or "") + (" " + tg_user.last_name if tg_user.last_name else "")
     full_name = full_name.strip()
@@ -226,8 +231,16 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 def main():
-    bot_token = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"  # Замените / вынесите в env
-    app = ApplicationBuilder().token(bot_token).build()
+    bot_token = settings.TELEGRAM_BOT_TOKEN or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+    proxy_url = getattr(settings, "TELEGRAM_API_PROXY", "")
+    builder = ApplicationBuilder().token(bot_token)
+    if proxy_url:
+        builder = (
+            builder
+            .request(HTTPXRequest(proxy_url=proxy_url))
+            .get_updates_request(HTTPXRequest(proxy_url=proxy_url))
+        )
+    app = builder.build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_token))
     app.run_polling()

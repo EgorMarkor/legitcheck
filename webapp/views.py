@@ -39,7 +39,7 @@ from . import telegram as tg_service
 Configuration.account_id = 1222154
 Configuration.secret_key = "live_Y3wIog3WrIrKkUvTF7HID1XDB6mgztrXZZFdx9VbwjQ"
 
-TELEGRAM_BOT_TOKEN = "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+TELEGRAM_BOT_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "") or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
 TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
 TELEGRAM_MEDIA_GROUP_LIMIT = 10
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
@@ -512,6 +512,36 @@ def _get_uploaded_photos_for_user(user, photo_ids):
     return ordered_photos, missing_ids
 
 
+def _idempotency_key_from_data(data):
+    key = (data.get("idempotency_key") or "").strip()
+    if not key:
+        return ""
+    return key[:64]
+
+
+def _find_idempotent_verdict(user, idempotency_key):
+    if not idempotency_key:
+        return None
+    return Verdict.objects.filter(
+        user=user,
+        idempotency_key=idempotency_key,
+    ).order_by("-id").first()
+
+
+def _verdict_success_payload(verdict, duplicate=False):
+    return {
+        "success": True,
+        "duplicate": duplicate,
+        "verdict": {
+            "id": verdict.id,
+            "code": verdict.code,
+            "category": verdict.category,
+            "brand": verdict.brand,
+        },
+        "verdict_url": f"{reverse('verdicts')}?code={verdict.code}",
+    }
+
+
 def _build_verdict_payload(data):
     category = (data.get("category") or "").strip()
     brand = (data.get("brand") or "").strip()
@@ -554,11 +584,17 @@ def _build_verdict_payload(data):
         "speed": speed,
         "price": price,
         "with_reason": with_reason,
+        "idempotency_key": _idempotency_key_from_data(data),
     }, None
 
 
 def _create_verdict_with_assets(user, verdict_payload, direct_files, uploaded_photos):
     with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=user.pk)
+        existing_verdict = _find_idempotent_verdict(user, verdict_payload.get("idempotency_key"))
+        if existing_verdict:
+            return existing_verdict, False
+
         verdict = Verdict.objects.create(
             user=user,
             status="inpending",
@@ -571,6 +607,7 @@ def _create_verdict_with_assets(user, verdict_payload, direct_files, uploaded_ph
             speed=verdict_payload["speed"],
             price=verdict_payload["price"],
             with_reason=verdict_payload["with_reason"],
+            idempotency_key=verdict_payload.get("idempotency_key") or None,
         )
 
         for file_obj in direct_files:
@@ -582,7 +619,7 @@ def _create_verdict_with_assets(user, verdict_payload, direct_files, uploaded_ph
 
         transaction.on_commit(lambda: _send_verdict_to_telegram(verdict))
 
-    return verdict
+    return verdict, True
 
 
 def _serialize_verdict_for_mobile(verdict):
@@ -633,6 +670,21 @@ def create_verdict(request):
     speed = request.POST.get('speed')
     with_reason = request.POST.get('with_reason') == '1'
     comment = request.POST.get('comment', '').strip()
+    idempotency_key = _idempotency_key_from_data(request.POST)
+
+    existing_verdict = _find_idempotent_verdict(user, idempotency_key)
+    if existing_verdict:
+        return JsonResponse({
+            "success": True,
+            "duplicate": True,
+            "redirect_url": reverse("lk"),
+            "verdict": {
+                "id": existing_verdict.id,
+                "code": existing_verdict.code,
+                "category": existing_verdict.category,
+                "brand": existing_verdict.brand,
+            },
+        })
 
     if not category or not brand or not speed:
         return JsonResponse({
@@ -661,6 +713,28 @@ def create_verdict(request):
 
     # 🔒 атомарно: списание + создание вердикта
     with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=user.pk)
+        existing_verdict = _find_idempotent_verdict(user, idempotency_key)
+        if existing_verdict:
+            return JsonResponse({
+                "success": True,
+                "duplicate": True,
+                "redirect_url": reverse("lk"),
+                "verdict": {
+                    "id": existing_verdict.id,
+                    "code": existing_verdict.code,
+                    "category": existing_verdict.category,
+                    "brand": existing_verdict.brand,
+                },
+            })
+
+        user_balance = Decimal(user.balance)
+        if user_balance < total_price:
+            return JsonResponse({
+                "success": False,
+                "error": "Недостаточно средств"
+            }, status=400)
+
         user.balance = str(user_balance - total_price)
         user.save(update_fields=["balance"])
 
@@ -675,6 +749,7 @@ def create_verdict(request):
             speed=speed,
             price=total_price,
             with_reason=with_reason,
+            idempotency_key=idempotency_key or None,
         )
 
         for f in request.FILES.getlist('photos'):
@@ -684,6 +759,7 @@ def create_verdict(request):
 
     return JsonResponse({
         "success": True,
+        "duplicate": False,
         "redirect_url": reverse("lk")
     })
 
@@ -710,6 +786,23 @@ def create_free_verdict(request):
 
     with transaction.atomic():
         user = User.objects.select_for_update().get(pk=request.tg_user.pk)
+        existing_verdict = _find_idempotent_verdict(user, verdict_payload.get("idempotency_key"))
+        if existing_verdict:
+            return JsonResponse(
+                {
+                    **_verdict_success_payload(existing_verdict, duplicate=True),
+                    "redirect_url": reverse("lk"),
+                    "is_free_check_available": user.is_free_check_available,
+                    "next_free_check_timestamp": (
+                        user.next_free_check_timestamp.isoformat()
+                        if user.next_free_check_timestamp
+                        else None
+                    ),
+                    "balance": user.balance,
+                },
+                status=200,
+            )
+
         state = _refresh_free_check_state(user)
 
         if not state["is_available"]:
@@ -734,7 +827,7 @@ def create_free_verdict(request):
         user.next_free_check_timestamp = next_timestamp
         user.save(update_fields=["is_free_check_available", "next_free_check_timestamp"])
 
-        verdict = _create_verdict_with_assets(
+        verdict, created = _create_verdict_with_assets(
             user=user,
             verdict_payload=verdict_payload,
             direct_files=direct_files,
@@ -744,6 +837,7 @@ def create_free_verdict(request):
     return JsonResponse(
         {
             "success": True,
+            "duplicate": not created,
             "redirect_url": reverse("lk"),
             "verdict": {
                 "id": verdict.id,
@@ -1166,6 +1260,10 @@ def api_create_verdict(request):
     if error_response:
         return error_response
 
+    existing_verdict = _find_idempotent_verdict(user, verdict_payload.get("idempotency_key"))
+    if existing_verdict:
+        return JsonResponse(_verdict_success_payload(existing_verdict, duplicate=True), status=200)
+
     photo_ids = _parse_photo_ids(request_data)
     uploaded_photos, missing_ids = _get_uploaded_photos_for_user(user, photo_ids)
     if missing_ids:
@@ -1181,7 +1279,7 @@ def api_create_verdict(request):
             status=400,
         )
 
-    verdict = _create_verdict_with_assets(
+    verdict, created = _create_verdict_with_assets(
         user=user,
         verdict_payload=verdict_payload,
         direct_files=direct_files,
@@ -1189,17 +1287,8 @@ def api_create_verdict(request):
     )
 
     return JsonResponse(
-        {
-            "success": True,
-            "verdict": {
-                "id": verdict.id,
-                "code": verdict.code,
-                "category": verdict.category,
-                "brand": verdict.brand,
-            },
-            "verdict_url": f"{reverse('verdicts')}?code={verdict.code}",
-        },
-        status=201,
+        _verdict_success_payload(verdict, duplicate=not created),
+        status=201 if created else 200,
     )
 
 
@@ -1260,6 +1349,10 @@ def api_mobile_create_verdict(request):
     if error_response:
         return error_response
 
+    existing_verdict = _find_idempotent_verdict(user, verdict_payload.get("idempotency_key"))
+    if existing_verdict:
+        return JsonResponse(_verdict_success_payload(existing_verdict, duplicate=True), status=200)
+
     photo_ids = _parse_photo_ids(request_data)
     uploaded_photos, missing_ids = _get_uploaded_photos_for_user(user, photo_ids)
     if missing_ids:
@@ -1275,7 +1368,7 @@ def api_mobile_create_verdict(request):
             status=400,
         )
 
-    verdict = _create_verdict_with_assets(
+    verdict, created = _create_verdict_with_assets(
         user=user,
         verdict_payload=verdict_payload,
         direct_files=direct_files,
@@ -1283,17 +1376,8 @@ def api_mobile_create_verdict(request):
     )
 
     return JsonResponse(
-        {
-            "success": True,
-            "verdict": {
-                "id": verdict.id,
-                "code": verdict.code,
-                "category": verdict.category,
-                "brand": verdict.brand,
-            },
-            "verdict_url": f"{reverse('verdicts')}?code={verdict.code}",
-        },
-        status=201,
+        _verdict_success_payload(verdict, duplicate=not created),
+        status=201 if created else 200,
     )
 
 
