@@ -1195,10 +1195,10 @@ document.addEventListener('DOMContentLoaded', function() {
   _sheet.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;';
   _sheet.innerHTML =
     '<div id="_sheet_bg" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>'
-    + '<div style="position:absolute;bottom:0;left:0;right:0;background:#1a1f2b;border-radius:1.2rem 1.2rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));">'
-    +   '<button id="_sheet_camera"  style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">📷 Сделать фото</button>'
-    +   '<button id="_sheet_gallery" style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0b0d11;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">🖼 Выбрать из галереи</button>'
-    +   '<button id="_sheet_cancel"  style="display:block;width:100%;padding:1rem;background:transparent;border:none;color:#8a94a3;font-size:1rem;font-family:inherit;cursor:pointer;">Отмена</button>'
+    + '<div class="bg_black" style="position:absolute;bottom:0;left:0;right:0;border-radius:1.2rem 1.2rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));">'
+    +   '<button id="_sheet_camera"  style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0C0F14;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">Сделать фото</button>'
+    +   '<button id="_sheet_gallery" style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0C0F14;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">Выбрать из галереи</button>'
+    +   '<button id="_sheet_cancel"  style="display:block;width:100%;padding:1rem;margin-bottom:0.5rem;background:#0C0F14;border:1px solid rgba(179,214,255,0.08);border-radius:0.8rem;color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;">Отмена</button>'
     + '</div>';
   document.body.appendChild(_sheet);
 
