@@ -1766,6 +1766,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return `${days} д. ${pad(hours)} ч. ${pad(minutes)} м. ${pad(seconds)} с.`;
   }
 
+  function setFreeCheckCopyHidden(isHidden) {
+    if (freeCheckLockedCopy) {
+      freeCheckLockedCopy.classList.toggle('hidden', isHidden);
+    }
+  }
+
   function setFreeCheckState(isAvailable, nextTimestamp) {
     if (!freeCheckCard) return;
 
@@ -1788,9 +1794,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? freeCheckConfig.activeImageUrl
         : freeCheckConfig.inactiveImageUrl;
     }
-    if (freeCheckLockedCopy) {
-      freeCheckLockedCopy.classList.toggle('hidden', freeCheckConfig.isAvailable);
-    }
+    setFreeCheckCopyHidden(freeCheckConfig.isAvailable);
 
     if (freeCheckTimerId) {
       clearInterval(freeCheckTimerId);
@@ -1809,15 +1813,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const targetTime = Date.parse(freeCheckConfig.nextTimestamp || '');
     if (!targetTime || Number.isNaN(targetTime)) {
       freeCheckCountdown.textContent = '0 д. 00 ч. 00 м. 00 с.';
+      setFreeCheckCopyHidden(Boolean(freeCheckConfig.isAvailable));
       return;
     }
 
     const remaining = targetTime - Date.now();
     if (remaining <= 0) {
+      freeCheckCountdown.textContent = '0 д. 00 ч. 00 м. 00 с.';
+      setFreeCheckCopyHidden(true);
       setFreeCheckState(true, '');
       return;
     }
 
+    setFreeCheckCopyHidden(false);
     freeCheckCountdown.textContent = formatFreeCheckRemaining(remaining);
   }
 
