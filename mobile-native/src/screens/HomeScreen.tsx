@@ -52,7 +52,7 @@ export function HomeScreen() {
   }
 
   const goCheck = (brand?: string) => {
-    navigation.navigate('Check', brand ? { brand } : undefined);
+    navigation.navigate('Check', brand ? { brand } : { order: 'brand-category' });
   };
 
   const halfCardWidth = (width - r(2) - r(0.75)) / 2;
@@ -72,7 +72,7 @@ export function HomeScreen() {
       </ScrollView>
 
       <View style={{ flexDirection: 'row', gap: r(0.75), paddingHorizontal: r(1), marginTop: r(1) }}>
-        <Pressable onPress={() => goCheck()} style={{ flex: 1 }}>
+        <Pressable onPress={() => navigation.navigate('Check', { order: 'category-brand' })} style={{ flex: 1 }}>
           <RemoteAsset uri={staticUrl('start_prov.png')} width={halfCardWidth} height={r(9)} resizeMode="cover" style={{ borderRadius: r(0.8) }} />
         </Pressable>
         <Pressable onPress={() => goCheck()} style={{ flex: 1 }}>

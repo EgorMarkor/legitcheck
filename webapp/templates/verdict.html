@@ -83,17 +83,23 @@
     }
 
 
-    .check-btn {
-      background: linear-gradient(247deg, rgba(12,200,139,0.1) 19.49%, rgba(29,120,91,0.1) 97.92%);
-      color: #10B781;
-      cursor: not-allowed;
+    .report-status {
       transition: background 0.2s;
     }
 
-    .check-btn.green_button {
-      /* Ваш “густой” зелёный градиент */
-      background: linear-gradient(247deg, #0CC88B 19.49%, #1D785B 97.92%);
-      cursor: pointer;
+    .report-status--pending {
+      background: linear-gradient(247deg, rgba(255, 193, 7, 0.14) 19.49%, rgba(140, 110, 0, 0.14) 97.92%);
+      color: #FFC107;
+    }
+
+    .report-status--legit {
+      background: linear-gradient(247deg, rgba(12, 200, 139, 0.1) 19.49%, rgba(29, 120, 91, 0.1) 97.92%);
+      color: #10B781;
+    }
+
+    .report-status--fake {
+      background: linear-gradient(247deg, rgba(255, 81, 81, 0.12) 19.49%, rgba(140, 32, 32, 0.12) 97.92%);
+      color: #FF5151;
     }
 
     .verdict-photo-link {
@@ -156,31 +162,25 @@
           </div>
           {% if verdict.status == 'fake' %}
   <!-- 🔴 Подделка -->
-  <div class="check-btn
-      bg-[linear-gradient(247deg,rgba(255,81,81,0.12)_19.49%,rgba(140,32,32,0.12)_97.92%)]
+  <div class="report-status report-status--fake
       w-full flex items-center justify-center py-[1.5rem]
-      rounded-[1rem] mt-4 font-semibold text-center
-      text-[#FF5151] text-[1.2rem]">
+      rounded-[1rem] mt-4 font-semibold text-center text-[1.2rem]">
     Отчёт найден
   </div>
 
 {% elif verdict.status == 'legit' %}
   <!-- 🟢 Оригинал -->
-  <div class="check-btn
-      bg-[linear-gradient(247deg,rgba(12,200,139,0.1)_19.49%,rgba(29,120,91,0.1)_97.92%)]
+  <div class="report-status report-status--legit
       w-full flex items-center justify-center py-[1.5rem]
-      rounded-[1rem] mt-4 font-semibold text-center
-      text-[#10B781] text-[1.2rem]">
+      rounded-[1rem] mt-4 font-semibold text-center text-[1.2rem]">
     Отчёт найден
   </div>
 
 {% else %}
   <!-- 🟡 В процессе / внимание -->
-  <div class="check-btn
-      bg-[linear-gradient(247deg,rgba(255,193,7,0.14)_19.49%,rgba(140,110,0,0.14)_97.92%)]
+  <div class="report-status report-status--pending
       w-full flex items-center justify-center py-[1.5rem]
-      rounded-[1rem] mt-4 font-semibold text-center
-      text-[#FFC107] text-[1.2rem]">
+      rounded-[1rem] mt-4 font-semibold text-center text-[1.2rem]">
     Отчёт найден
   </div>
 {% endif %}

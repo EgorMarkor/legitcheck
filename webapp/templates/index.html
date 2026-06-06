@@ -93,10 +93,10 @@
   </script>
     <!-- Две большие кнопки -->
     <div class="flex gap-3 px-4 mt-4">
-      <a href="/check" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+      <a href="{% url 'check' %}?order=category-brand" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'start_prov.png' %}" alt="Scanner"  />
       </a>
-      <a href="/check" class="flex-1 rounded-lg relative hover:brightness-110 transition">
+      <a href="{% url 'check' %}?order=brand-category" class="flex-1 rounded-lg relative hover:brightness-110 transition">
         <img src="{% static 'find_brend.png' %}" alt="Scanner" />
       </a>
     </div>

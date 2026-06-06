@@ -8,7 +8,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Home: { brand?: string } | undefined;
-  Check: { brand?: string } | undefined;
+  Check: { brand?: string; order?: 'category-brand' | 'brand-category' } | undefined;
   Verdicts: undefined;
 };
 

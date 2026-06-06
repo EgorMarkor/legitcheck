@@ -83,6 +83,7 @@ export function CheckScreen() {
   const { r, width } = useWebRem();
 
   const initialBrand = route.params?.brand as string | undefined;
+  const isCategoryFirst = route.params?.order === 'category-brand' && !initialBrand;
 
   const [step, setStep] = useState(initialBrand ? 2 : 1);
   const [brandTab, setBrandTab] = useState<BrandTab>('all');
@@ -221,7 +222,13 @@ export function CheckScreen() {
 
       <View style={{ paddingHorizontal: r(1), paddingVertical: r(0.5) }}>
         <Text style={{ color: '#fff', fontSize: r(1.5), fontWeight: '700' }}>
-          {step === 1 ? 'Выберите бренд' : step === 2 ? 'Выберите тип вещи' : step === 3 ? 'Загрузите фото' : 'Подтверждение'}
+          {step === 1
+            ? (isCategoryFirst ? 'Выберите тип вещи' : 'Выберите бренд')
+            : step === 2
+              ? (isCategoryFirst ? 'Выберите бренд' : 'Выберите тип вещи')
+              : step === 3
+                ? 'Загрузите фото'
+                : 'Подтверждение'}
         </Text>
         <Text style={{ color: '#737a86', fontSize: r(1), marginTop: r(0.4), lineHeight: r(1.25) }}>
           Мы предоставляем широкий ценовой спектр, чтобы каждый смог найти, что подходит именно ему.
@@ -232,7 +239,7 @@ export function CheckScreen() {
         </View>
       </View>
 
-      {step === 1 && (
+      {step === (isCategoryFirst ? 2 : 1) && (
         <View style={{ paddingHorizontal: r(1), paddingBottom: r(1) }}>
           <View style={{
             marginBottom: r(1),
@@ -293,7 +300,7 @@ export function CheckScreen() {
                   key={brand}
                   onPress={() => {
                     setSelectedBrand(brand);
-                    setStep(2);
+                    setStep(isCategoryFirst ? 3 : 2);
                   }}
                   style={{
                     width: brandCardWidth,
@@ -328,7 +335,7 @@ export function CheckScreen() {
         </View>
       )}
 
-      {step === 2 && (
+      {step === (isCategoryFirst ? 1 : 2) && (
         <View style={{ paddingHorizontal: r(1), paddingBottom: r(1) }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: r(0.5) }}>
             {CATEGORIES.map((item) => {
@@ -338,7 +345,7 @@ export function CheckScreen() {
                   key={item.id}
                   onPress={() => {
                     setSelectedCategory(item.id);
-                    setStep(3);
+                    setStep(isCategoryFirst ? 2 : 3);
                   }}
                   style={{
                     width: categoryCardWidth,
