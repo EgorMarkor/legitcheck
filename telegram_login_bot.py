@@ -1,249 +1,209 @@
-# telegram_login_bot.py
-import os
-import django
+import asyncio
 import logging
+import os
 import re
 
-from datetime import timedelta
+import django
 from asgiref.sync import sync_to_async
-from django.utils import timezone
-from django.db import transaction
 from django.conf import settings
-
+from django.db import transaction
+from django.utils import timezone
 from telegram import Update
-from telegram.request import HTTPXRequest
 from telegram.ext import (
-    ApplicationBuilder, MessageHandler, CommandHandler,
-    ContextTypes, filters
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
 )
+from telegram.request import HTTPXRequest
 
-# --- Django setup ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
 django.setup()
 
-from webapp.models import User
-from webapp import telegram as tg_service
 from pcwebapp.models import LoginToken
+from webapp import telegram as tg_service
+from webapp.models import User
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 TOKEN_PATTERN = re.compile(r"[A-Z0-9]{6}")
-
-# Плейсхолдер аватарки, если у пользователя нет фотографии
 DEFAULT_AVATAR_URL = "/static/avatar.png"
 
-# ========== DB HELPERS ==========
 
-@sync_to_async
-def get_token(code: str):
-    return (LoginToken.objects
-            .select_related('user')
-            .get(token=code, used_at__isnull=True))
+class LoginTokenError(Exception):
+    pass
 
-@sync_to_async
+
+class LoginTokenExpired(LoginTokenError):
+    pass
+
+
+class LoginTokenUnavailable(LoginTokenError):
+    pass
+
+
 @transaction.atomic
-def finalize_token(token_obj, user_data: dict):
-    """
-    Заполняет все поля User. Если юзер уже есть — обновляем только пустые/изменившиеся.
-    user_data = {
-        'tgId': int,
-        'username': str|None,
-        'full_name': str,
-        'photo_url': str|None,
-        'default_balance': str
-    }
-    """
-    if token_obj.expires_at and token_obj.expires_at < timezone.now():
-        raise ValueError("expired")
+def _claim_login_token(code: str, user_data: dict):
+    """Atomically claim a one-time code and attach it to a Telegram user."""
+    now = timezone.now()
+    tg_id = user_data["tgId"]
 
-    tg_id = user_data['tgId']
-    username = user_data.get('username')
-    full_name = user_data.get('full_name') or f"tg_{tg_id}"
-    photo_url = user_data.get('photo_url') or DEFAULT_AVATAR_URL
-    default_balance = user_data.get('default_balance', "0")
+    claimed = LoginToken.objects.filter(
+        token=code,
+        used_at__isnull=True,
+        expires_at__gt=now,
+    ).update(
+        used_at=now,
+        telegram_id=tg_id,
+    )
+    if claimed != 1:
+        token = LoginToken.objects.filter(token=code).only("expires_at").first()
+        if token and token.expires_at <= now:
+            raise LoginTokenExpired
+        raise LoginTokenUnavailable
 
-    user, created = User.objects.get_or_create(
+    username = user_data.get("username")
+    full_name = user_data.get("full_name") or f"tg_{tg_id}"
+    user, _ = User.objects.get_or_create(
         tgId=tg_id,
         defaults={
             "username": username,
             "name": full_name,
-            "img": photo_url,
-            "balance": default_balance,
-        }
+            "img": DEFAULT_AVATAR_URL,
+            "balance": "0",
+        },
     )
 
-    # Если существующий пользователь — обновляем поля, если они пустые или изменились
-    changed = False
-
-    if username and user.username != username:
+    changed_fields = []
+    if user.username != username:
         user.username = username
-        changed = True
-
-    if full_name and user.name != full_name:
+        changed_fields.append("username")
+    if user.name != full_name:
         user.name = full_name
-        changed = True
-
-    if user.img != photo_url:
-        user.img = photo_url
-        changed = True
-
-    # Если баланс пустой — задаём дефолт
+        changed_fields.append("name")
     if not user.balance:
-        user.balance = default_balance
-        changed = True
+        user.balance = "0"
+        changed_fields.append("balance")
 
-    if changed:
-        user.save(update_fields=["username", "name", "img", "balance"])
+    if changed_fields:
+        user.save(update_fields=changed_fields)
 
-    token_obj.user = user
-    token_obj.telegram_id = tg_id
-    token_obj.used_at = timezone.now()
-    token_obj.save(update_fields=["user", "telegram_id", "used_at"])
-
+    LoginToken.objects.filter(token=code).update(user=user)
     return user
 
-# ========== BOT HANDLERS ==========
+
+claim_login_token = sync_to_async(_claim_login_token, thread_sensitive=True)
+
+
+@sync_to_async(thread_sensitive=True)
+def _save_avatar(user_id: int, avatar_url: str):
+    User.objects.filter(pk=user_id).exclude(img=avatar_url).update(img=avatar_url)
+
+
+async def refresh_avatar(user_id: int, telegram_id: int, bot_token: str):
+    try:
+        avatar_url = await sync_to_async(
+            tg_service.download_and_cache_avatar,
+            thread_sensitive=True,
+        )(bot_token, telegram_id)
+        if avatar_url:
+            await _save_avatar(user_id, avatar_url)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.exception("Failed to refresh avatar for telegram_id=%s", telegram_id)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
     await update.message.reply_text(
         "Пришлите мне ваш одноразовый код (6 символов A-Z0-9), который отображается на сайте."
     )
 
 
-async def fetch_avatar_url(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> str | None:
-    """
-    Пытаемся получить URL аватарки:
-    1) get_user_profile_photos (самый большой size)
-    2) fallback -> get_chat().photo.big_file_id
-    Возвращает прямой URL (можете заменить на локальное сохранение).
-    """
-    # 1. Основной способ
-    try:
-        photos = await context.bot.get_user_profile_photos(user_id=user_id, limit=1)
-        if photos.total_count:
-            sizes = photos.photos[0]
-            largest = sizes[-1]
-            file = await context.bot.get_file(largest.file_id)
-            url = f"https://api.telegram.org/file/bot{context.bot.token}/{file.file_path}"
-            logger.info("Avatar via get_user_profile_photos user=%s url=%s", user_id, url)
-            return url
-        else:
-            logger.info("No photos via get_user_profile_photos for user=%s — trying get_chat fallback", user_id)
-    except Exception:
-        logger.exception("Error get_user_profile_photos for user=%s", user_id)
-
-    # 2. Fallback: get_chat
-    try:
-        chat = await context.bot.get_chat(user_id)
-        if chat and chat.photo:
-            # big_file_id чаще 640x640
-            file = await context.bot.get_file(chat.photo.big_file_id)
-            url = f"{file.file_path}"
-            logger.info("Avatar via get_chat fallback user=%s url=%s", user_id, url)
-            return url
-        else:
-            logger.info("get_chat has no photo for user=%s", user_id)
-    except Exception:
-        logger.exception("Error get_chat fallback for user=%s", user_id)
-
-    # Если аватар не найден, используем плейсхолдер
-    return DEFAULT_AVATAR_URL
-
-
-
-async def fetch_profile_photo_url(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> str | None:
-    try:
-        photos = await context.bot.get_user_profile_photos(user_id=user_id, limit=1)
-        print('photos', photos)
-        if not photos.total_count:
-            return None
-        # берем самый большой вариант
-        photo_sizes = photos.photos[0]
-        largest = photo_sizes[-1]  # последний — самый большой
-        file = await context.bot.get_file(largest.file_id)
-        url = f"https://api.telegram.org/file/bot{context.bot.token}/{file.file_path}"
-        logger.info("Fetched avatar for %s: %s", user_id, url)
-        return url
-    except Exception:
-        logger.exception("Не удалось получить аватар пользователя %s", user_id)
-        return None
-
-
 async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
+
     raw = update.message.text.strip().upper()
-
     if not TOKEN_PATTERN.fullmatch(raw):
-        await update.message.reply_text("Формат токена неверен. Нужно 6 символов A-Z0-9.")
-        return
-
-    try:
-        token_obj = await get_token(raw)
-    except LoginToken.DoesNotExist:
-        await update.message.reply_text("Токен не найден или уже использован.")
-        return
-    except Exception:
-        logger.exception("DB error fetching token")
-        await update.message.reply_text("Временная ошибка. Попробуйте позже.")
-        return
-
-    # Дополнительная проверка срока
-    if token_obj.expires_at and token_obj.expires_at < timezone.now():
-        await update.message.reply_text("Токен истёк.")
+        await update.message.reply_text(
+            "Формат токена неверен. Нужно 6 символов A-Z0-9."
+        )
         return
 
     tg_user = update.effective_user
+    if not tg_user:
+        await update.message.reply_text("Не удалось определить пользователя Telegram.")
+        return
 
-    # Получаем аватар через общий Telegram API клиент и кешируем локально.
-    photo_url = await sync_to_async(tg_service.download_and_cache_avatar)(context.bot.token, tg_user.id)
-    if not photo_url:
-        photo_url = DEFAULT_AVATAR_URL
-
-    full_name = (tg_user.first_name or "") + (" " + tg_user.last_name if tg_user.last_name else "")
-    full_name = full_name.strip()
-
+    full_name = " ".join(
+        part for part in (tg_user.first_name, tg_user.last_name) if part
+    )
     try:
-        user = await finalize_token(
-            token_obj,
+        user = await claim_login_token(
+            raw,
             {
                 "tgId": tg_user.id,
                 "username": tg_user.username,
                 "full_name": full_name,
-                "photo_url": photo_url,
-                "default_balance": "0",  # Можете поменять на стартовый бонус, например '100'
-            }
+            },
         )
-    except ValueError as e:
-        if str(e) == "expired":
-            await update.message.reply_text("Токен истёк.")
-        else:
-            await update.message.reply_text("Ошибка токена.")
+    except LoginTokenExpired:
+        await update.message.reply_text("Токен истёк.")
+        return
+    except LoginTokenUnavailable:
+        await update.message.reply_text("Токен не найден или уже использован.")
         return
     except Exception:
-        logger.exception("DB error finalizing token")
+        logger.exception("Failed to finalize login token")
         await update.message.reply_text("Ошибка сервера.")
         return
 
+    username = f" (@{user.username})" if user.username else ""
     await update.message.reply_text(
-        f"Успешно! Пользователь {user.name} (@{user.username}) авторизован. Вернитесь на сайт."
+        f"Успешно! Пользователь {user.name}{username} авторизован. Вернитесь на сайт."
+    )
+    context.application.create_task(
+        refresh_avatar(user.pk, tg_user.id, context.bot.token),
+        update=update,
     )
 
-def main():
-    bot_token = settings.TELEGRAM_BOT_TOKEN or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
-    proxy_url = getattr(settings, "TELEGRAM_API_PROXY", "")
-    builder = ApplicationBuilder().token(bot_token)
+
+def _build_request(proxy_url: str, *, read_timeout: float, pool_size: int):
+    kwargs = {
+        "connection_pool_size": pool_size,
+        "connect_timeout": 5,
+        "read_timeout": read_timeout,
+        "write_timeout": 15,
+        "pool_timeout": 5,
+    }
     if proxy_url:
-        builder = (
-            builder
-            .request(HTTPXRequest(proxy_url=proxy_url))
-            .get_updates_request(HTTPXRequest(proxy_url=proxy_url))
-        )
+        kwargs["proxy"] = proxy_url
+    return HTTPXRequest(**kwargs)
+
+
+def main():
+    bot_token = settings.TELEGRAM_BOT_TOKEN
+    if not bot_token:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
+
+    proxy_url = getattr(settings, "TELEGRAM_API_PROXY", "")
+    builder = (
+        ApplicationBuilder()
+        .token(bot_token)
+        .request(_build_request(proxy_url, read_timeout=15, pool_size=8))
+        .get_updates_request(_build_request(proxy_url, read_timeout=35, pool_size=1))
+    )
     app = builder.build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_token))
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()

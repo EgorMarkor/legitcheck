@@ -1,0 +1,20 @@
+[Unit]
+Description=Legitcheck Telegram login bot
+Requires=legitcheck-tg-tunnel.service
+After=network-online.target legitcheck-tg-tunnel.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/legitcheck
+EnvironmentFile=/etc/legitcheck/legitcheck.env
+ExecStart=/root/legitcheck/env/bin/python /root/legitcheck/telegram_login_bot.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

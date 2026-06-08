@@ -11,7 +11,9 @@ django.setup()
 
 from webapp.models import Verdict
 
-API_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "") or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+API_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
+if not API_TOKEN:
+    raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
 TELEGRAM_API_PROXY = getattr(settings, "TELEGRAM_API_PROXY", "")
 bot_kwargs = {
     "token": API_TOKEN,

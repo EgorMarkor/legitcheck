@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,25 +24,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-%7t^@^hct!d*e2*-ss7((0wy#+5^ne^=oe)ku_cy4e(c35ta=b",
-)
+LOCAL_DEV = os.environ.get("LOCAL_DEV") == "1"
+RUNNING_TESTS = "test" in sys.argv
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if LOCAL_DEV or RUNNING_TESTS:
+        SECRET_KEY = "django-insecure-local-development-only"
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY is required")
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
 TELEGRAM_API_PROXY = os.environ.get("TELEGRAM_API_PROXY", "")
+YOOKASSA_ACCOUNT_ID = os.environ.get("YOOKASSA_ACCOUNT_ID", "")
+YOOKASSA_SECRET_KEY = os.environ.get("YOOKASSA_SECRET_KEY", "")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-LOCAL_DEV = os.environ.get("LOCAL_DEV") == "1"
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "1" if LOCAL_DEV else "0") == "1"
 
 ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com', '127.0.0.1']
 
 if LOCAL_DEV:
     ALLOWED_HOSTS += ['localhost']
 
-SECURE_SSL_REDIRECT = False
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = not LOCAL_DEV
+SECURE_HSTS_SECONDS = 0 if LOCAL_DEV else 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not LOCAL_DEV
 SESSION_COOKIE_SECURE = not LOCAL_DEV
 CSRF_COOKIE_SECURE = not LOCAL_DEV
 
@@ -83,7 +95,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'legitcheck.host_routing_middleware.DomainRoutingMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -206,7 +218,10 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "checkercheckerlegit@gmail.com"
-EMAIL_HOST_PASSWORD = "nbuopjebdrgdhzwq"
-DEFAULT_FROM_EMAIL = "LegitCheck <checkercheckerlegit@gmail.com>"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "checkercheckerlegit@gmail.com")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL",
+    "LegitCheck <checkercheckerlegit@gmail.com>",
+)
 EMAIL_TIMEOUT = 5  # быстро падаем если SMTP недоступен

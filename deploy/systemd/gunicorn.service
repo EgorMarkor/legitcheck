@@ -1,0 +1,24 @@
+[Unit]
+Description=Gunicorn daemon for Legitcheck
+Wants=network-online.target legitcheck-tg-tunnel.service
+After=network-online.target legitcheck-tg-tunnel.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/legitcheck
+EnvironmentFile=/etc/legitcheck/legitcheck.env
+ExecStart=/root/legitcheck/env/bin/gunicorn \
+  --access-logfile - \
+  --workers 3 \
+  --bind unix:/run/gunicorn.sock \
+  legitcheck.wsgi:application
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

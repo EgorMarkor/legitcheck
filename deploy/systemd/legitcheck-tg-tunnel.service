@@ -1,0 +1,28 @@
+[Unit]
+Description=Legitcheck Telegram proxy SSH tunnel
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=tgtunnel
+Group=tgtunnel
+ExecStart=/usr/bin/ssh -N -T \
+  -i /var/lib/tgtunnel/.ssh/id_ed25519 \
+  -o BatchMode=yes \
+  -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=15 \
+  -o ServerAliveCountMax=3 \
+  -o StrictHostKeyChecking=yes \
+  -o UserKnownHostsFile=/var/lib/tgtunnel/.ssh/known_hosts \
+  -L 127.0.0.1:33886:127.0.0.1:33886 \
+  tgproxy@72.56.116.12
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

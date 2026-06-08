@@ -14,8 +14,8 @@ django-unfold==0.62.0
 # pyTelegramBotAPI — используется для parse_web_app_data в webapp/views.py
 pyTelegramBotAPI==4.29.1
 # python-telegram-bot — используется в telegram_login_bot.py (бот авторизации)
-python-telegram-bot==20.7
-httpx==0.25.2       # зависимость python-telegram-bot
+python-telegram-bot==22.2
+httpx==0.28.1       # зависимость python-telegram-bot
 
 # ─── Платёжная система ────────────────────────────────────────────────────────
 yookassa==3.5.0

@@ -36,10 +36,10 @@ import logging
 from . import telegram as tg_service
 
 
-Configuration.account_id = 1222154
-Configuration.secret_key = "live_Y3wIog3WrIrKkUvTF7HID1XDB6mgztrXZZFdx9VbwjQ"
+Configuration.account_id = settings.YOOKASSA_ACCOUNT_ID
+Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
 
-TELEGRAM_BOT_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "") or "7620197633:AAHqBbPgVEtloxy6we7YyvMU7eWK9-hSyrU"
+TELEGRAM_BOT_TOKEN = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_VERDICT_CHAT_ID = getattr(settings, "TELEGRAM_VERDICT_CHAT_ID", None)
 TELEGRAM_MEDIA_GROUP_LIMIT = 10
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
@@ -187,13 +187,6 @@ def index(request):
             "balance": "0",
         }
     )
-    # Скачиваем аватарку и кэшируем локально (браузер никогда не ходит на api.telegram.org)
-    cached_img = tg_service.download_and_cache_avatar(TELEGRAM_BOT_TOKEN, tg_id)
-    new_img = cached_img or DEFAULT_AVATAR_URL
-    if user.img != new_img:
-        user.img = new_img
-        user.save(update_fields=["img"])
-
     request.session["tg_id"] = tg_id
     request.session.set_expiry(365 * 24 * 60 * 60)
 
@@ -1554,12 +1547,6 @@ def api_web_login_with_token(request, token):
     request.session["tg_id"] = user.tgId
     request.session.set_expiry(365 * 24 * 60 * 60)
     request.session.cycle_key()
-
-    # Скачиваем аватарку локально при каждом входе
-    cached_img = tg_service.download_and_cache_avatar(TELEGRAM_BOT_TOKEN, user.tgId)
-    if cached_img and user.img != cached_img:
-        user.img = cached_img
-        user.save(update_fields=["img"])
 
     return JsonResponse(
         {
