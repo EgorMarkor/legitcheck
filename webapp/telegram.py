@@ -58,12 +58,31 @@ def api_call(token, method, payload=None, files=None, timeout=API_TIMEOUT):
         else:
             resp = session.post(url, json=payload or {}, timeout=timeout)
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not data.get("ok", False):
+            logger.warning(
+                "Telegram API rejected request method=%s status=%s description=%s",
+                method,
+                resp.status_code,
+                data.get("description", "unknown error"),
+            )
+            return None
+        return data
     except requests.RequestException as exc:
+        response = getattr(exc, "response", None)
+        status = getattr(response, "status_code", None)
+        description = None
+        if response is not None:
+            try:
+                description = response.json().get("description")
+            except (ValueError, AttributeError):
+                description = None
         logger.warning(
-            "Telegram API request failed method=%s error=%s",
+            "Telegram API request failed method=%s error=%s status=%s description=%s",
             method,
             type(exc).__name__,
+            status,
+            description or "unavailable",
         )
         return None
     except ValueError:
