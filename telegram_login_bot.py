@@ -16,6 +16,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram.error import NetworkError
 from telegram.request import HTTPXRequest
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
@@ -174,6 +175,20 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_error(update: object, context: ContextTypes.DEFAULT_TYPE):
+    error = context.error
+    if error is None:
+        logger.error("Telegram bot error handler called without an exception")
+        return
+    if isinstance(error, NetworkError):
+        logger.warning("Temporary Telegram network error: %s", type(error).__name__)
+        return
+    logger.error(
+        "Unhandled Telegram bot error",
+        exc_info=(type(error), error, error.__traceback__),
+    )
+
+
 def _build_request(proxy_url: str, *, read_timeout: float, pool_size: int):
     kwargs = {
         "connection_pool_size": pool_size,
@@ -202,6 +217,7 @@ def main():
     app = builder.build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_token))
+    app.add_error_handler(handle_error)
     app.run_polling()
 
 

@@ -18,7 +18,7 @@ ExecStart=/usr/bin/ssh -N -T \
   -L 127.0.0.1:33886:127.0.0.1:33886 \
   tgproxy@72.56.116.12
 Restart=always
-RestartSec=3
+RestartSec=1
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
