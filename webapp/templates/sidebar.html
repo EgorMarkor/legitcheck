@@ -17,9 +17,17 @@
     <!-- Кнопка "Главная" -->
     <a href="{% url 'home' %}" class="flex flex-col items-center">
       {% if request.resolver_match.url_name == 'home' %}
-        <img class="w-[1.5rem] h-auto" src="{% static 'home_active.svg' %}">
+        <img class="w-[1.5rem] h-auto"
+             src="{% static 'home_active.svg' %}"
+             data-active-src="{% static 'home_active.svg' %}"
+             data-inactive-src="{% static 'home.svg' %}"
+             alt="">
       {% else %}
-        <img class="w-[1.5rem] h-auto" src="{% static 'home.svg' %}">
+        <img class="w-[1.5rem] h-auto"
+             src="{% static 'home.svg' %}"
+             data-active-src="{% static 'home_active.svg' %}"
+             data-inactive-src="{% static 'home.svg' %}"
+             alt="">
       {% endif %}
       <span class="text-sm">Главная</span>
     </a>
@@ -34,9 +42,17 @@
     <!-- Кнопка "Вердикты" -->
     <a href="{% url 'verdicts' %}" class="flex flex-col items-center">
       {% if request.resolver_match.url_name == 'verdicts' %}
-        <img class="w-[1.5rem] h-auto" src="{% static 'verdicts_active.svg' %}">
+        <img class="w-[1.5rem] h-auto"
+             src="{% static 'verdicts_active.svg' %}"
+             data-active-src="{% static 'verdicts_active.svg' %}"
+             data-inactive-src="{% static 'verdicts.svg' %}"
+             alt="">
       {% else %}
-        <img class="w-[1.5rem] h-auto" src="{% static 'verdicts.svg' %}">
+        <img class="w-[1.5rem] h-auto"
+             src="{% static 'verdicts.svg' %}"
+             data-active-src="{% static 'verdicts_active.svg' %}"
+             data-inactive-src="{% static 'verdicts.svg' %}"
+             alt="">
       {% endif %}
       <span class="text-sm">Вердикты</span>
     </a>

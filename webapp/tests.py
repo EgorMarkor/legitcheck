@@ -1,9 +1,13 @@
 import json
+import re
 import shutil
 import tempfile
 from datetime import timedelta
+from pathlib import Path
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.staticfiles import finders
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -139,6 +143,28 @@ class VerdictApiTests(TestCase):
         self.assertContains(response, 'id="free-check-tariff"')
         self.assertContains(response, 'createUrl: "/verdict/create/free/"')
         self.assertContains(response, 'isAvailable: true')
+        self.assertContains(response, "data-active-src=")
+        self.assertContains(response, "data-inactive-src=")
+
+    def test_check_templates_only_reference_existing_static_files(self):
+        template_paths = (
+            Path(settings.BASE_DIR) / "webapp/templates/check.html",
+            Path(settings.BASE_DIR) / "pcwebapp/templates/pc/check.html",
+        )
+        missing = []
+
+        for template_path in template_paths:
+            source = template_path.read_text(encoding="utf-8")
+            static_names = set(
+                re.findall(r"""{%\s*static\s+['"]([^'"]+)['"]\s*%}""", source)
+            )
+            missing.extend(
+                f"{template_path.name}: {name}"
+                for name in sorted(static_names)
+                if finders.find(name) is None
+            )
+
+        self.assertEqual(missing, [])
 
     def test_paid_verdict_uses_basic_tariff_for_regular_brand(self):
         self._login_web_session()

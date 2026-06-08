@@ -738,15 +738,13 @@
   }
 
   function setSvgActive(img, isActive) {
-    var src = img.getAttribute("src") || "";
-    if (src.indexOf(".svg") === -1) return;
+    var activeSrc = img.getAttribute("data-active-src");
+    var inactiveSrc = img.getAttribute("data-inactive-src");
+    var nextSrc = isActive ? activeSrc : inactiveSrc;
 
-    var parts = src.split("?");
-    var path = parts[0].replace(/_active\.svg$/i, ".svg");
-    if (isActive) {
-      path = path.replace(/\.svg$/i, "_active.svg");
+    if (nextSrc && img.getAttribute("src") !== nextSrc) {
+      img.setAttribute("src", nextSrc);
     }
-    img.setAttribute("src", path + (parts[1] ? "?" + parts[1] : ""));
   }
 
   function dispatchPageReady(content) {

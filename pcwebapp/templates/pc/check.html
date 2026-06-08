@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Fallback for previews if images 404
-  const PREVIEW_FALLBACK = "{% static 'placeholder.png' %}";
+  const PREVIEW_FALLBACK = "{% static 'placeholder.svg' %}";
   document.querySelectorAll('.preview-img').forEach(function(img) {
     img.addEventListener('error', function() { img.src = PREVIEW_FALLBACK; }, { once: true });
   });
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // fallback for logos
-      const FALLBACK = "{% static 'placeholder.png' %}";
+      const FALLBACK = "{% static 'placeholder.svg' %}";
       document.querySelectorAll('.brand-logo').forEach(function(img){
         img.addEventListener('error', function() {
           img.style.objectFit='cover';
