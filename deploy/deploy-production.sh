@@ -5,13 +5,20 @@ APP_DIR="${APP_DIR:-/root/legitcheck}"
 ENV_FILE="${ENV_FILE:-/etc/legitcheck/legitcheck.env}"
 PYTHON="${PYTHON:-$APP_DIR/env/bin/python}"
 PIP="${PIP:-$APP_DIR/env/bin/pip}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/legitcheck}"
 
 cd "$APP_DIR"
 
-backup_dir="$APP_DIR/backups"
-backup_path="$backup_dir/db-$(date -u +%Y%m%dT%H%M%SZ).sqlite3"
-install -d -m 750 "$backup_dir"
-cp --preserve=mode,timestamps db.sqlite3 "$backup_path"
+backup_path="$BACKUP_DIR/db-$(date -u +%Y%m%dT%H%M%SZ).sqlite3"
+install -d -m 750 "$BACKUP_DIR"
+"$PYTHON" - "$backup_path" <<'PY'
+import sqlite3
+import sys
+
+with sqlite3.connect("db.sqlite3") as source:
+    with sqlite3.connect(sys.argv[1]) as destination:
+        source.backup(destination)
+PY
 
 git pull --ff-only
 "$PIP" install --disable-pip-version-check -r requirements.txt
