@@ -73,7 +73,7 @@ export function AccountScreen() {
     return null;
   }
 
-  const profileAvatar = resolveImageUrl(user.img) ?? staticUrl('avatar.png');
+  const profileAvatar = resolveImageUrl(user.img) ?? staticUrl('avatar-placeholder.png');
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: r(3) }}>

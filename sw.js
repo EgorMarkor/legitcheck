@@ -24,7 +24,7 @@ const PRECACHE_URLS = [
   '/static/balance.svg',
   '/static/start_prov.png',
   '/static/find_brend.png',
-  '/static/avatar.png',
+  '/static/avatar-placeholder.png',
 ];
 
 // ─── Install: прекэш ──────────────────────────────────────────────────────────

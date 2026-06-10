@@ -47,7 +47,7 @@ DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
 logger = logging.getLogger(__name__)
 
 # URL аватарки по умолчанию на случай отсутствия фото у пользователя
-DEFAULT_AVATAR_URL = "/static/avatar.png"
+DEFAULT_AVATAR_URL = "/static/avatar-placeholder.png"
 
 
 

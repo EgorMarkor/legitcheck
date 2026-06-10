@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 TOKEN_PATTERN = re.compile(r"[A-Z0-9]{6}")
-DEFAULT_AVATAR_URL = "/static/avatar.png"
+DEFAULT_AVATAR_URL = "/static/avatar-placeholder.png"
 
 
 class LoginTokenError(Exception):

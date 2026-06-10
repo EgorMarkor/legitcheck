@@ -32,7 +32,7 @@ class ClaimLoginTokenTests(TestCase):
         self.assertEqual(token.user, user)
         self.assertEqual(token.telegram_id, user.tgId)
         self.assertIsNotNone(token.used_at)
-        self.assertEqual(user.img, "/static/avatar.png")
+        self.assertEqual(user.img, "/static/avatar-placeholder.png")
 
     def test_used_token_cannot_be_claimed_twice(self):
         token = LoginToken.objects.create(

@@ -16,7 +16,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ user, onAvatarPress, onBalancePress }: AppHeaderProps) {
   const { r } = useWebRem();
-  const avatarUrl = resolveImageUrl(user.img) ?? staticUrl('avatar.png');
+  const avatarUrl = resolveImageUrl(user.img) ?? staticUrl('avatar-placeholder.png');
 
   return (
     <View style={[styles.wrapper, { marginTop: r(1), paddingHorizontal: r(1), paddingVertical: r(0.5) }]}> 
