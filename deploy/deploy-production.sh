@@ -30,6 +30,7 @@ set +a
 
 "$PYTHON" manage.py check
 "$PYTHON" manage.py migrate --noinput
+"$PYTHON" manage.py cleanup_login_tokens --retention-days 7
 "$PYTHON" manage.py collectstatic --noinput --clear
 
 systemctl restart gunicorn telegram-login-bot
