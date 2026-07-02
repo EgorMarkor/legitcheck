@@ -34,6 +34,7 @@ urlpatterns = [
     path('home/', views.index, name='home'),  # пример маршрута
     path('about/', views.about, name='about'),  # ещё один маршрут
     path('account/', views.cab, name="lk"),
+    path('account/delete/', views.account_delete, name="account_delete"),
     path('promo/', views.promo, name="promo"),
     path('verdicts/', views.verdicts, name="verdicts"),
     path('check/', views.check, name="check"),

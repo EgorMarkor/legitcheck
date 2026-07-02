@@ -11,7 +11,9 @@ from .models import (
     Verdict,
     VerdictPhoto,
 )
-from django.views.decorators.http import require_POST
+from django.core.files.storage import default_storage
+from django.db.models import Q
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -31,8 +33,10 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import os
 import traceback
 from pcwebapp.models import LoginToken
+from pcwebapp.models import UploadedVerdictPhoto as PcUploadedVerdictPhoto
 import json
 import logging
+from urllib.parse import urlparse
 from . import telegram as tg_service
 
 
@@ -239,6 +243,65 @@ def _free_check_json_state(user):
         "is_free_check_available": state["is_available"],
         "next_free_check_timestamp": next_timestamp.isoformat() if next_timestamp else None,
     }
+
+
+def _storage_path_from_media_value(value):
+    if not value:
+        return None
+
+    path = str(value).strip()
+    if not path:
+        return None
+
+    parsed = urlparse(path)
+    if parsed.scheme or parsed.netloc:
+        path = parsed.path
+
+    media_url = getattr(settings, "MEDIA_URL", "") or ""
+    if media_url and path.startswith(media_url):
+        path = path[len(media_url):]
+    elif path.startswith("/"):
+        return None
+
+    path = path.lstrip("/")
+    if not path or path.startswith("static/"):
+        return None
+
+    return path
+
+
+def _collect_account_media_paths(user):
+    media_paths = set()
+
+    for value in VerdictPhoto.objects.filter(verdict__user=user).values_list("image", flat=True):
+        path = _storage_path_from_media_value(value)
+        if path:
+            media_paths.add(path)
+
+    for value in UploadedVerdictPhoto.objects.filter(user=user).values_list("image", flat=True):
+        path = _storage_path_from_media_value(value)
+        if path:
+            media_paths.add(path)
+
+    for value in PcUploadedVerdictPhoto.objects.filter(user=user).values_list("image", flat=True):
+        path = _storage_path_from_media_value(value)
+        if path:
+            media_paths.add(path)
+
+    avatar_path = _storage_path_from_media_value(user.img)
+    if avatar_path:
+        media_paths.add(avatar_path)
+
+    return sorted(media_paths)
+
+
+def _delete_storage_paths(paths):
+    for path in paths:
+        try:
+            if default_storage.exists(path):
+                default_storage.delete(path)
+        except Exception:
+            logger.warning("Failed to delete account media file: %s", path, exc_info=True)
 
 
 
@@ -876,6 +939,37 @@ def cab(request):
         'free_check_available': free_check_state["is_free_check_available"],
         'free_check_next_timestamp': free_check_state["next_free_check_timestamp"],
     })
+
+
+@require_http_methods(["GET", "POST"])
+@require_user
+def account_delete(request):
+    if request.method == "GET":
+        return render(request, "account_delete.html", {
+            "tg_user": request.tg_user,
+        })
+
+    if request.POST.get("confirm_delete") != "1":
+        return render(request, "account_delete.html", {
+            "tg_user": request.tg_user,
+            "error": "Подтвердите удаление аккаунта.",
+        }, status=400)
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=request.tg_user.pk)
+        media_paths = _collect_account_media_paths(user)
+        user_email = user.email
+        tg_id = user.tgId
+
+        LoginToken.objects.filter(Q(user=user) | Q(telegram_id=tg_id)).delete()
+        if user_email:
+            EmailOTPToken.objects.filter(email__iexact=user_email).delete()
+
+        user.delete()
+        transaction.on_commit(lambda paths=tuple(media_paths): _delete_storage_paths(paths))
+
+    request.session.flush()
+    return render(request, "account_deleted.html")
     
     
 @require_user

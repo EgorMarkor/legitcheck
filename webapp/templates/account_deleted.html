@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<body class="text-gray-100 font-sans">
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
+        <div class="flex min-h-screen flex-col justify-center px-6 pb-20 pt-12">
+          <p class="text-[0.95rem] font-bold uppercase tracking-[0.12em] text-[#35E6AD]">Готово</p>
+          <h1 class="mt-3 text-[2rem] leading-tight font-bold text-white">Аккаунт удален</h1>
+          <p class="mt-4 text-[1.05rem] leading-[1.65rem] text-[#AEB6C3]">
+            Данные профиля и история проверок удалены. Для нового входа откройте приложение заново.
+          </p>
+          <a
+            href="{% url 'init' %}?clear_token=1"
+            class="mt-8 rounded-[1.2rem] bg-white px-5 py-4 text-center text-[1.1rem] font-bold text-[#0B0E13]"
+          >
+            На экран входа
+          </a>
+        </div>
+      </main>
+    </section>
+  </main>
+
+  <script>
+    localStorage.removeItem("checker_auth_token");
+    sessionStorage.clear();
+
+    (function () {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+      if (tg.BackButton) {
+        tg.BackButton.hide();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html>
+{% include 'head.html' %}
+<body class="text-gray-100 font-sans">
+  <main id="app-shell" class="app-shell" data-app-shell>
+    <section class="app-screen is-active" data-app-screen>
+      <main id="page-content" data-page>
+        <div class="min-h-screen px-6 pt-5 pb-24">
+          {% include 'header.html' %}
+
+          <section class="mt-8">
+            <p class="text-[0.95rem] font-bold uppercase tracking-[0.12em] text-[#FF6B6B]">Аккаунт</p>
+            <h1 class="mt-3 text-[2rem] leading-tight font-bold text-white">Удаление аккаунта</h1>
+            <p class="mt-4 text-[1.05rem] leading-[1.65rem] text-[#AEB6C3]">
+              Аккаунт, история проверок, загруженные фото и активированные промокоды будут удалены без восстановления.
+              Платежные записи останутся в системе без привязки к профилю.
+            </p>
+          </section>
+
+          <form method="post" class="mt-8 space-y-4">
+            {% csrf_token %}
+
+            {% if error %}
+              <div class="rounded-[1.2rem] border border-[#5B2732] bg-[#241116] px-4 py-3 text-[1rem] font-medium text-[#FF8A8A]">
+                {{ error }}
+              </div>
+            {% endif %}
+
+            <label class="bg_black flex items-start gap-3 rounded-[1.2rem] px-4 py-4">
+              <input
+                type="checkbox"
+                name="confirm_delete"
+                value="1"
+                class="mt-1 h-5 w-5 shrink-0 accent-[#FF5151]"
+              >
+              <span class="text-[1rem] leading-[1.5rem] text-white">
+                Я понимаю, что аккаунт и данные профиля будут удалены без возможности восстановления.
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              class="w-full rounded-[1.2rem] bg-[#FF5151] px-5 py-4 text-[1.1rem] font-bold text-white transition active:scale-[0.99]"
+            >
+              Удалить аккаунт
+            </button>
+
+            <a
+              href="{% url 'lk' %}"
+              class="block w-full rounded-[1.2rem] bg_black px-5 py-4 text-center text-[1.05rem] font-bold text-white"
+            >
+              Отмена
+            </a>
+          </form>
+        </div>
+      </main>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+      if (tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(function () {
+          window.location.href = "{% url 'lk' %}";
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

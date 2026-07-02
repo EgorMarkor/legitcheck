@@ -191,7 +191,7 @@
             <img src="{% static 'arrow.svg' %}" class="w-[3rem] h-[3rem]">
         </div>
     </div>
-    <div class="px-6 mt-4 pb-4">
+    <div class="px-6 mt-4">
         <div class="bg_black flex rounded-[1.2rem] px-[1.5rem] py-[1rem] items-center justify-between" onclick="window.location.href='{% url 'confident' %}'">
             <div class="flex items-center gap-2">
                 <img src="{% static 'file.svg' %}" class="w-[1.2rem] h-[1.2rem]">
@@ -199,6 +199,15 @@
             </div>
             <img src="{% static 'arrow.svg' %}" class="w-[3rem] h-[3rem]">
         </div>
+    </div>
+    <div class="px-6 mt-4 pb-28">
+        <a href="{% url 'account_delete' %}" class="bg_black flex rounded-[1.2rem] px-[1.5rem] py-[1rem] items-center justify-between border border-[#3A1D24]">
+            <div class="flex items-center gap-2">
+                <img src="{% static 'file.svg' %}" class="w-[1.2rem] h-[1.2rem] opacity-70">
+                <div class="text-[1rem] font-medium text-[#FF6B6B]">Удалить аккаунт</div>
+            </div>
+            <img src="{% static 'arrow.svg' %}" class="w-[3rem] h-[3rem] opacity-70">
+        </a>
     </div>
   </div>
   <div class="mt-4">

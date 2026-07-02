@@ -6,13 +6,24 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.staticfiles import finders
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from pcwebapp.models import LoginToken
-from webapp.models import HomePagePopularItem, UploadedVerdictPhoto, User, Verdict, VerdictPhoto
+from webapp.models import (
+    EmailOTPToken,
+    HomePagePopularItem,
+    Payment,
+    PromoCode,
+    PromoCodeRedemption,
+    UploadedVerdictPhoto,
+    User,
+    Verdict,
+    VerdictPhoto,
+)
 
 
 TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix="webapp_tests_media_")
@@ -625,3 +636,87 @@ class VerdictApiTests(TestCase):
         self.assertEqual(len(response.context["popular_models"]), 5)
         self.assertEqual(response.context["popular_models"][0].title, "Nike Dunk")
         self.assertContains(response, "Nike Dunk")
+
+    def test_account_delete_requires_login(self):
+        response = self.client.get("/account/delete/", HTTP_HOST=self.host)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/")
+
+    def test_account_delete_requires_confirmation(self):
+        self._login_web_session()
+
+        response = self.client.post("/account/delete/", {}, HTTP_HOST=self.host)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+        self.assertContains(response, "Подтвердите удаление аккаунта.", status_code=400)
+
+    def test_account_delete_removes_user_data_and_clears_session(self):
+        self.user.email = "delete@example.com"
+        self.user.save(update_fields=["email"])
+        self._login_web_session()
+
+        verdict = Verdict.objects.create(
+            user=self.user,
+            status="inpending",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="manager comment",
+            comment_from_user="user comment",
+            code="54321",
+            speed="24h",
+            price="450.00",
+            with_reason=False,
+        )
+        verdict_photo = VerdictPhoto.objects.create(
+            verdict=verdict,
+            image=self._image_file("delete-verdict.gif"),
+        )
+        uploaded_photo = UploadedVerdictPhoto.objects.create(
+            user=self.user,
+            image=self._image_file("delete-upload.gif"),
+        )
+        payment = Payment.objects.create(
+            user=self.user,
+            amount="149.00",
+            status="COMPLETED",
+        )
+        promo_code = PromoCode.objects.create(code="DELETE", reward_amount="10.00")
+        PromoCodeRedemption.objects.create(
+            promo_code=promo_code,
+            user=self.user,
+            amount="10.00",
+        )
+        EmailOTPToken.objects.create(email=self.user.email, code="123456")
+
+        media_paths = [verdict_photo.image.name, uploaded_photo.image.name]
+        for path in media_paths:
+            self.assertTrue(default_storage.exists(path))
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                "/account/delete/",
+                {"confirm_delete": "1"},
+                HTTP_HOST=self.host,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account_deleted.html")
+        self.assertContains(response, "checker_auth_token")
+
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+        self.assertEqual(Verdict.objects.filter(pk=verdict.pk).count(), 0)
+        self.assertEqual(VerdictPhoto.objects.filter(pk=verdict_photo.pk).count(), 0)
+        self.assertEqual(UploadedVerdictPhoto.objects.filter(pk=uploaded_photo.pk).count(), 0)
+        self.assertEqual(PromoCodeRedemption.objects.filter(user_id=self.user.pk).count(), 0)
+        self.assertEqual(EmailOTPToken.objects.filter(email__iexact=self.user.email).count(), 0)
+        self.assertEqual(LoginToken.objects.filter(user_id=self.user.pk).count(), 0)
+
+        payment.refresh_from_db()
+        self.assertIsNone(payment.user_id)
+        self.assertNotIn("tg_id", self.client.session)
+
+        for path in media_paths:
+            self.assertFalse(default_storage.exists(path))
