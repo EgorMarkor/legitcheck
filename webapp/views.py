@@ -941,10 +941,10 @@ def cab(request):
     })
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "HEAD", "POST"])
 @require_user
 def account_delete(request):
-    if request.method == "GET":
+    if request.method in ("GET", "HEAD"):
         return render(request, "account_delete.html", {
             "tg_user": request.tg_user,
         })
