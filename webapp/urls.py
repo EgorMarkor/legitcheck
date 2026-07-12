@@ -13,6 +13,7 @@ from .views import (
     VerdictPhotoViewSet,
     PaymentViewSet
 )
+from . import vkchat
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +31,15 @@ router.register(r'verdict-photos', VerdictPhotoViewSet)
 router.register(r'payments', PaymentViewSet)
 
 urlpatterns = [
+    path('vkchat/', vkchat.vkchat_app, name='vkchat_app'),
+    path('vkchat/manifest.json', vkchat.vkchat_manifest, name='vkchat_manifest'),
+    path('vkchat/api/config/', vkchat.vkchat_config, name='vkchat_config'),
+    path('vkchat/api/conversations/', vkchat.vkchat_conversations, name='vkchat_conversations'),
+    path('vkchat/api/conversations/<int:peer_id>/messages/', vkchat.vkchat_messages, name='vkchat_messages'),
+    path('vkchat/api/conversations/<int:peer_id>/read/', vkchat.vkchat_mark_read, name='vkchat_mark_read'),
+    path('vkchat/api/sync/', vkchat.vkchat_sync, name='vkchat_sync'),
+    path('vkchat/api/push/subscribe/', vkchat.vkchat_push_subscribe, name='vkchat_push_subscribe'),
+    path('vkchat/api/push/unsubscribe/', vkchat.vkchat_push_unsubscribe, name='vkchat_push_unsubscribe'),
     path('', views.init, name='init'),  # пример маршрута
     path('home/', views.index, name='home'),  # пример маршрута
     path('about/', views.about, name='about'),  # ещё один маршрут

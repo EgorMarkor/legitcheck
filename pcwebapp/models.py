@@ -22,6 +22,13 @@ class LoginToken(models.Model):
             self.expires_at = timezone.now() + timedelta(minutes=5)
         super().save(*args, **kwargs)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["ip_address", "used_at", "-created_at"], name="login_ip_used_created_idx"),
+            models.Index(fields=["expires_at"], name="login_expires_idx"),
+            models.Index(fields=["user", "used_at"], name="login_user_used_idx"),
+        ]
+
 
 class Brand(models.Model):
     brand = models.CharField(max_length=255)
@@ -31,6 +38,11 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.brand
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["category", "brand"], name="brand_category_name_idx"),
+        ]
 
 
 class UploadedVerdictPhoto(models.Model):
@@ -53,6 +65,10 @@ class UploadedVerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Загруженная фотография вердикта"
         verbose_name_plural = "Загруженные фотографии вердикта"
+        indexes = [
+            models.Index(fields=["user", "verdict"], name="pcupload_user_verdict_idx"),
+            models.Index(fields=["user", "-created_at"], name="pcupload_user_created_idx"),
+        ]
 
     def save(self, *args, **kwargs):
         if self.image and not getattr(self.image, "_committed", True):

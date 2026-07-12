@@ -169,9 +169,10 @@
               <div class="_3-account__frame-2131329276">
                 <div class="_3-account__frame-1000001368">
                   {% for verdict in verdicts %}
+                  {% with first_photo=verdict.prefetched_photos.0 %}
                   <a href="{% url 'pc_verdicts' %}?code={{ verdict.code }}">
                     <div class="_3-account__frame-130">
-                      <img class="_3-account__image" src="{{ verdict.photos.first.image.url }}" />
+                      <img class="_3-account__image" src="{% if first_photo %}{{ first_photo.image.url }}{% else %}{% static 'avatar-placeholder.png' %}{% endif %}" />
                       <div class="_3-account__frame-1948754069">
                         <div class="_3-account__div11">{{ verdict.get_status_display }}</div>
                       </div>
@@ -193,6 +194,7 @@
                       </div>
                     </div>
                   </a>
+                  {% endwith %}
                   {% endfor %}
                 </div>
               </div>

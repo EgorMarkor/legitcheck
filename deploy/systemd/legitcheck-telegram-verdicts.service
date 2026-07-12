@@ -1,0 +1,17 @@
+[Unit]
+Description=LegitCheck Telegram verdict delivery worker
+After=network-online.target gunicorn.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/legitcheck
+EnvironmentFile=/etc/legitcheck/legitcheck.env
+ExecStart=/root/legitcheck/env/bin/python manage.py process_telegram_verdicts
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

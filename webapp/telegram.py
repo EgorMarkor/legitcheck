@@ -122,6 +122,13 @@ def edit_message_reply_markup(token, chat_id, message_id, reply_markup):
     })
 
 
+def delete_message(token, chat_id, message_id):
+    return api_call(token, "deleteMessage", {
+        "chat_id": chat_id,
+        "message_id": message_id,
+    })
+
+
 # ─── Avatar: download & cache locally ────────────────────────────────────────
 
 def _get_avatar_cdn_url(token, tg_id):

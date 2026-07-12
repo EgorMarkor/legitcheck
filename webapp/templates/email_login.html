@@ -48,7 +48,8 @@
       font-size: 13px;
       color: #8a94a3;
     }
-    input[type="email"] {
+    input[type="email"],
+    input[type="password"] {
       width: 100%;
       box-sizing: border-box;
       background: #0b0d11;
@@ -60,7 +61,8 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    input[type="email"]:focus {
+    input[type="email"]:focus,
+    input[type="password"]:focus {
       border-color: rgba(12, 200, 139, 0.5);
     }
     .btn {
@@ -118,6 +120,8 @@
 
     {% if error == 'invalid' %}
       <div class="error">Введите корректный email-адрес.</div>
+    {% elif error == 'invalid_credentials' %}
+      <div class="error">Неверный email или пароль.</div>
     {% elif error == 'send_failed' %}
       <div class="error">Не удалось отправить письмо. Попробуйте позже или войдите через Telegram.</div>
     {% endif %}
@@ -128,7 +132,11 @@
         <label for="email">Email</label>
         <input type="email" id="email" name="email" placeholder="you@example.com" autofocus autocomplete="email" required>
       </div>
-      <button type="submit" class="btn">Получить код</button>
+      <div class="field">
+        <label for="password">Пароль / Password</label>
+        <input type="password" id="password" name="password" placeholder="Для обычного входа оставьте пустым" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn">Войти / получить код</button>
     </form>
 
     <div class="divider">или</div>

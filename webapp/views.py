@@ -10,13 +10,15 @@ from .models import (
     User,
     Verdict,
     VerdictPhoto,
+    TelegramVerdictDelivery,
 )
 from django.core.files.storage import default_storage
-from django.db.models import Q
+from django.core.exceptions import ImproperlyConfigured
+from django.db.models import Prefetch, Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.urls import reverse
-from django.utils.crypto import get_random_string
+from django.utils.crypto import constant_time_compare, get_random_string
 from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from django.utils import timezone
@@ -32,6 +34,7 @@ from yookassa.domain.notification import WebhookNotification
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import os
 import traceback
+import threading
 from pcwebapp.models import LoginToken
 from pcwebapp.models import UploadedVerdictPhoto as PcUploadedVerdictPhoto
 import json
@@ -49,6 +52,56 @@ TELEGRAM_MEDIA_GROUP_LIMIT = 10
 DEFAULT_PUBLIC_BASE_URL = "https://legitcheck.one"
 
 logger = logging.getLogger(__name__)
+
+
+def _configure_yookassa():
+    account_id = str(getattr(settings, "YOOKASSA_ACCOUNT_ID", "")).strip()
+    secret_key = str(getattr(settings, "YOOKASSA_SECRET_KEY", "")).strip()
+    if not account_id or not secret_key:
+        logger.error("YooKassa is disabled: YOOKASSA_ACCOUNT_ID/YOOKASSA_SECRET_KEY are missing")
+        return False
+    Configuration.account_id = account_id
+    Configuration.secret_key = secret_key
+    return True
+
+
+def _yookassa_error_response(exc):
+    logger.exception("YooKassa API request failed")
+    details = str(exc) or type(exc).__name__
+    return JsonResponse({"error": "Не удалось создать платёж", "details": details}, status=502)
+
+
+def _create_yookassa_payment(user, amount):
+    if not _configure_yookassa():
+        raise ImproperlyConfigured("YooKassa credentials are not configured")
+    receipt = {
+        "customer": {"email": user.email or "no-reply@legitcheck.one"},
+        "items": [{
+            "description": "Пополнение баланса LegitCheck",
+            "quantity": "1.00",
+            "amount": {"value": str(amount), "currency": "RUB"},
+            "vat_code": 1,
+            "payment_subject": "service",
+            "payment_mode": "full_payment",
+        }],
+    }
+    tax_system_code = getattr(settings, "YOOKASSA_TAX_SYSTEM_CODE", "")
+    if tax_system_code:
+        receipt["tax_system_code"] = int(tax_system_code)
+    return YooPayment.create(
+        {
+            "amount": {"value": str(amount), "currency": "RUB"},
+            "confirmation": {
+                "type": "redirect",
+                "return_url": settings.YOOKASSA_RETURN_URL,
+            },
+            "capture": True,
+            "description": "Пополнение баланса LegitCheck",
+            "receipt": receipt,
+            "metadata": {"tg_id": str(user.tgId)},
+        },
+        str(uuid.uuid4()),
+    )
 
 # URL аватарки по умолчанию на случай отсутствия фото у пользователя
 DEFAULT_AVATAR_URL = "/static/avatar-placeholder.png"
@@ -140,6 +193,24 @@ def _homepage_popular_models():
     for fallback_item in HomePagePopularItem.default_items():
         items.append(items_by_position.get(fallback_item.position, fallback_item))
     return items
+
+
+def _verdict_photos_prefetch():
+    return Prefetch(
+        "photos",
+        queryset=VerdictPhoto.objects.order_by("id"),
+        to_attr="prefetched_photos",
+    )
+
+
+def _verdicts_with_photos(queryset):
+    return queryset.prefetch_related(_verdict_photos_prefetch())
+
+
+def _verdict_photos(verdict):
+    if hasattr(verdict, "prefetched_photos"):
+        return list(verdict.prefetched_photos)
+    return list(verdict.photos.order_by("id"))
 
 
 def index(request):
@@ -315,7 +386,7 @@ def _generate_unique_code():
         code = get_random_string(5, allowed_chars='0123456789')
     return code
 
-from django.db import transaction
+from django.db import close_old_connections, transaction
 from django.core.mail import send_mail
 import random
 import zlib
@@ -362,8 +433,11 @@ def _chunked(items, size):
 
 
 def _send_verdict_to_telegram(verdict):
-    if not TELEGRAM_VERDICT_CHAT_ID:
-        return
+    policy = _telegram_delivery_policy(verdict)
+    if not policy:
+        return []
+    chat_id, _, _ = policy
+    message_ids = []
     text = _build_verdict_message(verdict, include_prompt=True)
     reply_markup = {
         "inline_keyboard": [
@@ -373,7 +447,7 @@ def _send_verdict_to_telegram(verdict):
             ]
         ]
     }
-    photos = list(verdict.photos.all())
+    photos = _verdict_photos(verdict)
     if photos:
         first_caption = text
         for group in _chunked(photos, TELEGRAM_MEDIA_GROUP_LIMIT):
@@ -394,24 +468,116 @@ def _send_verdict_to_telegram(verdict):
                 if use_upload:
                     files[file_key] = open(photo_path, "rb")
             if files:
-                tg_service.send_media_group(TELEGRAM_BOT_TOKEN, TELEGRAM_VERDICT_CHAT_ID, media, files=files)
+                result = tg_service.send_media_group(TELEGRAM_BOT_TOKEN, chat_id, media, files=files)
                 for file in files.values():
                     file.close()
             else:
-                tg_service.send_media_group(TELEGRAM_BOT_TOKEN, TELEGRAM_VERDICT_CHAT_ID, media)
-        tg_service.send_message(
+                result = tg_service.send_media_group(TELEGRAM_BOT_TOKEN, chat_id, media)
+            if not result:
+                raise RuntimeError("Telegram rejected the verdict media group")
+            message_ids.extend(item["message_id"] for item in result.get("result", []))
+        result = tg_service.send_message(
             TELEGRAM_BOT_TOKEN,
-            TELEGRAM_VERDICT_CHAT_ID,
+            chat_id,
             text,
             reply_markup=reply_markup,
         )
     else:
-        tg_service.send_message(
+        result = tg_service.send_message(
             TELEGRAM_BOT_TOKEN,
-            TELEGRAM_VERDICT_CHAT_ID,
+            chat_id,
             text,
             reply_markup=reply_markup,
         )
+    if not result:
+        raise RuntimeError("Telegram rejected the verdict message")
+    message_ids.append(result["result"]["message_id"])
+    return message_ids
+
+
+def _telegram_delivery_policy(verdict):
+    """Return (chat_id, lifetime, repeat interval) for a check SLA."""
+    speed = (verdict.speed or "").lower()
+    if speed == FREE_CHECK_SPEED or speed.startswith("12h"):
+        bucket, lifetime, interval = "12H", timedelta(hours=12), timedelta(hours=1)
+    elif speed in {"standard", "24h"} or speed.startswith("3h"):
+        bucket, lifetime, interval = "3H", timedelta(hours=3), timedelta(minutes=30)
+    else:
+        bucket, lifetime, interval = "1H", timedelta(hours=1), timedelta(minutes=15)
+    chat_id = getattr(settings, f"TELEGRAM_VERDICT_CHAT_{bucket}_ID", "") or TELEGRAM_VERDICT_CHAT_ID
+    return (str(chat_id), lifetime, interval) if chat_id else None
+
+
+def _delete_telegram_messages(chat_id, message_ids):
+    for message_id in message_ids or []:
+        tg_service.delete_message(TELEGRAM_BOT_TOKEN, chat_id, message_id)
+
+
+def _deliver_verdict_to_telegram(verdict, delivery=None):
+    policy = _telegram_delivery_policy(verdict)
+    if not policy:
+        return
+    chat_id, lifetime, interval = policy
+    now = timezone.now()
+    delivery = delivery or TelegramVerdictDelivery.objects.filter(verdict=verdict).first()
+    if delivery:
+        _delete_telegram_messages(delivery.chat_id, delivery.message_ids)
+    message_ids = _send_verdict_to_telegram(verdict)
+    TelegramVerdictDelivery.objects.update_or_create(
+        verdict=verdict,
+        defaults={
+            "chat_id": chat_id,
+            "message_ids": message_ids,
+            "interval_minutes": int(interval.total_seconds() // 60),
+            "expires_at": delivery.expires_at if delivery else now + lifetime,
+            "next_send_at": now + interval,
+            "active": verdict.status not in {"legit", "fake"},
+            "last_error": "",
+        },
+    )
+
+
+def _send_verdict_to_telegram_by_id(verdict_id):
+    close_old_connections()
+    try:
+        verdict = (
+            Verdict.objects
+            .select_related("user")
+            .prefetch_related(_verdict_photos_prefetch())
+            .get(pk=verdict_id)
+        )
+        policy = _telegram_delivery_policy(verdict)
+        if not policy:
+            return
+        chat_id, lifetime, interval = policy
+        now = timezone.now()
+        delivery, _ = TelegramVerdictDelivery.objects.get_or_create(
+            verdict=verdict,
+            defaults={
+                "chat_id": chat_id,
+                "interval_minutes": int(interval.total_seconds() // 60),
+                "expires_at": now + lifetime,
+                "next_send_at": now,
+            },
+        )
+        _deliver_verdict_to_telegram(verdict, delivery=delivery)
+    except Exception:
+        logger.exception("Failed to send verdict %s to Telegram", verdict_id)
+    finally:
+        close_old_connections()
+
+
+def _queue_verdict_telegram_send(verdict_id):
+    if not TELEGRAM_BOT_TOKEN:
+        return
+
+    thread = threading.Thread(
+        target=_send_verdict_to_telegram_by_id,
+        args=(verdict_id,),
+        name=f"telegram-verdict-{verdict_id}",
+        daemon=True,
+    )
+    thread.start()
 
 
 def _extract_auth_token(request, request_data=None):
@@ -673,14 +839,14 @@ def _create_verdict_with_assets(user, verdict_payload, direct_files, uploaded_ph
             VerdictPhoto.objects.create(verdict=verdict, image=uploaded_photo.image.name)
             uploaded_photo.mark_used(verdict)
 
-        transaction.on_commit(lambda: _send_verdict_to_telegram(verdict))
+        transaction.on_commit(lambda verdict_id=verdict.id: _queue_verdict_telegram_send(verdict_id))
 
     return verdict, True
 
 
 def _serialize_verdict_for_mobile(verdict):
     photos = []
-    for photo in verdict.photos.all():
+    for photo in _verdict_photos(verdict):
         photos.append(
             {
                 "id": photo.id,
@@ -811,7 +977,7 @@ def create_verdict(request):
         for f in request.FILES.getlist('photos'):
             VerdictPhoto.objects.create(verdict=verdict, image=f)
 
-        transaction.on_commit(lambda: _send_verdict_to_telegram(verdict))
+        transaction.on_commit(lambda verdict_id=verdict.id: _queue_verdict_telegram_send(verdict_id))
 
     return JsonResponse({
         "success": True,
@@ -911,13 +1077,17 @@ def create_free_verdict(request):
 @require_user
 def check_verdict(request):
     code = request.GET.get('code', '').strip().upper()
-    verdict = Verdict.objects.filter(code=code, user=request.tg_user).first()
+    verdict = (
+        Verdict.objects
+        .select_related("user")
+        .prefetch_related(_verdict_photos_prefetch())
+        .filter(code=code, user=request.tg_user)
+        .first()
+    )
     if not verdict:
         return redirect(f"{reverse('verdicts')}?error=not_found&code={code}")
-    photos = verdict.photos.all()
-
-    # вместо photos[0]
-    first_photo = photos.first()  
+    photos = _verdict_photos(verdict)
+    first_photo = photos[0] if photos else None
 
     return render(request, 'verdict.html', {
         'tg_user':    request.tg_user,
@@ -931,7 +1101,15 @@ def check_verdict(request):
 
 @require_user
 def cab(request):
-    verdicts = request.tg_user.verdicts.all().order_by('-created_at')
+    verdicts = _verdicts_with_photos(
+        request.tg_user.verdicts.only(
+            "id",
+            "user_id",
+            "status",
+            "code",
+            "created_at",
+        ).order_by("-created_at")
+    )
     free_check_state = _free_check_json_state(request.tg_user)
     return render(request, 'cab.html', {
         'tg_user':  request.tg_user,
@@ -1123,6 +1301,13 @@ def telegram_verdict_webhook(request):
     verdict.status = decision
     verdict.save(update_fields=["status"])
 
+    delivery = TelegramVerdictDelivery.objects.filter(verdict=verdict, active=True).first()
+    if delivery:
+        _delete_telegram_messages(delivery.chat_id, delivery.message_ids)
+        delivery.message_ids = []
+        delivery.active = False
+        delivery.save(update_fields=["message_ids", "active", "updated_at"])
+
     tg_service.answer_callback_query(
         TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт обновлен"
     )
@@ -1169,42 +1354,9 @@ def create_payment(request):
         return JsonResponse({"error": "Минимум 10 ₽"}, status=400)
 
     try:
-        payment = YooPayment.create(
-            {
-                "amount": {
-                    "value": str(amount),
-                    "currency": "RUB"
-                },
-                "confirmation": {
-                    "type": "redirect",
-                    "return_url": "https://legitcheck.one"
-                },
-                "capture": True,
-                "description": "Пополнение баланса",
-                "receipt": {
-                    "customer": {"email": "no-reply@legitcheck.one"},
-                    "tax_system_code": 2,
-                    "items": [
-                        {
-                            "description": "Пополнение баланса",
-                            "quantity": "1.00",
-                            "amount": {"value": str(amount), "currency": "RUB"},
-                            "vat_code": 1,
-                            "payment_subject": "service",
-                            "payment_mode": "full_payment",
-                        }
-                    ]
-                },
-                "metadata": {
-                    "tg_id": request.tg_user.tgId
-                }
-            },
-            uuid.uuid4()
-        )
-
-    except Exception as e:
-        details = e.args[0] if getattr(e, "args", None) else str(e)
-        return JsonResponse({"error": "YooKassa error", "details": details}, status=400)
+        payment = _create_yookassa_payment(request.tg_user, amount)
+    except Exception as exc:
+        return _yookassa_error_response(exc)
 
     Payment.objects.create(
         user=request.tg_user,
@@ -1230,37 +1382,44 @@ def yookassa_webhook(request):
     if data.get("event") != "payment.succeeded":
         return HttpResponse(status=200)
 
-    obj = data["object"]
-    provider_payment_id = obj["id"]
-    tg_id = obj.get("metadata", {}).get("tg_id")
-    amount = Decimal(obj["amount"]["value"])
+    provider_payment_id = data.get("object", {}).get("id")
+    if not provider_payment_id or not _configure_yookassa():
+        return HttpResponse(status=503)
 
-    # 🔒 1. Находим платёж
+    # Never trust monetary fields from the unauthenticated notification body.
     try:
-        payment = Payment.objects.select_for_update().get(
-            provider_payment_id=provider_payment_id
-        )
-    except Payment.DoesNotExist:
-        # ❗ неизвестный платёж — игнорируем
-        return HttpResponse(status=200)
-
-    # 🔒 2. Если уже обработан — ВЫХОД
-    if payment.status == "COMPLETED":
-        return HttpResponse(status=200)
-
-    # 🔒 3. Начисляем баланс ОДИН РАЗ
-    try:
-        user = payment.user
-        user.balance = str(
-            Decimal(user.balance) + amount
-        )
-        user.save()
-
-        payment.status = "COMPLETED"
-        payment.save()
-
+        provider_payment = YooPayment.find_one(provider_payment_id)
     except Exception:
-        # если что-то пошло не так — не подтверждаем
+        logger.exception("Failed to verify YooKassa payment %s", provider_payment_id)
+        return HttpResponse(status=503)
+
+    if provider_payment.status != "succeeded" or not provider_payment.paid:
+        logger.warning("Ignoring unconfirmed YooKassa payment %s", provider_payment_id)
+        return HttpResponse(status=200)
+
+    try:
+        with transaction.atomic():
+            payment = Payment.objects.select_for_update().select_related("user").get(
+                provider_payment_id=provider_payment_id
+            )
+            if payment.status == "COMPLETED":
+                return HttpResponse(status=200)
+            provider_amount = Decimal(provider_payment.amount.value)
+            if provider_payment.amount.currency != "RUB" or provider_amount != payment.amount:
+                logger.error("YooKassa amount mismatch for payment %s", provider_payment_id)
+                return HttpResponse(status=400)
+            if payment.user_id is None:
+                logger.error("YooKassa payment %s has no local user", provider_payment_id)
+                return HttpResponse(status=409)
+            user = User.objects.select_for_update().get(pk=payment.user_id)
+            user.balance = str(Decimal(user.balance) + payment.amount)
+            user.save(update_fields=["balance"])
+            payment.status = "COMPLETED"
+            payment.save(update_fields=["status"])
+    except Payment.DoesNotExist:
+        return HttpResponse(status=200)
+    except Exception:
+        logger.exception("Failed to apply YooKassa payment %s", provider_payment_id)
         return HttpResponse(status=500)
 
     return HttpResponse(status=200)
@@ -1476,8 +1635,8 @@ def api_mobile_get_verdict_by_code(request, code):
 
     verdict = (
         Verdict.objects.select_related("user")
-        .prefetch_related("photos")
-        .filter(code__iexact=normalized_code)
+        .prefetch_related(_verdict_photos_prefetch())
+        .filter(code=normalized_code)
         .first()
     )
     if not verdict:
@@ -1504,7 +1663,7 @@ def api_mobile_upload_verdict_photo(request, verdict_id):
 
     verdict = (
         Verdict.objects.select_related("user")
-        .prefetch_related("photos")
+        .prefetch_related(_verdict_photos_prefetch())
         .filter(id=verdict_id, user=user)
         .first()
     )
@@ -1528,7 +1687,7 @@ def api_mobile_upload_verdict_photo(request, verdict_id):
 
     verdict = (
         Verdict.objects.select_related("user")
-        .prefetch_related("photos")
+        .prefetch_related(_verdict_photos_prefetch())
         .get(id=verdict.id)
     )
 
@@ -1709,41 +1868,9 @@ def create_yookassa_payment_api(request):
         return JsonResponse({"error": "Минимум 10 ₽"}, status=400)
 
     try:
-        payment = YooPayment.create(
-            {
-                "amount": {
-                    "value": str(amount),
-                    "currency": "RUB"
-                },
-                "confirmation": {
-                    "type": "redirect",
-                    "return_url": "https://legitcheck.one"
-                },
-                "capture": True,
-                "description": "Пополнение баланса",
-                "receipt": {
-                    "customer": {"email": "no-reply@legitcheck.one"},
-                    "tax_system_code": 2,
-                    "items": [
-                        {
-                            "description": "Пополнение баланса",
-                            "quantity": "1.00",
-                            "amount": {"value": str(amount), "currency": "RUB"},
-                            "vat_code": 1,
-                            "payment_subject": "service",
-                            "payment_mode": "full_payment",
-                        }
-                    ]
-                },
-                "metadata": {
-                    "tg_id": user.tgId
-                }
-            },
-            uuid.uuid4()
-        )
-    except Exception as e:
-        details = e.args[0] if getattr(e, "args", None) else str(e)
-        return JsonResponse({"error": "YooKassa error", "details": details}, status=400)
+        payment = _create_yookassa_payment(user, amount)
+    except Exception as exc:
+        return _yookassa_error_response(exc)
 
     local_payment = Payment.objects.create(
         user=user,
@@ -1776,7 +1903,7 @@ class VerdictViewSet(viewsets.ModelViewSet):
         code = (self.request.query_params.get('code') or '').strip()
 
         if code:
-            queryset = queryset.filter(code__iexact=code)
+            queryset = queryset.filter(code=code.upper())
 
         if user_id:
             queryset = queryset.filter(user__tgId=user_id)
@@ -1814,6 +1941,71 @@ def _email_to_tg_id(email: str) -> int:
     return synthetic
 
 
+def _get_or_create_email_user(email: str, *, name=None):
+    normalized_email = email.strip().lower()
+    user = User.objects.filter(email__iexact=normalized_email).first()
+    if user:
+        return user
+
+    return User.objects.create(
+        tgId=_email_to_tg_id(normalized_email),
+        email=normalized_email,
+        name=name or normalized_email.split("@")[0],
+        img=DEFAULT_AVATAR_URL,
+        balance="0",
+    )
+
+
+def _set_session_user(request, user):
+    request.session["tg_id"] = user.tgId
+    request.session.set_expiry(365 * 24 * 60 * 60)
+    request.session.pop("email_otp_pending", None)
+
+
+def _app_review_demo_credentials_match(email: str, password: str) -> bool:
+    demo_email = getattr(settings, "APP_REVIEW_DEMO_EMAIL", "").strip().lower()
+    demo_password = getattr(settings, "APP_REVIEW_DEMO_PASSWORD", "")
+    return bool(
+        demo_email
+        and demo_password
+        and email.strip().lower() == demo_email
+        and constant_time_compare(password, demo_password)
+    )
+
+
+def _app_review_demo_balance() -> str:
+    raw_balance = str(getattr(settings, "APP_REVIEW_DEMO_BALANCE", "5000")).strip() or "5000"
+    try:
+        return str(Decimal(raw_balance).quantize(Decimal("0.01")))
+    except (InvalidOperation, ValueError):
+        return "5000.00"
+
+
+def _login_app_review_demo_user(request, email: str):
+    user = _get_or_create_email_user(email, name="App Review Demo")
+    update_fields = []
+
+    demo_balance = _app_review_demo_balance()
+    if user.balance != demo_balance:
+        user.balance = demo_balance
+        update_fields.append("balance")
+
+    if not user.is_free_check_available:
+        user.is_free_check_available = True
+        update_fields.append("is_free_check_available")
+
+    if user.next_free_check_timestamp is not None:
+        user.next_free_check_timestamp = None
+        update_fields.append("next_free_check_timestamp")
+
+    if update_fields:
+        user.save(update_fields=update_fields)
+
+    _set_session_user(request, user)
+    EmailOTPToken.objects.filter(email__iexact=email.strip().lower(), used=False).update(used=True)
+    return user
+
+
 def email_login_page(request):
     """Страница ввода email."""
     if _session_user(request):
@@ -1830,6 +2022,13 @@ def email_send_otp(request):
     email = request.POST.get("email", "").strip().lower()
     if not email or "@" not in email:
         return redirect("/email-login/?error=invalid")
+
+    password = request.POST.get("password", "")
+    if password:
+        if _app_review_demo_credentials_match(email, password):
+            _login_app_review_demo_user(request, email)
+            return redirect("home")
+        return redirect("/email-login/?error=invalid_credentials")
 
     # Генерируем 6-значный код
     code = "{:06d}".format(random.randint(0, 999999))
@@ -1893,20 +2092,7 @@ def email_verify_otp(request):
     token.used = True
     token.save(update_fields=["used"])
 
-    # Получаем или создаём пользователя
-    user = User.objects.filter(email=email).first()
-    if not user:
-        tg_id = _email_to_tg_id(email)
-        user = User.objects.create(
-            tgId=tg_id,
-            email=email,
-            name=email.split("@")[0],
-            img=DEFAULT_AVATAR_URL,
-            balance="0",
-        )
-
-    request.session["tg_id"] = user.tgId
-    request.session.set_expiry(365 * 24 * 60 * 60)
-    request.session.pop("email_otp_pending", None)
+    user = _get_or_create_email_user(email)
+    _set_session_user(request, user)
 
     return redirect("home")

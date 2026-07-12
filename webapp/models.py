@@ -112,6 +112,11 @@ class Verdict(models.Model):
     class Meta:
         verbose_name = "Вердикты"
         verbose_name_plural = "Вердикты"  # Для корректного отображения множественного числа
+        indexes = [
+            models.Index(fields=["user", "-created_at"], name="verdict_user_created_idx"),
+            models.Index(fields=["user", "code"], name="verdict_user_code_idx"),
+            models.Index(fields=["status", "-created_at"], name="verdict_status_created_idx"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "idempotency_key"],
@@ -145,6 +150,10 @@ class VerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Фотография вердикта"
         verbose_name_plural = "Фотографии вердикта"
+        ordering = ("id",)
+        indexes = [
+            models.Index(fields=["verdict", "id"], name="vphoto_verdict_id_idx"),
+        ]
 
 
 class UploadedVerdictPhoto(models.Model):
@@ -167,6 +176,10 @@ class UploadedVerdictPhoto(models.Model):
     class Meta:
         verbose_name = "Загруженная фотография вердикта"
         verbose_name_plural = "Загруженные фотографии вердикта"
+        indexes = [
+            models.Index(fields=["user", "verdict"], name="upload_user_verdict_idx"),
+            models.Index(fields=["user", "-created_at"], name="upload_user_created_idx"),
+        ]
 
     def save(self, *args, **kwargs):
         if self.image and not getattr(self.image, "_committed", True):
@@ -306,6 +319,9 @@ class EmailOTPToken(models.Model):
     class Meta:
         verbose_name = "Email OTP"
         verbose_name_plural = "Email OTP"
+        indexes = [
+            models.Index(fields=["email", "used", "-created_at"], name="emailotp_lookup_idx"),
+        ]
 
     @property
     def is_expired(self):
@@ -355,6 +371,35 @@ class Payment(models.Model):
     
     class Meta:
         verbose_name = "Платежи"
+        indexes = [
+            models.Index(fields=["provider_payment_id"], name="payment_provider_idx"),
+            models.Index(fields=["user", "-date"], name="payment_user_date_idx"),
+            models.Index(fields=["status", "-date"], name="payment_status_date_idx"),
+        ]
+
+
+class TelegramVerdictDelivery(models.Model):
+    verdict = models.OneToOneField(
+        Verdict,
+        on_delete=models.CASCADE,
+        related_name="telegram_delivery",
+    )
+    chat_id = models.CharField(max_length=64)
+    message_ids = models.JSONField(default=list, blank=True)
+    interval_minutes = models.PositiveIntegerField()
+    expires_at = models.DateTimeField(db_index=True)
+    next_send_at = models.DateTimeField(db_index=True)
+    active = models.BooleanField(default=True, db_index=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Доставка вердикта в Telegram"
+        verbose_name_plural = "Доставки вердиктов в Telegram"
+        indexes = [
+            models.Index(fields=["active", "next_send_at"], name="tgdelivery_due_idx"),
+        ]
 
 
 class PromoCode(models.Model):
@@ -414,3 +459,89 @@ class PromoCodeRedemption(models.Model):
 
     def __str__(self):
         return f"{self.user} / {self.promo_code.code}"
+
+
+class VkConversation(models.Model):
+    peer_id = models.BigIntegerField(unique=True, db_index=True, verbose_name="VK peer ID")
+    from_id = models.BigIntegerField(db_index=True, verbose_name="VK user ID")
+    title = models.CharField(max_length=255, blank=True, verbose_name="Название")
+    avatar_url = models.URLField(max_length=500, blank=True, verbose_name="Аватар")
+    last_message_text = models.TextField(blank=True, verbose_name="Последнее сообщение")
+    last_message_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    unread_count = models.PositiveIntegerField(default=0, verbose_name="Новые сообщения")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "VK диалог"
+        verbose_name_plural = "VK диалоги"
+        ordering = ("-last_message_at", "-updated_at")
+        indexes = [
+            models.Index(fields=["-last_message_at", "-updated_at"], name="vkconv_last_updated_idx"),
+        ]
+
+    def __str__(self):
+        return self.title or f"vk.com/id{self.from_id}"
+
+
+class VkMessage(models.Model):
+    DIRECTION_INCOMING = "incoming"
+    DIRECTION_OUTGOING = "outgoing"
+    DIRECTION_CHOICES = [
+        (DIRECTION_INCOMING, "Входящее"),
+        (DIRECTION_OUTGOING, "Исходящее"),
+    ]
+
+    conversation = models.ForeignKey(
+        VkConversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    vk_message_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    peer_id = models.BigIntegerField(db_index=True)
+    from_id = models.BigIntegerField(db_index=True)
+    direction = models.CharField(max_length=16, choices=DIRECTION_CHOICES)
+    text = models.TextField(blank=True)
+    attachments = models.JSONField(default=list, blank=True)
+    raw_payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(db_index=True)
+    stored_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "VK сообщение"
+        verbose_name_plural = "VK сообщения"
+        ordering = ("created_at", "id")
+        indexes = [
+            models.Index(fields=["conversation", "-created_at", "-id"], name="vkmsg_conv_created_idx"),
+            models.Index(fields=["peer_id", "-created_at"], name="vkmsg_peer_created_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("peer_id", "vk_message_id", "direction"),
+                name="unique_vk_message_per_peer_direction",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.direction} #{self.vk_message_id or self.id}"
+
+
+class WebPushSubscription(models.Model):
+    endpoint = models.TextField(unique=True)
+    p256dh = models.TextField()
+    auth = models.TextField()
+    user_agent = models.TextField(blank=True)
+    active = models.BooleanField(default=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Web Push подписка"
+        verbose_name_plural = "Web Push подписки"
+        ordering = ("-updated_at",)
+        indexes = [
+            models.Index(fields=["active", "-updated_at"], name="webpush_active_updated_idx"),
+        ]
+
+    def __str__(self):
+        return self.endpoint[:80]

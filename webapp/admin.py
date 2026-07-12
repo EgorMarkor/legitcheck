@@ -13,6 +13,9 @@ from .models import (
     User,
     Verdict,
     VerdictPhoto,
+    VkConversation,
+    VkMessage,
+    WebPushSubscription,
 )
 from unfold.admin import ModelAdmin  # вы используете свой класс-расширение
 from io import BytesIO
@@ -223,6 +226,32 @@ class PromoCodeRedemptionAdmin(ModelAdmin):
         return False
 
 
+class VkConversationAdmin(ModelAdmin):
+    list_display = ("peer_id", "title", "from_id", "unread_count", "last_message_at")
+    search_fields = ("title", "peer_id", "from_id")
+    list_filter = ("last_message_at",)
+    readonly_fields = ("updated_at",)
+
+
+class VkMessageAdmin(ModelAdmin):
+    list_display = ("id", "conversation", "direction", "vk_message_id", "created_at")
+    search_fields = ("text", "peer_id", "from_id", "vk_message_id")
+    list_filter = ("direction", "created_at")
+    readonly_fields = ("stored_at",)
+
+
+class WebPushSubscriptionAdmin(ModelAdmin):
+    list_display = ("id", "active", "updated_at", "endpoint_preview")
+    list_filter = ("active", "created_at", "updated_at")
+    search_fields = ("endpoint", "user_agent", "last_error")
+    readonly_fields = ("created_at", "updated_at", "last_error")
+
+    def endpoint_preview(self, obj):
+        return obj.endpoint[:80]
+
+    endpoint_preview.short_description = "Endpoint"
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(Verdict, VerdictAdmin)
 admin.site.register(UploadedVerdictPhoto, UploadedVerdictPhotoAdmin)
@@ -230,3 +259,6 @@ admin.site.register(Payment, PaymentAdmin)
 admin.site.register(HomePagePopularItem, HomePagePopularItemAdmin)
 admin.site.register(PromoCode, PromoCodeAdmin)
 admin.site.register(PromoCodeRedemption, PromoCodeRedemptionAdmin)
+admin.site.register(VkConversation, VkConversationAdmin)
+admin.site.register(VkMessage, VkMessageAdmin)
+admin.site.register(WebPushSubscription, WebPushSubscriptionAdmin)

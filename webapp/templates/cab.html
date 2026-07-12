@@ -124,6 +124,7 @@
     <div class="bg_card border_card rounded-[1.2rem] p-[1rem] grid grid-cols-3 gap-2 mx-5">
 
         {% for verdict in verdicts %}
+            {% with first_photo=verdict.prefetched_photos.0 %}
             <div class="card bg-[#0A0C11] rounded-[1.2rem] mb-4
               {% if verdict.status == 'inpending' %} processing
               {% elif verdict.status == 'todo' %} todo
@@ -134,7 +135,7 @@
 
                   <div
                     class="w-[8.2rem] h-[8.2rem] rounded-[1.2rem] overflow-hidden bg-cover bg-center"
-                    style="background-image: url('{{ verdict.photos.first.image.url }}');"
+                    style="background-image: url('{% if first_photo %}{{ first_photo.image.url }}{% else %}{% static 'avatar-placeholder.png' %}{% endif %}');"
                   >
 
                   <div
@@ -168,6 +169,7 @@
                   </div>
               </a>
             </div>
+            {% endwith %}
         {% endfor %}
 
     </div>

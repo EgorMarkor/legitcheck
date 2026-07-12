@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'checker-pwa-v21';
+const CACHE_VERSION = 'checker-pwa-v22';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -45,6 +45,53 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (_) {
+    payload = {
+      title: 'VK Чаты',
+      body: event.data ? event.data.text() : 'Новое сообщение',
+    };
+  }
+
+  const title = payload.title || 'VK Чаты';
+  const options = {
+    body: payload.body || 'Новое сообщение',
+    icon: '/static/pwa/icon-192.png',
+    badge: '/static/pwa/icon-192.png',
+    tag: payload.tag || 'vkchat-message',
+    renotify: true,
+    data: {
+      url: payload.url || '/vkchat/',
+      peer_id: payload.peer_id || null,
+      message_id: payload.message_id || null,
+    },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = new URL(event.notification.data?.url || '/vkchat/', self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) => {
+        for (const client of clients) {
+          const clientUrl = new URL(client.url);
+          if (clientUrl.origin === self.location.origin && clientUrl.pathname.startsWith('/vkchat/')) {
+            return client.navigate(targetUrl).then((navigatedClient) => (navigatedClient || client).focus());
+          }
+        }
+        return self.clients.openWindow(targetUrl);
+      })
+  );
 });
 
 // ─── Activate: удаляем старые кэши ───────────────────────────────────────────
@@ -131,6 +178,7 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.startsWith('/admin/') ||
     url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/vkchat/api/') ||
     url.pathname.includes('webhook')
   ) {
     return;

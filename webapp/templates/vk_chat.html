@@ -1,0 +1,56 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>VK Чаты</title>
+  <meta name="theme-color" content="#0077ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="VK Чаты">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="{% url 'vkchat_manifest' %}">
+  <link rel="apple-touch-icon" href="{% static 'pwa/apple-touch-icon-180.png' %}">
+  <link rel="stylesheet" href="{% static 'css/vk-chat.css' %}?v=20260702-1">
+</head>
+<body>
+  <main class="vk-shell" data-app-shell>
+    <section class="chat-list-panel" data-list-panel>
+      <header class="panel-header">
+        <div>
+          <h1>VK Чаты</h1>
+          <p data-connection-status>Подключение</p>
+        </div>
+        <div class="header-actions">
+          <button class="icon-button" type="button" data-sync-button aria-label="Обновить" title="Обновить">↻</button>
+          <button class="icon-button" type="button" data-push-button aria-label="Уведомления" title="Уведомления">●</button>
+        </div>
+      </header>
+      <div class="push-status" data-push-status></div>
+      <div class="conversation-list" data-conversation-list></div>
+    </section>
+
+    <section class="chat-panel" data-chat-panel>
+      <header class="chat-header">
+        <button class="icon-button back-button" type="button" data-back-button aria-label="Назад" title="Назад">‹</button>
+        <div class="chat-avatar" data-chat-avatar></div>
+        <div class="chat-title-wrap">
+          <h2 data-chat-title>Выберите диалог</h2>
+          <a data-chat-link href="#" target="_blank" rel="noreferrer"></a>
+        </div>
+      </header>
+
+      <div class="message-list" data-message-list>
+        <div class="empty-state">Нет выбранного диалога</div>
+      </div>
+
+      <form class="composer" data-composer>
+        <textarea data-message-input rows="1" placeholder="Сообщение" autocomplete="off"></textarea>
+        <button type="submit">Отправить</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="{% static 'js/vk-chat.js' %}?v=20260702-2" defer></script>
+</body>
+</html>

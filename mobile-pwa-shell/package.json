@@ -1,12 +1,14 @@
 {
   "name": "legitcheck-pwa-shell",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "private": true,
   "scripts": {
     "add:ios": "npx cap add ios",
     "sync:ios": "npx cap sync ios",
     "open:ios": "npx cap open ios",
     "build:ios": "npm run sync:ios && npm run open:ios",
+    "build:ios:unsigned": "bash scripts/build_unsigned_ios_ipa.sh",
+    "upload:ios:testflight": "bash scripts/upload_ios_testflight.sh",
     "add:android": "npx cap add android",
     "sync:android": "npx cap sync android",
     "open:android": "npx cap open android",
@@ -14,12 +16,12 @@
   },
   "dependencies": {
     "@capacitor/camera": "^7.0.5",
-    "@capacitor/core": "^7.0.0"
+    "@capacitor/core": "^7.6.0"
   },
   "devDependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/cli": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
+    "@capacitor/android": "^7.6.0",
+    "@capacitor/cli": "^7.6.0",
+    "@capacitor/ios": "^7.6.0",
     "typescript": "^5.8.3"
   }
 }

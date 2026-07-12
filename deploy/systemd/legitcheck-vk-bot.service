@@ -1,0 +1,21 @@
+[Unit]
+Description=Legitcheck VK community message bot
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/legitcheck
+EnvironmentFile=/etc/legitcheck/legitcheck.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/root/legitcheck/env/bin/python /root/legitcheck/main_vk.py
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

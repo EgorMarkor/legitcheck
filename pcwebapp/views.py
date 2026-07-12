@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import timedelta
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -22,6 +23,20 @@ MOBILE_UA_RE = re.compile(
     re.I
 )
 TELEGRAM_BOT_URL = "https://t.me/LegitLogisticsBot?start=login"
+
+
+def _verdict_photos_prefetch():
+    return Prefetch(
+        "photos",
+        queryset=VerdictPhoto.objects.order_by("id"),
+        to_attr="prefetched_photos",
+    )
+
+
+def _verdict_photos(verdict):
+    if hasattr(verdict, "prefetched_photos"):
+        return list(verdict.prefetched_photos)
+    return list(verdict.photos.order_by("id"))
 
 def is_mobile(request):
     ua = request.META.get("HTTP_USER_AGENT", "")
@@ -97,7 +112,12 @@ def pay(request):
 
 @_require_tg_user
 def account(request):
-    verdicts = request.tg_user.verdicts.all().order_by('-created_at')
+    verdicts = (
+        request.tg_user.verdicts
+        .only("id", "user_id", "status", "code", "created_at")
+        .order_by("-created_at")
+        .prefetch_related(_verdict_photos_prefetch())
+    )
     return render(request, 'pc/account.html', {'tg_user': request.tg_user, 'verdicts': verdicts})
 
 
@@ -114,9 +134,12 @@ def privacy_policy(request):
 @_require_tg_user
 def verdict(request):
     code = request.GET.get('code', '').upper()
-    verdict_obj = get_object_or_404(Verdict, code=code)
-    photos = verdict_obj.photos.all()
-    first_photo = photos.first()
+    verdict_obj = get_object_or_404(
+        Verdict.objects.select_related("user").prefetch_related(_verdict_photos_prefetch()),
+        code=code,
+    )
+    photos = _verdict_photos(verdict_obj)
+    first_photo = photos[0] if photos else None
     return render(request, 'pc/verdict.html', {
         'tg_user': request.tg_user,
         'verdict': verdict_obj,

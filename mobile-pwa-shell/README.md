@@ -1,7 +1,7 @@
 # LegitCheck PWA iOS Shell (Capacitor)
 
 Эта папка нужна, чтобы собрать iOS-приложение-оболочку поверх PWA.
-По умолчанию оболочка смотрит на `http://127.0.0.1:8000`.
+По умолчанию оболочка смотрит на `https://legitcheck.one`.
 
 ## 1. Установка зависимостей
 
@@ -22,7 +22,22 @@ npm run add:ios
 npm run sync:ios
 ```
 
-## 4. Открыть Xcode
+## 4. Собрать unsigned IPA
+
+```bash
+npm run build:ios:unsigned
+```
+
+Результат:
+
+```text
+build/Checker-unsigned.ipa
+```
+
+Текущая iOS-версия для App Store: `4.0`, build `4`.
+Она должна быть выше уже загруженной версии `3`.
+
+## 5. Открыть Xcode
 
 ```bash
 npm run open:ios
@@ -31,7 +46,7 @@ npm run open:ios
 Дальше в Xcode:
 1. Выберите Team и Bundle Identifier.
 2. Выберите устройство/симулятор.
-3. Build/Run или Archive для релизной сборки.
+3. Build/Run или Archive для релизной подписанной сборки.
 
 ## Смена адреса сервера (опционально)
 

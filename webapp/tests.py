@@ -4,6 +4,8 @@ import shutil
 import tempfile
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -23,6 +25,7 @@ from webapp.models import (
     User,
     Verdict,
     VerdictPhoto,
+    TelegramVerdictDelivery,
 )
 
 
@@ -618,6 +621,60 @@ class VerdictApiTests(TestCase):
         session = self.client.session
         self.assertEqual(session.get("tg_id"), self.user.tgId)
 
+    @override_settings(
+        APP_REVIEW_DEMO_EMAIL="egor20080801@yandex.ru",
+        APP_REVIEW_DEMO_PASSWORD="1111",
+        APP_REVIEW_DEMO_BALANCE="5000",
+        SECURE_SSL_REDIRECT=False,
+    )
+    def test_email_login_accepts_configured_app_review_demo_password(self):
+        response = self.client.post(
+            "/email/send-otp/",
+            {
+                "email": "Egor20080801@yandex.ru",
+                "password": "1111",
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/home/")
+
+        user = User.objects.get(email="egor20080801@yandex.ru")
+        self.assertEqual(user.name, "App Review Demo")
+        self.assertEqual(user.balance, "5000.00")
+        self.assertTrue(user.is_free_check_available)
+        self.assertIsNone(user.next_free_check_timestamp)
+        self.assertEqual(self.client.session.get("tg_id"), user.tgId)
+        self.assertEqual(
+            EmailOTPToken.objects.filter(email__iexact="egor20080801@yandex.ru").count(),
+            0,
+        )
+
+    @override_settings(
+        APP_REVIEW_DEMO_EMAIL="egor20080801@yandex.ru",
+        APP_REVIEW_DEMO_PASSWORD="1111",
+        SECURE_SSL_REDIRECT=False,
+    )
+    def test_email_login_rejects_wrong_demo_password_without_sending_otp(self):
+        response = self.client.post(
+            "/email/send-otp/",
+            {
+                "email": "Egor20080801@yandex.ru",
+                "password": "wrong",
+            },
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/email-login/?error=invalid_credentials")
+        self.assertFalse(User.objects.filter(email__iexact="egor20080801@yandex.ru").exists())
+        self.assertEqual(
+            EmailOTPToken.objects.filter(email__iexact="egor20080801@yandex.ru").count(),
+            0,
+        )
+        self.assertNotIn("tg_id", self.client.session)
+
     def test_index_renders_by_session_without_init_data(self):
         popular_item = HomePagePopularItem.objects.get(position=1)
         popular_item.title = "Nike Dunk"
@@ -720,3 +777,60 @@ class VerdictApiTests(TestCase):
 
         for path in media_paths:
             self.assertFalse(default_storage.exists(path))
+
+    @override_settings(
+        TELEGRAM_VERDICT_CHAT_1H_ID="-101",
+        TELEGRAM_VERDICT_CHAT_3H_ID="-103",
+        TELEGRAM_VERDICT_CHAT_12H_ID="-112",
+    )
+    def test_telegram_verdict_groups_and_repeat_intervals(self):
+        from webapp.views import _telegram_delivery_policy
+
+        expected = {
+            "fast": ("-101", 60, 15),
+            "standard": ("-103", 180, 30),
+            "12h-free": ("-112", 720, 60),
+        }
+        for speed, (chat_id, lifetime_minutes, interval_minutes) in expected.items():
+            verdict = Verdict(user=self.user, speed=speed)
+            actual_chat, lifetime, interval = _telegram_delivery_policy(verdict)
+            self.assertEqual(actual_chat, chat_id)
+            self.assertEqual(lifetime, timedelta(minutes=lifetime_minutes))
+            self.assertEqual(interval, timedelta(minutes=interval_minutes))
+
+    @override_settings(
+        YOOKASSA_ACCOUNT_ID="shop-id",
+        YOOKASSA_SECRET_KEY="secret",
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch("webapp.views.YooPayment.find_one")
+    def test_yookassa_webhook_verifies_and_credits_only_once(self, find_one):
+        payment = Payment.objects.create(
+            user=self.user,
+            amount="100.00",
+            status="PENDING",
+            provider_payment_id="provider-1",
+        )
+        find_one.return_value = SimpleNamespace(
+            status="succeeded",
+            paid=True,
+            amount=SimpleNamespace(value="100.00", currency="RUB"),
+        )
+        body = json.dumps({
+            "event": "payment.succeeded",
+            "object": {"id": payment.provider_payment_id, "amount": {"value": "999999.00"}},
+        })
+
+        for _ in range(2):
+            response = self.client.post(
+                "/yookassa/webhook/",
+                data=body,
+                content_type="application/json",
+                HTTP_HOST=self.host,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        self.user.refresh_from_db()
+        payment.refresh_from_db()
+        self.assertEqual(self.user.balance, "1100.00")
+        self.assertEqual(payment.status, "COMPLETED")

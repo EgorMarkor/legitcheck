@@ -28,13 +28,30 @@ set -a
 source "$ENV_FILE"
 set +a
 
+: "${YOOKASSA_ACCOUNT_ID:?YOOKASSA_ACCOUNT_ID is missing in $ENV_FILE}"
+: "${YOOKASSA_SECRET_KEY:?YOOKASSA_SECRET_KEY is missing in $ENV_FILE}"
+: "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is missing in $ENV_FILE}"
+
 "$PYTHON" manage.py check
 "$PYTHON" manage.py migrate --noinput
 "$PYTHON" manage.py cleanup_login_tokens --retention-days 7
 "$PYTHON" manage.py collectstatic --noinput --clear
 
-systemctl restart gunicorn telegram-login-bot
-systemctl is-active --quiet gunicorn
-systemctl is-active --quiet telegram-login-bot
+install -m 0644 deploy/systemd/legitcheck-telegram-verdicts.service /etc/systemd/system/legitcheck-telegram-verdicts.service
+systemctl daemon-reload
+systemctl enable legitcheck-telegram-verdicts.service
+
+services=(gunicorn telegram-login-bot)
+if systemctl list-unit-files --type=service --no-legend legitcheck-telegram-verdicts.service 2>/dev/null | grep -q '^legitcheck-telegram-verdicts\.service'; then
+  services+=(legitcheck-telegram-verdicts)
+fi
+if systemctl list-unit-files --type=service --no-legend legitcheck-vk-bot.service 2>/dev/null | grep -q '^legitcheck-vk-bot\.service'; then
+  services+=(legitcheck-vk-bot)
+fi
+
+systemctl restart "${services[@]}"
+for service in "${services[@]}"; do
+  systemctl is-active --quiet "$service"
+done
 
 echo "Deployment complete. Database backup: $backup_path"

@@ -36,17 +36,51 @@ if not SECRET_KEY:
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
+TELEGRAM_VERDICT_CHAT_1H_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_1H_ID", "")
+TELEGRAM_VERDICT_CHAT_3H_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_3H_ID", "")
+TELEGRAM_VERDICT_CHAT_12H_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_12H_ID", "")
 TELEGRAM_API_PROXY = os.environ.get("TELEGRAM_API_PROXY", "")
 YOOKASSA_ACCOUNT_ID = os.environ.get("YOOKASSA_ACCOUNT_ID", "")
 YOOKASSA_SECRET_KEY = os.environ.get("YOOKASSA_SECRET_KEY", "")
+YOOKASSA_TAX_SYSTEM_CODE = os.environ.get("YOOKASSA_TAX_SYSTEM_CODE", "").strip()
+YOOKASSA_RETURN_URL = os.environ.get(
+    "YOOKASSA_RETURN_URL",
+    f"{os.environ.get('PUBLIC_BASE_URL', 'https://legitcheck.one').rstrip('/')}/payment/success/",
+)
+VK_GROUP_TOKEN = os.environ.get("VK_GROUP_TOKEN", "")
+VK_GROUP_ID = os.environ.get("VK_GROUP_ID", "")
+VKCHAT_VAPID_PUBLIC_KEY = os.environ.get("VKCHAT_VAPID_PUBLIC_KEY", "")
+VKCHAT_VAPID_PRIVATE_KEY = os.environ.get("VKCHAT_VAPID_PRIVATE_KEY", "")
+VKCHAT_VAPID_CLAIM_EMAIL = os.environ.get("VKCHAT_VAPID_CLAIM_EMAIL", "admin@legitcheck.one")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "1" if LOCAL_DEV else "0") == "1"
 
-ALLOWED_HOSTS = ['89.169.2.234', 'legitcheck.one', 'checkerlegit.com', '127.0.0.1']
+DEFAULT_ALLOWED_HOSTS = [
+    '89.169.2.234',
+    'legitcheck.one',
+    'www.legitcheck.one',
+    'checkerlegit.com',
+    'www.checkerlegit.com',
+    '127.0.0.1',
+]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
+    if host.strip()
+]
 
 if LOCAL_DEV:
     ALLOWED_HOSTS += ['localhost']
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "https://legitcheck.one,https://www.legitcheck.one,https://checkerlegit.com,https://www.checkerlegit.com",
+    ).split(",")
+    if origin.strip()
+]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = not LOCAL_DEV
@@ -88,9 +122,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'legitcheck.host_routing_middleware.DomainRoutingMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -104,8 +138,14 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000,
+        },
     }
 }
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 # Whitenoise: отдаёт статику с gzip/br сжатием и Cache-Control: max-age=1 год
 STORAGES = {
@@ -139,7 +179,7 @@ TEMPLATES = [
         'APP_DIRS': LOCAL_DEV,  # в prod отключаем — используем cached loader
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
+                *(['django.template.context_processors.debug'] if LOCAL_DEV else []),
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -160,6 +200,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
         'CONN_MAX_AGE': 60,  # переиспользовать соединение 60 сек
+        'OPTIONS': {
+            'timeout': 20,
+            'init_command': (
+                "PRAGMA journal_mode=WAL;"
+                "PRAGMA synchronous=NORMAL;"
+                "PRAGMA temp_store=MEMORY"
+            ),
+        },
     }
 }
 
@@ -224,3 +272,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
     "LegitCheck <checkercheckerlegit@gmail.com>",
 )
 EMAIL_TIMEOUT = 5  # быстро падаем если SMTP недоступен
+
+# App Store Review demo access. Keep disabled unless both values are set in env.
+APP_REVIEW_DEMO_EMAIL = os.environ.get("APP_REVIEW_DEMO_EMAIL", "").strip().lower()
+APP_REVIEW_DEMO_PASSWORD = os.environ.get("APP_REVIEW_DEMO_PASSWORD", "")
+APP_REVIEW_DEMO_BALANCE = os.environ.get("APP_REVIEW_DEMO_BALANCE", "5000")
