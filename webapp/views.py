@@ -500,10 +500,12 @@ def _telegram_delivery_policy(verdict):
     speed = (verdict.speed or "").lower()
     if speed == FREE_CHECK_SPEED or speed.startswith("12h"):
         bucket, lifetime, interval = "12H", timedelta(hours=12), timedelta(hours=1)
-    elif speed in {"standard", "24h"} or speed.startswith("3h"):
-        bucket, lifetime, interval = "3H", timedelta(hours=3), timedelta(minutes=30)
-    else:
+    elif speed == "express" or speed.startswith("15min") or speed.startswith("30min"):
+        bucket, lifetime, interval = "15_30M", timedelta(minutes=30), timedelta(minutes=15)
+    elif speed == "fast" or speed.startswith("1h"):
         bucket, lifetime, interval = "1H", timedelta(hours=1), timedelta(minutes=15)
+    else:
+        bucket, lifetime, interval = "2H", timedelta(hours=2), timedelta(minutes=30)
     chat_id = getattr(settings, f"TELEGRAM_VERDICT_CHAT_{bucket}_ID", "") or TELEGRAM_VERDICT_CHAT_ID
     return (str(chat_id), lifetime, interval) if chat_id else None
 

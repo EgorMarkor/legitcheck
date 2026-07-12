@@ -779,16 +779,18 @@ class VerdictApiTests(TestCase):
             self.assertFalse(default_storage.exists(path))
 
     @override_settings(
+        TELEGRAM_VERDICT_CHAT_15_30M_ID="-100",
         TELEGRAM_VERDICT_CHAT_1H_ID="-101",
-        TELEGRAM_VERDICT_CHAT_3H_ID="-103",
+        TELEGRAM_VERDICT_CHAT_2H_ID="-102",
         TELEGRAM_VERDICT_CHAT_12H_ID="-112",
     )
     def test_telegram_verdict_groups_and_repeat_intervals(self):
         from webapp.views import _telegram_delivery_policy
 
         expected = {
+            "express": ("-100", 30, 15),
             "fast": ("-101", 60, 15),
-            "standard": ("-103", 180, 30),
+            "standard": ("-102", 120, 30),
             "12h-free": ("-112", 720, 60),
         }
         for speed, (chat_id, lifetime_minutes, interval_minutes) in expected.items():
