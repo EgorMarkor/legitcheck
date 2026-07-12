@@ -264,6 +264,7 @@ export function VerdictDetailScreen() {
           ) : null}
         </View>
 
+        {verdict.status === 'todo' ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: gridGap, marginTop: r(0.5), paddingBottom: r(1.5) }}>
           <Pressable
             onPress={() => void addPhoto()}
@@ -282,6 +283,7 @@ export function VerdictDetailScreen() {
             <Text style={{ color: '#9CA3AF', fontSize: r(0.8) }}>{uploading ? 'Загрузка...' : '+ Добавить фото'}</Text>
           </Pressable>
         </View>
+        ) : null}
       </View>
     </ScrollView>
   );

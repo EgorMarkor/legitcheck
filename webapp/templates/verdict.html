@@ -226,7 +226,7 @@
             {% endfor %}
           </div>
 
-          {% if can_edit_verdict %}
+          {% if can_upload_extra_photos %}
           <div class="grid grid-cols-3 gap-2 mt-2 pb-6">
             <!-- label→input схема: label — область нажатия, input — 1px. Не крашит iOS PWA -->
             <div class="relative h-[8rem] rounded-[1.2rem]
@@ -241,7 +241,7 @@
           </div>
           {% endif %}
 
-          {% if can_edit_verdict %}
+          {% if can_upload_extra_photos %}
           <script>
             const uploadInput = document.getElementById('extra-photo-input');
 

@@ -442,8 +442,11 @@ def _send_verdict_to_telegram(verdict):
     reply_markup = {
         "inline_keyboard": [
             [
-                {"text": "Легит", "callback_data": f"verdict:{verdict.id}:legit"},
-                {"text": "Не легит", "callback_data": f"verdict:{verdict.id}:fake"},
+                {"text": "Вердикт", "callback_data": f"verdict:{verdict.id}:legit"},
+                {"text": "Не вердикт", "callback_data": f"verdict:{verdict.id}:fake"},
+            ],
+            [
+                {"text": "Загрузите доп. фото", "callback_data": f"verdict:{verdict.id}:todo"},
             ]
         ]
     }
@@ -1097,7 +1100,9 @@ def check_verdict(request):
         'first_photo': first_photo,
         'photos':     photos,
         'code': code,
-        'can_edit_verdict': verdict.user_id == request.tg_user.tgId,
+        'can_upload_extra_photos': (
+            verdict.user_id == request.tg_user.pk and verdict.status == "todo"
+        ),
     })
 
 
@@ -1289,7 +1294,7 @@ def telegram_verdict_webhook(request):
     except ValueError:
         return JsonResponse({"ok": True})
 
-    if decision not in {"legit", "fake"}:
+    if decision not in {"legit", "fake", "todo"}:
         return JsonResponse({"ok": True})
 
     try:
@@ -1309,6 +1314,20 @@ def telegram_verdict_webhook(request):
         delivery.message_ids = []
         delivery.active = False
         delivery.save(update_fields=["message_ids", "active", "updated_at"])
+
+    user_messages = {
+        "legit": f"✅ Проверка {verdict.code} завершена: вынесен вердикт «Оригинал».",
+        "fake": f"❌ Проверка {verdict.code} завершена: вынесен вердикт «Не оригинал».",
+        "todo": (
+            f"📷 Для проверки {verdict.code} нужны дополнительные фотографии. "
+            f"Загрузите их на странице {getattr(settings, 'PUBLIC_BASE_URL', DEFAULT_PUBLIC_BASE_URL).rstrip('/')}/verdict/?code={verdict.code}"
+        ),
+    }
+    tg_service.send_message(
+        TELEGRAM_BOT_TOKEN,
+        verdict.user.tgId,
+        user_messages[decision],
+    )
 
     tg_service.answer_callback_query(
         TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт обновлен"
@@ -1441,6 +1460,12 @@ def payment_success(request):
 def upload_verdict_photo(request, verdict_id):
     verdict = get_object_or_404(Verdict, id=verdict_id, user=request.tg_user)
 
+    if verdict.status != "todo":
+        return JsonResponse(
+            {"success": False, "error": "Дополнительные фото можно загрузить только по запросу эксперта"},
+            status=409,
+        )
+
     if 'photo' not in request.FILES:
         return JsonResponse({'error': 'Файл не передан'}, status=400)
 
@@ -1448,6 +1473,10 @@ def upload_verdict_photo(request, verdict_id):
         verdict=verdict,
         image=request.FILES['photo']
     )
+    verdict.status = "inpending"
+    verdict.save(update_fields=["status"])
+    TelegramVerdictDelivery.objects.filter(verdict=verdict).delete()
+    transaction.on_commit(lambda verdict_id=verdict.id: _queue_verdict_telegram_send(verdict_id))
 
     return JsonResponse({
         'success': True,
@@ -1671,6 +1700,11 @@ def api_mobile_upload_verdict_photo(request, verdict_id):
     )
     if not verdict:
         return JsonResponse({"success": False, "error": "Вердикт не найден"}, status=404)
+    if verdict.status != "todo":
+        return JsonResponse(
+            {"success": False, "error": "Дополнительные фото можно загрузить только по запросу эксперта"},
+            status=409,
+        )
 
     files = _collect_photo_files(request)
     if not files:
@@ -1686,6 +1720,11 @@ def api_mobile_upload_verdict_photo(request, verdict_id):
                 "uploaded_at": photo.uploaded_at.isoformat(),
             }
         )
+
+    verdict.status = "inpending"
+    verdict.save(update_fields=["status"])
+    TelegramVerdictDelivery.objects.filter(verdict=verdict).delete()
+    transaction.on_commit(lambda verdict_id=verdict.id: _queue_verdict_telegram_send(verdict_id))
 
     verdict = (
         Verdict.objects.select_related("user")

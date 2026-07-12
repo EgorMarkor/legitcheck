@@ -446,7 +446,7 @@ class VerdictApiTests(TestCase):
         self.assertEqual(payload["verdict"]["status_display"], "Оригинал")
         self.assertEqual(payload["verdict"]["code"], "55555")
 
-    def test_web_verdict_page_allows_owner_and_disables_code_inputs(self):
+    def test_web_verdict_page_hides_extra_upload_after_final_verdict(self):
         self._login_web_session()
         verdict = Verdict.objects.create(
             user=self.user,
@@ -471,7 +471,47 @@ class VerdictApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="1" disabled readonly aria-disabled="true"')
         self.assertContains(response, 'value="9" disabled readonly aria-disabled="true"')
-        self.assertContains(response, 'id="extra-photo-input"')
+        self.assertNotContains(response, 'id="extra-photo-input"')
+
+    def test_web_extra_photo_requires_expert_request(self):
+        self._login_web_session()
+        verdict = Verdict.objects.create(
+            user=self.user,
+            status="todo",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="",
+            comment_from_user="user comment",
+            code="13578",
+            speed="fast",
+            price="299.00",
+            with_reason=False,
+        )
+
+        page = self.client.get(f"/verdict/?code={verdict.code}", HTTP_HOST=self.host)
+        self.assertContains(page, 'id="extra-photo-input"')
+
+        with patch("webapp.views._queue_verdict_telegram_send") as queue_send:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(
+                    f"/verdict/{verdict.id}/upload-photo/",
+                    {"photo": self._image_file("requested-extra.gif")},
+                    HTTP_HOST=self.host,
+                )
+
+        self.assertEqual(response.status_code, 200)
+        verdict.refresh_from_db()
+        self.assertEqual(verdict.status, "inpending")
+        self.assertEqual(verdict.photos.count(), 1)
+        queue_send.assert_called_once_with(verdict.id)
+
+        blocked = self.client.post(
+            f"/verdict/{verdict.id}/upload-photo/",
+            {"photo": self._image_file("blocked-after-upload.gif")},
+            HTTP_HOST=self.host,
+        )
+        self.assertEqual(blocked.status_code, 409)
 
     def test_web_verdict_page_does_not_show_other_users_verdict(self):
         other_user = User.objects.create(
@@ -577,7 +617,7 @@ class VerdictApiTests(TestCase):
     def test_mobile_upload_photo_to_existing_verdict(self):
         verdict = Verdict.objects.create(
             user=self.user,
-            status="inpending",
+            status="todo",
             category="sneakers",
             brand="Nike",
             item_model="Dunk",
@@ -604,6 +644,7 @@ class VerdictApiTests(TestCase):
         self.assertEqual(len(payload["photos"]), 1)
         verdict.refresh_from_db()
         self.assertEqual(verdict.photos.count(), 1)
+        self.assertEqual(verdict.status, "inpending")
 
     def test_web_login_with_token_sets_session(self):
         response = self.client.post(
