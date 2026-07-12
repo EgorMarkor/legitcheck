@@ -367,12 +367,7 @@ window.status_payment = async function status_payment(event) {
       throw new Error(data.details || data.error || "Не удалось создать платёж");
     }
 
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && typeof tg.openLink === "function") {
-      tg.openLink(data.url);
-    } else {
-      window.location.assign(data.url);
-    }
+    window.location.assign(data.url);
   } catch (error) {
     alert(error.message || "Ошибка создания платежа");
   } finally {
