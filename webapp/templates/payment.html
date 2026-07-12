@@ -166,14 +166,14 @@
       />
     </div>
 
-        <div class="p-5 w-full flex justify-center gap-1 rounded-[12px] bg_you items-center mt-4" id="payBtn">
+        <button type="button" class="p-5 w-full flex justify-center gap-1 rounded-[12px] bg_you items-center mt-4" id="payBtn" onclick="status_payment(event)">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 18 13" fill="none">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3853 12.589C14.6789 12.589 17.3488 9.91908 17.3488 6.62556C17.3488 3.33204 14.6789 0.662109 11.3853 0.662109C8.74397 0.662109 6.50371 2.37934 5.72006 4.7583V2.45114H0.651123L3.48376 11.3963H5.72006V8.49282C6.50371 10.8718 8.74397 12.589 11.3853 12.589ZM11.3853 8.86185C12.6204 8.86185 13.6216 7.86064 13.6216 6.62556C13.6216 5.39048 12.6204 4.38927 11.3853 4.38927C10.1503 4.38927 9.14904 5.39048 9.14904 6.62556C9.14904 7.86064 10.1503 8.86185 11.3853 8.86185Z" fill="white"/>
           </svg>
           <div class="text-[1.2rem] font-bold">
             Перейти в Ю-касса
           </div>
-        </div>
+        </button>
       </div>
 
     </div>
@@ -330,14 +330,12 @@
         });
       });
 
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('payBtn')
-          .addEventListener('click', status_payment);
-      });
-
     </script>
     <script>
-async function status_payment() {
+async function status_payment(event) {
+  if (event) event.preventDefault();
+  const button = document.getElementById('payBtn');
+  if (button && button.disabled) return;
   let raw = document.querySelector("#amountInput").value;
 
   // ❗ чистим строку
@@ -351,26 +349,31 @@ async function status_payment() {
     return;
   }
 
-  const res = await fetch("/payment/create/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-CSRFToken": "{{ csrf_token }}"
-    },
-    body: `amount=${encodeURIComponent(amount)}`
-  });
+  if (button) button.disabled = true;
+  try {
+    const res = await fetch("/payment/create/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: `amount=${encodeURIComponent(amount)}`
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) {
+      throw new Error(data.details || data.error || "Не удалось создать платёж");
+    }
 
-  if (!res.ok) {
-    alert("Ошибка создания платежа");
-    return;
-  }
-
-  const data = await res.json();
-
-  if (data.url) {
-    window.location.href = data.url; // 🚀 ПЕРЕХОД В ЮKASSA
-  } else {
-    alert("Ошибка оплаты");
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && typeof tg.openLink === "function") {
+      tg.openLink(data.url);
+    } else {
+      window.location.assign(data.url);
+    }
+  } catch (error) {
+    alert(error.message || "Ошибка создания платежа");
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 </script>
