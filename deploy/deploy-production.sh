@@ -37,7 +37,12 @@ set +a
 "$PYTHON" manage.py cleanup_login_tokens --retention-days 7
 "$PYTHON" manage.py collectstatic --noinput --clear
 
+install -m 0644 deploy/systemd/gunicorn.service /etc/systemd/system/gunicorn.service
+install -m 0644 deploy/systemd/telegram-login-bot.service /etc/systemd/system/telegram-login-bot.service
 install -m 0644 deploy/systemd/legitcheck-telegram-verdicts.service /etc/systemd/system/legitcheck-telegram-verdicts.service
+if [[ -n "${VK_GROUP_TOKEN:-}" && -n "${VK_GROUP_ID:-}" ]]; then
+  install -m 0644 deploy/systemd/legitcheck-vk-bot.service /etc/systemd/system/legitcheck-vk-bot.service
+fi
 systemctl daemon-reload
 systemctl enable legitcheck-telegram-verdicts.service
 
