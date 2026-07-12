@@ -87,6 +87,9 @@
       opacity: 1;
       transition: opacity 0.3s ease;
     }
+    .method_payment {
+      padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+    }
     .success_payment {
       display: none;
       opacity: 0;
@@ -332,7 +335,7 @@
 
     </script>
     <script>
-async function status_payment(event) {
+window.status_payment = async function status_payment(event) {
   if (event) event.preventDefault();
   const button = document.getElementById('payBtn');
   if (button && button.disabled) return;
@@ -375,7 +378,7 @@ async function status_payment(event) {
   } finally {
     if (button) button.disabled = false;
   }
-}
+};
 </script>
   <script>
     (function () {
