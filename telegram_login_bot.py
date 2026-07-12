@@ -11,6 +11,7 @@ from django.utils import timezone
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -24,7 +25,7 @@ django.setup()
 
 from pcwebapp.models import LoginToken
 from webapp import telegram as tg_service
-from webapp.models import User
+from webapp.models import TelegramVerdictDelivery, User, Verdict
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -97,6 +98,26 @@ def _claim_login_token(code: str, user_data: dict):
 
 
 claim_login_token = sync_to_async(_claim_login_token, thread_sensitive=True)
+
+
+@transaction.atomic
+def _apply_verdict_decision(verdict_id: int, decision: str):
+    if decision not in {"legit", "fake", "todo"}:
+        raise ValueError("Unsupported verdict decision")
+    verdict = Verdict.objects.select_for_update().select_related("user").get(pk=verdict_id)
+    verdict.status = decision
+    verdict.save(update_fields=["status"])
+    delivery = TelegramVerdictDelivery.objects.filter(verdict=verdict, active=True).first()
+    delivery_data = None
+    if delivery:
+        delivery_data = (delivery.chat_id, list(delivery.message_ids or []))
+        delivery.message_ids = []
+        delivery.active = False
+        delivery.save(update_fields=["message_ids", "active", "updated_at"])
+    return verdict.code, verdict.user.tgId, delivery_data
+
+
+apply_verdict_decision = sync_to_async(_apply_verdict_decision, thread_sensitive=True)
 
 
 @sync_to_async(thread_sensitive=True)
@@ -175,6 +196,40 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_verdict_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if not query or not query.data:
+        return
+    try:
+        _, verdict_id, decision = query.data.split(":")
+        code, user_tg_id, delivery_data = await apply_verdict_decision(int(verdict_id), decision)
+    except (ValueError, Verdict.DoesNotExist):
+        await query.answer("Вердикт не найден или данные некорректны", show_alert=True)
+        return
+
+    await query.answer("Решение сохранено")
+    if delivery_data:
+        chat_id, message_ids = delivery_data
+        for message_id in message_ids:
+            try:
+                await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+            except Exception:
+                logger.warning("Failed to delete verdict message chat=%s message=%s", chat_id, message_id)
+
+    messages = {
+        "legit": f"✅ Проверка {code} завершена: вынесен вердикт «Оригинал».",
+        "fake": f"❌ Проверка {code} завершена: вынесен вердикт «Не оригинал».",
+        "todo": (
+            f"📷 Для проверки {code} нужны дополнительные фотографии. "
+            f"Загрузите их на странице {settings.PUBLIC_BASE_URL.rstrip('/')}/verdict/?code={code}"
+        ),
+    }
+    try:
+        await context.bot.send_message(chat_id=user_tg_id, text=messages[decision])
+    except Exception:
+        logger.warning("Failed to notify Telegram user %s about verdict %s", user_tg_id, code)
+
+
 async def handle_error(update: object, context: ContextTypes.DEFAULT_TYPE):
     error = context.error
     if error is None:
@@ -216,6 +271,7 @@ def main():
     )
     app = builder.build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(handle_verdict_callback, pattern=r"^verdict:\d+:(legit|fake|todo)$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_token))
     app.add_error_handler(handle_error)
     app.run_polling()
