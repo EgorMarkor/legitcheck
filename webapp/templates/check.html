@@ -1753,6 +1753,11 @@ document.addEventListener('DOMContentLoaded', function() {
   let isFreeCheckSubmitting = false;
   let isVerdictSubmitting = false;
   let verdictSubmissionKey = null;
+  const VALID_TYPES = new Set(Array.from(typeImgs).map(function(img) { return img.dataset.type; }).filter(Boolean));
+
+  function hasValidType() {
+    return Boolean(type_item && VALID_TYPES.has(type_item) && document.getElementById('check_' + type_item));
+  }
 
   function getVerdictSubmissionKey() {
     if (!verdictSubmissionKey) {
@@ -1961,6 +1966,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   // Show step
   function showStep(step) {
+    if (step === 3 && !hasValidType()) {
+      currentStep = isCategoryFirst ? 1 : 2;
+      step = currentStep;
+    }
+
     brandSection.classList.add('hidden', 'opacity-0');
     itemSection.classList.add('hidden', 'opacity-0');
     document.querySelectorAll('[id^="check_"]').forEach(function(sec) { sec.classList.add('hidden', 'opacity-0'); });
@@ -2006,7 +2016,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Called from the brand list after a brand is selected.
   window.gotoStep2 = function(){
     selectedBrand = window.__selectedBrand || selectedBrand;
-    currentStep = isCategoryFirst ? 3 : 2;
+    currentStep = isCategoryFirst ? (hasValidType() ? 3 : 1) : 2;
     showStep(currentStep);
   };
   // A direct brand link always continues with category selection.
@@ -2022,12 +2032,19 @@ document.addEventListener('DOMContentLoaded', function() {
   typeImgs.forEach(function(img) {
     img.addEventListener('click', function(e) {
       type_item = e.currentTarget.dataset.type;
-      currentStep = isCategoryFirst ? 2 : 3;
+      currentStep = isCategoryFirst ? (selectedBrand ? 3 : 2) : 3;
       showStep(currentStep);
     });
   });
   // Continue
   continueBtn.addEventListener('click', function() {
+    if (!hasValidType()) {
+      currentStep = isCategoryFirst ? 1 : 2;
+      showStep(currentStep);
+      alert('Выберите тип вещи.');
+      return;
+    }
+
     if (!validateRequiredPhotos()) return;
 
     const checkSection = document.getElementById('check_' + type_item);
