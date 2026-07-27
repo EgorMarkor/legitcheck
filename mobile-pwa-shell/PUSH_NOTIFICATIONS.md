@@ -11,7 +11,7 @@ Before an App Store/TestFlight build:
    `APNS_AUTH_KEY_PATH`, and `APNS_BUNDLE_ID`.
 3. Put the APNs `.p8` key outside the repository at `APNS_AUTH_KEY_PATH`.
 4. Run `npm run upload:ios:testflight` with the existing App Store Connect
-   signing credentials. The upload script archives with
+   signing credentials. The default release build number is `5`, and the upload script archives with
    `APS_ENVIRONMENT=production`.
 
 The web app requests notification permission on native startup, registers the
