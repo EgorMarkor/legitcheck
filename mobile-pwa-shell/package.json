@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "add:ios": "npx cap add ios",
-    "sync:ios": "npx cap sync ios",
+    "sync:ios": "npx cap sync ios && bash scripts/configure_ios_push.sh",
     "open:ios": "npx cap open ios",
     "build:ios": "npm run sync:ios && npm run open:ios",
     "build:ios:unsigned": "bash scripts/build_unsigned_ios_ipa.sh",
@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@capacitor/camera": "^7.0.5",
-    "@capacitor/core": "^7.6.0"
+    "@capacitor/core": "^7.6.0",
+    "@capacitor/push-notifications": "^7.0.7"
   },
   "devDependencies": {
     "@capacitor/android": "^7.6.0",

@@ -681,7 +681,7 @@ class VerdictApiTests(TestCase):
             worker["Cache-Control"],
             "no-store, no-cache, must-revalidate, max-age=0",
         )
-        self.assertContains(worker, "checker-pwa-v24-check-page-fix")
+        self.assertContains(worker, "checker-pwa-v25-push-notifications")
 
     def test_check_page_uses_full_navigation_under_csp(self):
         transitions_path = (

@@ -11,6 +11,8 @@ from .models import (
     Verdict,
     VerdictPhoto,
     TelegramVerdictDelivery,
+    NativePushDevice,
+    WebPushSubscription,
 )
 from django.core.files.storage import default_storage
 from django.core.exceptions import ImproperlyConfigured
@@ -45,6 +47,8 @@ import hashlib
 import ipaddress
 from urllib.parse import urlparse
 from . import telegram as tg_service
+from .apns import apns_is_configured
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 Configuration.account_id = settings.YOOKASSA_ACCOUNT_ID
@@ -357,6 +361,128 @@ def require_user(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapped
+
+
+def _push_user_or_error(request):
+    user = _session_user(request)
+    if not user:
+        return None, JsonResponse({"success": False, "error": "Не авторизован"}, status=401)
+    return user, None
+
+
+def _request_json(request):
+    try:
+        payload = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+@ensure_csrf_cookie
+@require_http_methods(["GET"])
+def api_push_config(request):
+    user, error = _push_user_or_error(request)
+    if error:
+        return error
+    return JsonResponse({
+        "success": True,
+        "web_push_enabled": bool(
+            settings.WEB_PUSH_VAPID_PUBLIC_KEY
+            and settings.WEB_PUSH_VAPID_PRIVATE_KEY
+        ),
+        "vapid_public_key": settings.WEB_PUSH_VAPID_PUBLIC_KEY,
+        "native_push_enabled": apns_is_configured(),
+    })
+
+
+@require_http_methods(["POST"])
+def api_push_web_subscribe(request):
+    user, error = _push_user_or_error(request)
+    if error:
+        return error
+    payload = _request_json(request)
+    if payload is None:
+        return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
+
+    endpoint = str(payload.get("endpoint") or "").strip()
+    keys = payload.get("keys") if isinstance(payload.get("keys"), dict) else {}
+    p256dh = str(keys.get("p256dh") or "").strip()
+    auth = str(keys.get("auth") or "").strip()
+    parsed_endpoint = urlparse(endpoint)
+    endpoint_host = parsed_endpoint.hostname or ""
+    try:
+        endpoint_ip = ipaddress.ip_address(endpoint_host)
+    except ValueError:
+        endpoint_ip = None
+    try:
+        endpoint_port = parsed_endpoint.port
+    except ValueError:
+        endpoint_port = -1
+    if (
+        parsed_endpoint.scheme != "https"
+        or not parsed_endpoint.netloc
+        or parsed_endpoint.username
+        or parsed_endpoint.password
+        or endpoint_port not in {None, 443}
+        or (endpoint_ip is not None and not endpoint_ip.is_global)
+        or len(endpoint) > 4096
+        or not p256dh
+        or len(p256dh) > 512
+        or not auth
+        or len(auth) > 512
+    ):
+        return JsonResponse({"success": False, "error": "Некорректная push-подписка"}, status=400)
+
+    WebPushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={
+            "user": user,
+            "p256dh": p256dh,
+            "auth": auth,
+            "user_agent": request.META.get("HTTP_USER_AGENT", "")[:1000],
+            "active": True,
+            "last_error": "",
+        },
+    )
+    return JsonResponse({"success": True})
+
+
+@require_http_methods(["POST"])
+def api_push_native_register(request):
+    user, error = _push_user_or_error(request)
+    if error:
+        return error
+    payload = _request_json(request)
+    if payload is None:
+        return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
+
+    platform = str(payload.get("platform") or "").strip().lower()
+    token = str(payload.get("token") or "").strip()
+    allowed_token_characters = (
+        "0123456789abcdefABCDEF"
+        if platform == NativePushDevice.PLATFORM_IOS
+        else "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:-"
+    )
+    if (
+        platform not in {NativePushDevice.PLATFORM_IOS, NativePushDevice.PLATFORM_ANDROID}
+        or not 32 <= len(token) <= 512
+        or not token.isascii()
+        or any(character not in allowed_token_characters for character in token)
+    ):
+        return JsonResponse({"success": False, "error": "Некорректный push-токен"}, status=400)
+
+    NativePushDevice.objects.update_or_create(
+        token=token,
+        defaults={
+            "user": user,
+            "platform": platform,
+            "bundle_id": settings.APNS_BUNDLE_ID if platform == NativePushDevice.PLATFORM_IOS else "",
+            "environment": "sandbox" if settings.APNS_USE_SANDBOX else "production",
+            "active": True,
+            "last_error": "",
+        },
+    )
+    return JsonResponse({"success": True})
 
 
 def _refresh_free_check_state(user, save=True):

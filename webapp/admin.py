@@ -16,6 +16,7 @@ from .models import (
     VkConversation,
     VkMessage,
     WebPushSubscription,
+    NativePushDevice,
 )
 from unfold.admin import ModelAdmin  # вы используете свой класс-расширение
 from io import BytesIO
@@ -241,7 +242,7 @@ class VkMessageAdmin(ModelAdmin):
 
 
 class WebPushSubscriptionAdmin(ModelAdmin):
-    list_display = ("id", "active", "updated_at", "endpoint_preview")
+    list_display = ("id", "user", "active", "updated_at", "endpoint_preview")
     list_filter = ("active", "created_at", "updated_at")
     search_fields = ("endpoint", "user_agent", "last_error")
     readonly_fields = ("created_at", "updated_at", "last_error")
@@ -250,6 +251,13 @@ class WebPushSubscriptionAdmin(ModelAdmin):
         return obj.endpoint[:80]
 
     endpoint_preview.short_description = "Endpoint"
+
+
+class NativePushDeviceAdmin(ModelAdmin):
+    list_display = ("id", "user", "platform", "environment", "active", "updated_at")
+    list_filter = ("platform", "environment", "active", "updated_at")
+    search_fields = ("user__tgId", "user__name", "token", "last_error")
+    readonly_fields = ("created_at", "updated_at", "last_error")
 
 
 admin.site.register(User, UserAdmin)
@@ -262,3 +270,4 @@ admin.site.register(PromoCodeRedemption, PromoCodeRedemptionAdmin)
 admin.site.register(VkConversation, VkConversationAdmin)
 admin.site.register(VkMessage, VkMessageAdmin)
 admin.site.register(WebPushSubscription, WebPushSubscriptionAdmin)
+admin.site.register(NativePushDevice, NativePushDeviceAdmin)

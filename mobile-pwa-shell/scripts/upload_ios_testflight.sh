@@ -50,6 +50,7 @@ xcodebuild \
   MARKETING_VERSION="$MARKETING_VERSION" \
   CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
   CODE_SIGN_STYLE=Automatic \
+  APS_ENVIRONMENT=production \
   clean archive
 
 cat > "$EXPORT_OPTIONS" <<EOF

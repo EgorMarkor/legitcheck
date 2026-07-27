@@ -9,26 +9,26 @@ from .models import WebPushSubscription
 logger = logging.getLogger(__name__)
 
 
-def send_web_push_to_all(payload):
-    public_key = getattr(settings, "VKCHAT_VAPID_PUBLIC_KEY", "")
-    private_key = getattr(settings, "VKCHAT_VAPID_PRIVATE_KEY", "")
-    claim_email = getattr(settings, "VKCHAT_VAPID_CLAIM_EMAIL", "admin@legitcheck.one")
+def _send_web_push(payload, subscriptions):
+    public_key = getattr(settings, "WEB_PUSH_VAPID_PUBLIC_KEY", "")
+    private_key = getattr(settings, "WEB_PUSH_VAPID_PRIVATE_KEY", "")
+    claim_email = getattr(settings, "WEB_PUSH_VAPID_CLAIM_EMAIL", "admin@legitcheck.one")
 
     if not public_key or not private_key:
-        logger.warning("VK chat push skipped: VAPID keys are not configured")
+        logger.warning("Web push skipped: VAPID keys are not configured")
         return 0
 
     try:
         from pywebpush import WebPushException, webpush
     except ImportError:
-        logger.exception("VK chat push skipped: pywebpush is not installed")
+        logger.exception("Web push skipped: pywebpush is not installed")
         return 0
 
     sent = 0
     payload_json = json.dumps(payload, ensure_ascii=False)
     vapid_claims = {"sub": f"mailto:{claim_email}"}
 
-    for subscription in WebPushSubscription.objects.filter(active=True).iterator():
+    for subscription in subscriptions.filter(active=True).iterator():
         subscription_info = {
             "endpoint": subscription.endpoint,
             "keys": {
@@ -56,10 +56,25 @@ def send_web_push_to_all(payload):
                 subscription.save(update_fields=["active", "last_error", "updated_at"])
             else:
                 subscription.save(update_fields=["last_error", "updated_at"])
-            logger.warning("VK chat push failed for subscription %s: %s", subscription.id, exc)
+            logger.warning("Web push failed for subscription %s: %s", subscription.id, exc)
         except Exception as exc:
             subscription.last_error = str(exc)[:1000]
             subscription.save(update_fields=["last_error", "updated_at"])
-            logger.exception("Unexpected VK chat push error for subscription %s", subscription.id)
+            logger.exception("Unexpected web push error for subscription %s", subscription.id)
 
     return sent
+
+
+def send_web_push_to_all(payload):
+    """Legacy staff-chat broadcast. User-owned subscriptions are excluded."""
+    return _send_web_push(
+        payload,
+        WebPushSubscription.objects.filter(user__isnull=True),
+    )
+
+
+def send_web_push_to_user(user_id, payload):
+    return _send_web_push(
+        payload,
+        WebPushSubscription.objects.filter(user_id=user_id),
+    )

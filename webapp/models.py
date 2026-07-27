@@ -526,6 +526,13 @@ class VkMessage(models.Model):
 
 
 class WebPushSubscription(models.Model):
+    user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="web_push_subscriptions",
+    )
     endpoint = models.TextField(unique=True)
     p256dh = models.TextField()
     auth = models.TextField()
@@ -545,3 +552,40 @@ class WebPushSubscription(models.Model):
 
     def __str__(self):
         return self.endpoint[:80]
+
+
+class NativePushDevice(models.Model):
+    PLATFORM_IOS = "ios"
+    PLATFORM_ANDROID = "android"
+    PLATFORM_CHOICES = (
+        (PLATFORM_IOS, "iOS"),
+        (PLATFORM_ANDROID, "Android"),
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="native_push_devices",
+    )
+    platform = models.CharField(max_length=16, choices=PLATFORM_CHOICES)
+    token = models.CharField(max_length=512, unique=True)
+    bundle_id = models.CharField(max_length=255, blank=True)
+    environment = models.CharField(max_length=16, default="production")
+    active = models.BooleanField(default=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Нативное push-устройство"
+        verbose_name_plural = "Нативные push-устройства"
+        ordering = ("-updated_at",)
+        indexes = [
+            models.Index(
+                fields=["user", "active", "platform"],
+                name="nativepush_user_active_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.platform} {self.user_id}: {self.token[:32]}"

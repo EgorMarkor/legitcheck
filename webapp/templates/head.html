@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/page-transitions.css' %}?v=20260601-3">
     <!-- Telegram WebApp SDK: defer — не блокирует парсинг -->
     <script defer src="{% static 'vendor/telegram-web-app.js' %}"></script>
+    <script defer src="{% static 'js/push-notifications.js' %}?v=20260728-1"></script>
     <link rel="manifest" href="/manifest.json">
     <style>
       /* ─── Убираем скроллбары ───────────────────────────────────────────────── */
@@ -65,6 +66,51 @@
       }
 
       * { font-family: 'Google Sans', sans-serif; }
+
+      .checker-push-prompt {
+        position: fixed;
+        z-index: 10000;
+        left: max(1rem, env(safe-area-inset-left));
+        right: max(1rem, env(safe-area-inset-right));
+        top: max(1rem, env(safe-area-inset-top));
+        display: grid;
+        gap: .9rem;
+        padding: 1.1rem;
+        color: #f7f9fc;
+        background: rgba(23, 28, 36, .98);
+        border: 1px solid rgba(98, 255, 202, .22);
+        border-radius: 1.4rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, .4);
+      }
+
+      .checker-push-prompt__copy {
+        display: grid;
+        gap: .35rem;
+      }
+
+      .checker-push-prompt__copy strong { font-size: 1.2rem; }
+      .checker-push-prompt__copy span { color: #aeb6c4; line-height: 1.35; }
+
+      .checker-push-prompt__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .65rem;
+      }
+
+      .checker-push-prompt__actions button {
+        min-height: 2.8rem;
+        padding: .65rem 1rem;
+        border: 0;
+        border-radius: 999px;
+        color: #e7ebf2;
+        background: #252c37;
+      }
+
+      .checker-push-prompt__actions [data-checker-push-enable] {
+        color: #07120e;
+        font-weight: 700;
+        background: #20d9a0;
+      }
 
       .bg_black {
         background: linear-gradient(180deg, #171C24 0%, #11151A 100%);

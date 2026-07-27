@@ -52,9 +52,28 @@ YOOKASSA_RETURN_URL = os.environ.get(
 )
 VK_GROUP_TOKEN = os.environ.get("VK_GROUP_TOKEN", "")
 VK_GROUP_ID = os.environ.get("VK_GROUP_ID", "")
-VKCHAT_VAPID_PUBLIC_KEY = os.environ.get("VKCHAT_VAPID_PUBLIC_KEY", "")
-VKCHAT_VAPID_PRIVATE_KEY = os.environ.get("VKCHAT_VAPID_PRIVATE_KEY", "")
-VKCHAT_VAPID_CLAIM_EMAIL = os.environ.get("VKCHAT_VAPID_CLAIM_EMAIL", "admin@legitcheck.one")
+WEB_PUSH_VAPID_PUBLIC_KEY = os.environ.get(
+    "WEB_PUSH_VAPID_PUBLIC_KEY",
+    os.environ.get("VKCHAT_VAPID_PUBLIC_KEY", ""),
+)
+WEB_PUSH_VAPID_PRIVATE_KEY = os.environ.get(
+    "WEB_PUSH_VAPID_PRIVATE_KEY",
+    os.environ.get("VKCHAT_VAPID_PRIVATE_KEY", ""),
+)
+WEB_PUSH_VAPID_CLAIM_EMAIL = os.environ.get(
+    "WEB_PUSH_VAPID_CLAIM_EMAIL",
+    os.environ.get("VKCHAT_VAPID_CLAIM_EMAIL", "admin@legitcheck.one"),
+)
+# Backwards-compatible names used by the staff VK chat.
+VKCHAT_VAPID_PUBLIC_KEY = WEB_PUSH_VAPID_PUBLIC_KEY
+VKCHAT_VAPID_PRIVATE_KEY = WEB_PUSH_VAPID_PRIVATE_KEY
+VKCHAT_VAPID_CLAIM_EMAIL = WEB_PUSH_VAPID_CLAIM_EMAIL
+
+APNS_KEY_ID = os.environ.get("APNS_KEY_ID", "")
+APNS_TEAM_ID = os.environ.get("APNS_TEAM_ID", "")
+APNS_AUTH_KEY_PATH = os.environ.get("APNS_AUTH_KEY_PATH", "")
+APNS_BUNDLE_ID = os.environ.get("APNS_BUNDLE_ID", "com.markor.legitcheck")
+APNS_USE_SANDBOX = os.environ.get("APNS_USE_SANDBOX", "0") == "1"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "1" if LOCAL_DEV else "0") == "1"

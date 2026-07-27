@@ -1,5 +1,5 @@
-// v24 refreshes the navigation runtime after the CSP hardening rollout.
-const CACHE_VERSION = 'checker-pwa-v24-check-page-fix';
+// v25 adds personal verdict notifications for installed PWAs.
+const CACHE_VERSION = 'checker-pwa-v25-push-notifications';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -13,6 +13,7 @@ const PRECACHE_URLS = [
   '/static/vendor/google-sans.css',
   '/static/css/page-transitions.css?v=20260601-3',
   '/static/js/page-transitions.js?v=20260728-1',
+  '/static/js/push-notifications.js?v=20260728-1',
   '/static/vendor/fonts/google-sans-cyrillic-700.woff2',
   '/static/vendor/fonts/google-sans-cyrillic-ext-700.woff2',
   '/static/vendor/fonts/google-sans-latin-700.woff2',
@@ -54,20 +55,20 @@ self.addEventListener('push', (event) => {
     payload = event.data ? event.data.json() : {};
   } catch (_) {
     payload = {
-      title: 'VK Чаты',
-      body: event.data ? event.data.text() : 'Новое сообщение',
+      title: 'Checker',
+      body: event.data ? event.data.text() : 'Статус проверки обновлён',
     };
   }
 
-  const title = payload.title || 'VK Чаты';
+  const title = payload.title || 'Checker';
   const options = {
-    body: payload.body || 'Новое сообщение',
+    body: payload.body || 'Статус проверки обновлён',
     icon: '/static/pwa/icon-192.png',
     badge: '/static/pwa/icon-192.png',
-    tag: payload.tag || 'vkchat-message',
+    tag: payload.tag || 'checker-notification',
     renotify: true,
     data: {
-      url: payload.url || '/vkchat/',
+      url: payload.url || '/verdicts/',
       peer_id: payload.peer_id || null,
       message_id: payload.message_id || null,
     },
@@ -79,14 +80,14 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const targetUrl = new URL(event.notification.data?.url || '/vkchat/', self.location.origin).href;
+  const targetUrl = new URL(event.notification.data?.url || '/verdicts/', self.location.origin).href;
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clients) => {
         for (const client of clients) {
           const clientUrl = new URL(client.url);
-          if (clientUrl.origin === self.location.origin && clientUrl.pathname.startsWith('/vkchat/')) {
+          if (clientUrl.origin === self.location.origin) {
             return client.navigate(targetUrl).then((navigatedClient) => (navigatedClient || client).focus());
           }
         }

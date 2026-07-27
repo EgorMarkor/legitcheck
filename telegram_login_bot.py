@@ -26,6 +26,7 @@ django.setup()
 from pcwebapp.models import LoginToken
 from webapp import telegram as tg_service
 from webapp.models import TelegramVerdictDelivery, User, Verdict
+from webapp.push import send_user_push
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -265,6 +266,19 @@ async def handle_verdict_callback(update: Update, context: ContextTypes.DEFAULT_
         await context.bot.send_message(chat_id=user_tg_id, text=messages[decision])
     except Exception:
         logger.warning("Failed to notify Telegram user %s about verdict %s", user_tg_id, code)
+
+    push_bodies = {
+        "legit": f"Проверка {code} завершена: вынесен вердикт «Оригинал».",
+        "fake": f"Проверка {code} завершена: вынесен вердикт «Не оригинал».",
+        "todo": f"Для проверки {code} нужны дополнительные фотографии.",
+    }
+    await sync_to_async(send_user_push, thread_sensitive=False)(
+        user_tg_id,
+        title="Checker",
+        body=push_bodies[decision],
+        url=f"/verdict/?code={code}",
+        tag=f"checker-verdict-{code}",
+    )
 
 
 async def handle_error(update: object, context: ContextTypes.DEFAULT_TYPE):
