@@ -17,7 +17,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from telegram.error import NetworkError
+from telegram.error import InvalidToken, NetworkError
 from telegram.request import HTTPXRequest
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legitcheck.settings")
@@ -291,7 +291,13 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_verdict_callback, pattern=r"^verdict:\d+:(legit|fake|todo)$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_token))
     app.add_error_handler(handle_error)
-    app.run_polling()
+    try:
+        app.run_polling()
+    except InvalidToken:
+        # python-telegram-bot includes the rejected credential in the
+        # exception text. Keep it out of journald and let systemd leave the
+        # unit stopped until an operator installs a replacement token.
+        logger.critical("Telegram rejected TELEGRAM_BOT_TOKEN; replace the token before restarting this service")
 
 
 if __name__ == "__main__":
