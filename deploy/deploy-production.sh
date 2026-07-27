@@ -35,6 +35,9 @@ set +a
 "$PYTHON" manage.py check
 "$PYTHON" manage.py migrate --noinput
 "$PYTHON" manage.py cleanup_login_tokens --retention-days 7
+if [[ "${ROTATE_USER_AUTH_TOKENS:-0}" == "1" ]]; then
+  "$PYTHON" manage.py rotate_user_auth_tokens
+fi
 "$PYTHON" manage.py collectstatic --noinput --clear
 
 install -m 0644 deploy/systemd/gunicorn.service /etc/systemd/system/gunicorn.service

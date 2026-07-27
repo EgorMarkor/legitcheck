@@ -11,6 +11,7 @@ build/
 .eggs/
 .tox/
 .pytest_cache/
+graphify-out/
 
 # Django
 *.log

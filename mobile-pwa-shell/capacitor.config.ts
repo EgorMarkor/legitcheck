@@ -13,9 +13,7 @@ const config: CapacitorConfig = {
       '127.0.0.1',
       'localhost',
       'legitcheck.one',
-      '*.legitcheck.one',
-      't.me',
-      'telegram.me',
+      'www.legitcheck.one',
       '*.yookassa.ru',
       'yookassa.ru'
     ]

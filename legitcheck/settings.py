@@ -35,6 +35,7 @@ if not SECRET_KEY:
         raise ImproperlyConfigured("DJANGO_SECRET_KEY is required")
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_INIT_DATA_MAX_AGE = int(os.environ.get("TELEGRAM_INIT_DATA_MAX_AGE", "600"))
 TELEGRAM_VERDICT_CHAT_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_ID")
 TELEGRAM_VERDICT_CHAT_15_30M_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_15_30M_ID", "")
 TELEGRAM_VERDICT_CHAT_1H_ID = os.environ.get("TELEGRAM_VERDICT_CHAT_1H_ID", "")
@@ -71,6 +72,11 @@ ALLOWED_HOSTS = [
     for host in os.environ.get("DJANGO_ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
     if host.strip()
 ]
+TRUSTED_PROXY_IPS = {
+    ip.strip()
+    for ip in os.environ.get("TRUSTED_PROXY_IPS", "127.0.0.1,::1").split(",")
+    if ip.strip()
+}
 
 if LOCAL_DEV:
     ALLOWED_HOSTS += ['localhost']
@@ -87,8 +93,16 @@ CSRF_TRUSTED_ORIGINS = [
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = not LOCAL_DEV
 SECURE_HSTS_SECONDS = 0 if LOCAL_DEV else 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not LOCAL_DEV
+SECURE_HSTS_PRELOAD = not LOCAL_DEV
 SESSION_COOKIE_SECURE = not LOCAL_DEV
 CSRF_COOKIE_SECURE = not LOCAL_DEV
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
 
 # Keep users logged in for 1 year
 SESSION_COOKIE_AGE = 365 * 24 * 60 * 60  # seconds
@@ -106,6 +120,10 @@ MEDIA_ROOT = "/srv/legitcheck/media"
 
 # URL prefix for accessing those files
 MEDIA_URL = "/media/"
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+MAX_UPLOAD_IMAGE_BYTES = 15 * 1024 * 1024
+MAX_UPLOAD_IMAGE_PIXELS = 40_000_000
 
 
 # Application definition
@@ -125,6 +143,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'legitcheck.security_middleware.ApplicationSecurityHeadersMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

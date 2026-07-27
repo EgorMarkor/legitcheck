@@ -101,19 +101,23 @@ claim_login_token = sync_to_async(_claim_login_token, thread_sensitive=True)
 
 
 @transaction.atomic
-def _apply_verdict_decision(verdict_id: int, decision: str):
+def _apply_verdict_decision(verdict_id: int, decision: str, callback_chat_id: int):
     if decision not in {"legit", "fake", "todo"}:
         raise ValueError("Unsupported verdict decision")
     verdict = Verdict.objects.select_for_update().select_related("user").get(pk=verdict_id)
+    delivery = TelegramVerdictDelivery.objects.select_for_update().filter(
+        verdict=verdict,
+        active=True,
+    ).first()
+    if not delivery or str(delivery.chat_id) != str(callback_chat_id):
+        raise PermissionError("Verdict callback came from an unauthorized chat")
+
     verdict.status = decision
     verdict.save(update_fields=["status"])
-    delivery = TelegramVerdictDelivery.objects.filter(verdict=verdict, active=True).first()
-    delivery_data = None
-    if delivery:
-        delivery_data = (delivery.chat_id, list(delivery.message_ids or []))
-        delivery.message_ids = []
-        delivery.active = False
-        delivery.save(update_fields=["message_ids", "active", "updated_at"])
+    delivery_data = (delivery.chat_id, list(delivery.message_ids or []))
+    delivery.message_ids = []
+    delivery.active = False
+    delivery.save(update_fields=["message_ids", "active", "updated_at"])
     return verdict.code, verdict.user.tgId, delivery_data
 
 
@@ -198,11 +202,24 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_verdict_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    if not query or not query.data:
+    if not query or not query.data or not query.message:
         return
     try:
         _, verdict_id, decision = query.data.split(":")
-        code, user_tg_id, delivery_data = await apply_verdict_decision(int(verdict_id), decision)
+        code, user_tg_id, delivery_data = await apply_verdict_decision(
+            int(verdict_id),
+            decision,
+            query.message.chat_id,
+        )
+    except PermissionError:
+        logger.warning(
+            "Rejected verdict callback verdict_id=%s chat_id=%s user_id=%s",
+            verdict_id if "verdict_id" in locals() else "invalid",
+            query.message.chat_id,
+            query.from_user.id if query.from_user else "unknown",
+        )
+        await query.answer("Недостаточно прав", show_alert=True)
+        return
     except (ValueError, Verdict.DoesNotExist):
         await query.answer("Вердикт не найден или данные некорректны", show_alert=True)
         return

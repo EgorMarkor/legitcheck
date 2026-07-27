@@ -7,9 +7,10 @@ from pcwebapp.models import LoginToken
 from telegram_login_bot import (
     LoginTokenExpired,
     LoginTokenUnavailable,
+    _apply_verdict_decision,
     _claim_login_token,
 )
-from webapp.models import User
+from webapp.models import TelegramVerdictDelivery, User, Verdict
 
 
 class ClaimLoginTokenTests(TestCase):
@@ -58,3 +59,41 @@ class ClaimLoginTokenTests(TestCase):
         token.refresh_from_db()
         self.assertIsNone(token.used_at)
         self.assertEqual(User.objects.count(), 0)
+
+    def test_verdict_callback_must_come_from_delivery_chat(self):
+        user = User.objects.create(
+            tgId=654321,
+            name="Verifier",
+            img="/static/avatar-placeholder.png",
+            balance="0",
+        )
+        verdict = Verdict.objects.create(
+            user=user,
+            status="inpending",
+            category="sneakers",
+            brand="Nike",
+            item_model="Dunk",
+            comment="",
+            comment_from_user="",
+            code="12345",
+            speed="fast",
+            price="299.00",
+        )
+        TelegramVerdictDelivery.objects.create(
+            verdict=verdict,
+            chat_id="-100123",
+            message_ids=[10],
+            interval_minutes=15,
+            expires_at=timezone.now() + timedelta(hours=1),
+            next_send_at=timezone.now() + timedelta(minutes=15),
+        )
+
+        with self.assertRaises(PermissionError):
+            _apply_verdict_decision(verdict.id, "legit", -100999)
+
+        verdict.refresh_from_db()
+        self.assertEqual(verdict.status, "inpending")
+
+        _apply_verdict_decision(verdict.id, "legit", -100123)
+        verdict.refresh_from_db()
+        self.assertEqual(verdict.status, "legit")

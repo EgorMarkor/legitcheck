@@ -160,7 +160,26 @@
       // Попытка восстановить сессию из localStorage (Capacitor persistency)
       const savedToken = localStorage.getItem('checker_auth_token');
       if (savedToken) {
-        window.location.replace('/api/auth/restore/' + encodeURIComponent(savedToken) + '/');
+        fetch('/api/auth/restore/', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + savedToken,
+            'Content-Type': 'application/json'
+          },
+          body: '{}',
+          credentials: 'same-origin'
+        })
+          .then(function (response) {
+            if (!response.ok) throw new Error('restore failed');
+            return response.json();
+          })
+          .then(function (payload) {
+            localStorage.removeItem('checker_auth_token');
+            window.location.replace(payload.redirect_url || '/home/');
+          })
+          .catch(function () {
+            localStorage.removeItem('checker_auth_token');
+          });
         return;
       }
     }

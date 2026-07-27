@@ -1,4 +1,6 @@
-const CACHE_VERSION = 'checker-pwa-v22';
+// Security cache reset: v23 invalidates every response cached before the
+// July 2026 incident cleanup.
+const CACHE_VERSION = 'checker-pwa-v23-security-reset';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -115,12 +117,26 @@ self.addEventListener('activate', (event) => {
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-  const response = await fetch(request);
-  if (response.ok) {
+  const response = await fetch(new Request(request, {
+    cache: 'no-store',
+    credentials: 'same-origin',
+  }));
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  const expectedType = expectedStaticContentType(new URL(request.url).pathname);
+  if (response.ok && !response.redirected && (!expectedType || contentType.startsWith(expectedType))) {
     const cache = await caches.open(STATIC_CACHE);
     cache.put(request, response.clone());
   }
   return response;
+}
+
+function expectedStaticContentType(pathname) {
+  if (/\.(png|jpe?g|webp|gif|avif)$/i.test(pathname)) return 'image/';
+  if (/\.svg$/i.test(pathname)) return 'image/svg+xml';
+  if (/\.css$/i.test(pathname)) return 'text/css';
+  if (/\.js$/i.test(pathname)) return 'application/javascript';
+  if (/\.(woff2?|ttf|otf)$/i.test(pathname)) return 'font/';
+  return null;
 }
 
 // Network-first: HTML-страницы (нужна свежесть, фолбэк на кэш)

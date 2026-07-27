@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -25,6 +26,11 @@ def _watermark_path():
 
 
 def apply_verdict_photo_watermark(uploaded_file):
+    uploaded_size = getattr(uploaded_file, "size", None)
+    max_bytes = int(getattr(settings, "MAX_UPLOAD_IMAGE_BYTES", 15 * 1024 * 1024))
+    if uploaded_size is not None and uploaded_size > max_bytes:
+        raise ValidationError("Изображение превышает допустимый размер.")
+
     watermark_path = _watermark_path()
     if not watermark_path:
         return uploaded_file
@@ -36,13 +42,16 @@ def apply_verdict_photo_watermark(uploaded_file):
 
     try:
         with Image.open(uploaded_file) as source_image:
+            if source_image.format not in {"JPEG", "PNG", "WEBP", "GIF", "HEIC", "HEIF"}:
+                raise ValidationError("Неподдерживаемый формат изображения.")
+            max_pixels = int(getattr(settings, "MAX_UPLOAD_IMAGE_PIXELS", 40_000_000))
+            if source_image.width * source_image.height > max_pixels:
+                raise ValidationError("Слишком большое разрешение изображения.")
             base_image = ImageOps.exif_transpose(source_image).convert("RGBA")
-    except (UnidentifiedImageError, OSError, ValueError):
-        try:
-            uploaded_file.seek(0)
-        except (AttributeError, OSError):
-            pass
-        return uploaded_file
+    except ValidationError:
+        raise
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValidationError("Файл не является допустимым изображением.") from exc
 
     try:
         with Image.open(watermark_path) as watermark_image:

@@ -372,6 +372,7 @@ class VerdictApiTests(TestCase):
                 "photo": self._image_file("mobile.gif"),
             },
             HTTP_HOST=self.host,
+            HTTP_AUTHORIZATION=f"Bearer {self.user.auth_token}",
         )
         self.assertEqual(upload_response.status_code, 201)
         upload_json = upload_response.json()
@@ -391,6 +392,7 @@ class VerdictApiTests(TestCase):
             ),
             content_type="application/json",
             HTTP_HOST=self.host,
+            HTTP_AUTHORIZATION=f"Bearer {self.user.auth_token}",
         )
 
         self.assertEqual(create_response.status_code, 201)
@@ -401,7 +403,7 @@ class VerdictApiTests(TestCase):
         self.assertEqual(verdict.user_id, self.user.tgId)
         self.assertEqual(verdict.photos.count(), 1)
 
-    def test_mobile_create_verdict_requires_tg_id(self):
+    def test_mobile_create_verdict_requires_authentication(self):
         response = self.client.post(
             "/api/mobile/verdict/create/",
             data=json.dumps(
@@ -415,7 +417,7 @@ class VerdictApiTests(TestCase):
             HTTP_HOST=self.host,
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 401)
         self.assertFalse(response.json()["success"])
 
     def test_mobile_get_verdict_by_code(self):
@@ -436,6 +438,7 @@ class VerdictApiTests(TestCase):
         response = self.client.get(
             f"/api/mobile/verdict/by-code/{verdict.code}/",
             HTTP_HOST=self.host,
+            HTTP_AUTHORIZATION=f"Bearer {self.user.auth_token}",
         )
 
         self.assertEqual(response.status_code, 200)
@@ -575,7 +578,7 @@ class VerdictApiTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_verdicts_api_supports_code_filter(self):
+    def test_verdicts_api_rejects_anonymous_access(self):
         Verdict.objects.create(
             user=self.user,
             status="legit",
@@ -608,11 +611,7 @@ class VerdictApiTests(TestCase):
             HTTP_HOST=self.host,
         )
 
-        self.assertEqual(response.status_code, 200)
-        payload = response.json()
-        self.assertEqual(len(payload), 1)
-        self.assertEqual(payload[0]["id"], target_verdict.id)
-        self.assertEqual(payload[0]["code"], "22222")
+        self.assertEqual(response.status_code, 403)
 
     def test_mobile_upload_photo_to_existing_verdict(self):
         verdict = Verdict.objects.create(
@@ -636,6 +635,7 @@ class VerdictApiTests(TestCase):
                 "photo": self._image_file("verdict-extra.gif"),
             },
             HTTP_HOST=self.host,
+            HTTP_AUTHORIZATION=f"Bearer {self.user.auth_token}",
         )
 
         self.assertEqual(response.status_code, 201)
@@ -661,6 +661,53 @@ class VerdictApiTests(TestCase):
 
         session = self.client.session
         self.assertEqual(session.get("tg_id"), self.user.tgId)
+        self.assertIn("checker_device", response.cookies)
+        self.assertTrue(response.cookies["checker_device"]["httponly"])
+
+    def test_security_headers_and_service_worker_cache_reset(self):
+        self._login_web_session()
+        page = self.client.get("/home/", HTTP_HOST=self.host)
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("default-src 'self'", page["Content-Security-Policy"])
+        self.assertIn("img-src 'self' data: blob:", page["Content-Security-Policy"])
+        self.assertEqual(page["X-Content-Type-Options"], "nosniff")
+        self.assertNotContains(page, str(self.user.auth_token))
+
+        worker = self.client.get("/sw.js", HTTP_HOST=self.host)
+        self.assertEqual(worker.status_code, 200)
+        self.assertEqual(
+            worker["Cache-Control"],
+            "no-store, no-cache, must-revalidate, max-age=0",
+        )
+        self.assertContains(worker, "checker-pwa-v23-security-reset")
+
+    def test_unused_telegram_webhook_is_not_routable(self):
+        response = self.client.post(
+            "/telegram/verdict-webhook/",
+            data="{}",
+            content_type="application/json",
+            HTTP_HOST=self.host,
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_auth_restore_uses_post_body_and_sets_httponly_cookie(self):
+        old_url = self.client.get(
+            f"/api/auth/restore/{self.user.auth_token}/",
+            HTTP_HOST=self.host,
+        )
+        self.assertEqual(old_url.status_code, 404)
+
+        response = self.client.post(
+            "/api/auth/restore/",
+            data="{}",
+            content_type="application/json",
+            HTTP_HOST=self.host,
+            HTTP_AUTHORIZATION=f"Bearer {self.user.auth_token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertTrue(response.cookies["checker_device"]["httponly"])
 
     @override_settings(
         APP_REVIEW_DEMO_EMAIL="egor20080801@yandex.ru",
@@ -803,6 +850,7 @@ class VerdictApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "account_deleted.html")
         self.assertContains(response, "checker_auth_token")
+        self.assertEqual(response.cookies["checker_device"]["max-age"], 0)
 
         self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
         self.assertEqual(Verdict.objects.filter(pk=verdict.pk).count(), 0)

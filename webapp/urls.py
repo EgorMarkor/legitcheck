@@ -23,6 +23,18 @@ def manifest(request):
     manifest_path = Path(__file__).resolve().parent.parent / "manifest.json"
     with open(manifest_path, encoding="utf-8") as f:
         return HttpResponse(f.read(), content_type="application/manifest+json")
+
+
+def service_worker(request):
+    service_worker_path = Path(__file__).resolve().parent.parent / "sw.js"
+    response = HttpResponse(
+        service_worker_path.read_text(encoding="utf-8"),
+        content_type="application/javascript; charset=utf-8",
+    )
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    response["Service-Worker-Allowed"] = "/"
+    return response
     
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -63,7 +75,6 @@ urlpatterns = [
     path('articles/', views.articles, name="articles"),
     path('auth_check/', views.auth_check, name="auth_check"),
     path('our_support/', views.our_support, name="our_support"),
-    path('telegram/verdict-webhook/', views.telegram_verdict_webhook, name='telegram_verdict_webhook'),
     path('feedbacks/', views.feedbacks, name="feedbacks"),
     path('start_check/', views.start_check, name="start_check"),
     path("payment/create/", views.create_payment),
@@ -74,17 +85,13 @@ urlpatterns = [
     path('api/auth/token/', views.api_create_login_token, name='api_create_login_token'),
     path('api/auth/poll/<str:token>/', views.api_poll_login_token, name='api_poll_login_token'),
     path('api/auth/web-login/<str:token>/', views.api_web_login_with_token, name='api_web_login_with_token'),
-    path('api/auth/restore/<str:token>/', views.api_auth_restore, name='api_auth_restore'),
+    path('api/auth/restore/', views.api_auth_restore, name='api_auth_restore'),
     
     path("manifest.json", manifest),
     path("manifest.json/", manifest),
     path("manifest.webmanifest", manifest),
     
-    re_path(
-        r'^sw\.js$',
-        serve,
-        {'document_root': BASE_DIR, 'path': 'sw.js'}
-    ),
+    path("sw.js", service_worker, name="service_worker"),
 
     # ВСЕ папки (ios/, android/, windows11/)
     re_path(

@@ -14,6 +14,8 @@ from .models import (
 )
 from django.core.files.storage import default_storage
 from django.core.exceptions import ImproperlyConfigured
+from django.core import signing
+from django.core.cache import cache
 from django.db.models import Prefetch, Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_protect
@@ -22,7 +24,7 @@ from django.utils.crypto import constant_time_compare, get_random_string
 from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from django.utils import timezone
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
+from django.http import JsonResponse, HttpResponse
 import uuid
 from yookassa import Configuration, Payment as YooPayment
 from django.conf import settings
@@ -39,6 +41,8 @@ from pcwebapp.models import LoginToken
 from pcwebapp.models import UploadedVerdictPhoto as PcUploadedVerdictPhoto
 import json
 import logging
+import hashlib
+import ipaddress
 from urllib.parse import urlparse
 from . import telegram as tg_service
 
@@ -156,6 +160,9 @@ DEFAULT_VERDICT_PRICE = Decimal("0.00")
 FREE_CHECK_SPEED = "12h-free"
 FREE_CHECK_COOLDOWN = timedelta(days=7)
 TRUTHY_VALUES = {"1", "true", "yes", "on"}
+DEVICE_COOKIE_NAME = "checker_device"
+DEVICE_COOKIE_SALT = "legitcheck.device-session.v1"
+DEVICE_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def _tariff_group_for_brand(brand):
@@ -166,6 +173,18 @@ def _tariff_price_for_brand(speed, brand):
     return TARIFF_PRICES.get(_tariff_group_for_brand(brand), {}).get(speed)
 
 
+def _rate_limited(bucket, identity, *, limit, window_seconds):
+    digest = hashlib.sha256(str(identity or "unknown").encode("utf-8")).hexdigest()
+    cache_key = f"rate:{bucket}:{digest}"
+    if cache.add(cache_key, 1, timeout=window_seconds):
+        return False
+    try:
+        return cache.incr(cache_key) > limit
+    except ValueError:
+        cache.set(cache_key, 1, timeout=window_seconds)
+        return False
+
+
 def init(request):
     # Точка входа: показываем кнопку Telegram WebApp
     return render(request, 'init.html')
@@ -173,6 +192,21 @@ def init(request):
 
 def _session_user(request):
     tg_id = request.session.get("tg_id")
+    if not tg_id:
+        signed_device = request.COOKIES.get(DEVICE_COOKIE_NAME)
+        if signed_device:
+            try:
+                tg_id = signing.loads(
+                    signed_device,
+                    salt=DEVICE_COOKIE_SALT,
+                    max_age=DEVICE_COOKIE_MAX_AGE,
+                )
+            except signing.BadSignature:
+                tg_id = None
+            if tg_id:
+                request.session["tg_id"] = tg_id
+                request.session.set_expiry(DEVICE_COOKIE_MAX_AGE)
+
     if not tg_id:
         return None
 
@@ -182,6 +216,19 @@ def _session_user(request):
 
     request.session.pop("tg_id", None)
     return None
+
+
+def _set_device_cookie(response, user):
+    response.set_cookie(
+        DEVICE_COOKIE_NAME,
+        signing.dumps(user.tgId, salt=DEVICE_COOKIE_SALT, compress=True),
+        max_age=DEVICE_COOKIE_MAX_AGE,
+        secure=not settings.LOCAL_DEV,
+        httponly=True,
+        samesite="Lax",
+        path="/",
+    )
+    return response
 
 
 def _homepage_popular_models():
@@ -223,10 +270,11 @@ def index(request):
     if not raw_init_data:
         user = _session_user(request)
         if user:
-            return render(request, "index.html", {
+            response = render(request, "index.html", {
                 "tg_user": user,
                 "popular_models": popular_models,
             })
+            return _set_device_cookie(response, user)
         return redirect("init")
 
     try:
@@ -237,6 +285,21 @@ def index(request):
 
     if not webapp_data:
         logger.warning("parse_web_app_data returned falsy, token_set=%s", bool(TELEGRAM_BOT_TOKEN))
+        return redirect("init")
+
+    auth_date = webapp_data.get("auth_date")
+    try:
+        auth_timestamp = (
+            auth_date.timestamp()
+            if hasattr(auth_date, "timestamp")
+            else int(str(auth_date))
+        )
+    except (TypeError, ValueError, OSError):
+        logger.warning("Telegram init data rejected: missing or invalid auth_date")
+        return redirect("init")
+    max_age = int(getattr(settings, "TELEGRAM_INIT_DATA_MAX_AGE", 600))
+    if abs(timezone.now().timestamp() - auth_timestamp) > max_age:
+        logger.warning("Telegram init data rejected: expired auth_date")
         return redirect("init")
 
     tg_user_data = webapp_data.get("user")
@@ -265,10 +328,11 @@ def index(request):
     request.session["tg_id"] = tg_id
     request.session.set_expiry(365 * 24 * 60 * 60)
 
-    return render(request, "index.html", {
+    response = render(request, "index.html", {
         "tg_user": user,
         "popular_models": popular_models,
     })
+    return _set_device_cookie(response, user)
 
 
 def require_user(view_func):
@@ -388,7 +452,7 @@ def _generate_unique_code():
 
 from django.db import close_old_connections, transaction
 from django.core.mail import send_mail
-import random
+import secrets
 import zlib
 
 
@@ -604,7 +668,7 @@ def _extract_auth_token(request, request_data=None):
     token = (request.POST.get("auth_token") or "").strip()
     if token:
         return token
-    return (request.GET.get("auth_token") or "").strip()
+    return ""
 
 
 def _resolve_api_user(request, request_data=None):
@@ -619,9 +683,14 @@ def _resolve_api_user(request, request_data=None):
         return None
 
     login_token = LoginToken.objects.select_related("user").filter(token=token).first()
-    if not login_token or login_token.is_expired() or not login_token.used_at or not login_token.user:
+    if login_token and not login_token.is_expired() and login_token.used_at and login_token.user:
+        return login_token.user
+
+    try:
+        parsed_token = uuid.UUID(str(token))
+    except (TypeError, ValueError, AttributeError):
         return None
-    return login_token.user
+    return User.objects.filter(auth_token=parsed_token).first()
 
 
 def _resolve_user_by_tg_id(request_data):
@@ -886,7 +955,6 @@ def _serialize_verdict_for_mobile(verdict):
     }
 
 
-@csrf_exempt
 @require_POST
 @require_user
 def create_verdict(request):
@@ -991,7 +1059,6 @@ def create_verdict(request):
     })
 
 
-@csrf_exempt
 @require_POST
 @require_user
 def create_free_verdict(request):
@@ -1061,7 +1128,7 @@ def create_free_verdict(request):
             uploaded_photos=[],
         )
 
-    return JsonResponse(
+    response = JsonResponse(
         {
             "success": True,
             "duplicate": not created,
@@ -1078,6 +1145,7 @@ def create_free_verdict(request):
         },
         status=201,
     )
+    return response
 
 @require_user
 def check_verdict(request):
@@ -1154,7 +1222,13 @@ def account_delete(request):
         transaction.on_commit(lambda paths=tuple(media_paths): _delete_storage_paths(paths))
 
     request.session.flush()
-    return render(request, "account_deleted.html")
+    response = render(request, "account_deleted.html")
+    response.delete_cookie(
+        DEVICE_COOKIE_NAME,
+        path="/",
+        samesite="Lax",
+    )
+    return response
     
     
 @require_user
@@ -1271,81 +1345,6 @@ def our_support(request):
     })
 
 
-@csrf_exempt
-def telegram_verdict_webhook(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest("Invalid method")
-
-    try:
-        payload = json.loads(request.body or "{}")
-    except json.JSONDecodeError:
-        return HttpResponseBadRequest("Invalid payload")
-
-    callback_query = payload.get("callback_query")
-    if not callback_query:
-        return JsonResponse({"ok": True})
-
-    data = callback_query.get("data", "")
-    if not data.startswith("verdict:"):
-        return JsonResponse({"ok": True})
-
-    try:
-        _, verdict_id, decision = data.split(":")
-    except ValueError:
-        return JsonResponse({"ok": True})
-
-    if decision not in {"legit", "fake", "todo"}:
-        return JsonResponse({"ok": True})
-
-    try:
-        verdict = Verdict.objects.get(pk=int(verdict_id))
-    except (Verdict.DoesNotExist, ValueError):
-        tg_service.answer_callback_query(
-            TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт не найден"
-        )
-        return JsonResponse({"ok": True})
-
-    verdict.status = decision
-    verdict.save(update_fields=["status"])
-
-    delivery = TelegramVerdictDelivery.objects.filter(verdict=verdict, active=True).first()
-    if delivery:
-        _delete_telegram_messages(delivery.chat_id, delivery.message_ids)
-        delivery.message_ids = []
-        delivery.active = False
-        delivery.save(update_fields=["message_ids", "active", "updated_at"])
-
-    user_messages = {
-        "legit": f"✅ Проверка {verdict.code} завершена: вынесен вердикт «Оригинал».",
-        "fake": f"❌ Проверка {verdict.code} завершена: вынесен вердикт «Не оригинал».",
-        "todo": (
-            f"📷 Для проверки {verdict.code} нужны дополнительные фотографии. "
-            f"Загрузите их на странице {getattr(settings, 'PUBLIC_BASE_URL', DEFAULT_PUBLIC_BASE_URL).rstrip('/')}/verdict/?code={verdict.code}"
-        ),
-    }
-    tg_service.send_message(
-        TELEGRAM_BOT_TOKEN,
-        verdict.user.tgId,
-        user_messages[decision],
-    )
-
-    tg_service.answer_callback_query(
-        TELEGRAM_BOT_TOKEN, callback_query.get("id"), "Вердикт обновлен"
-    )
-
-    message = callback_query.get("message", {})
-    chat = message.get("chat", {})
-    if chat.get("id") and message.get("message_id"):
-        tg_service.edit_message_reply_markup(
-            TELEGRAM_BOT_TOKEN,
-            chat.get("id"),
-            message.get("message_id"),
-            {"inline_keyboard": []},
-        )
-
-    return JsonResponse({"ok": True})
-    
-
 @require_user
 def feedbacks(request):
     return render(request, 'feedback.html', {
@@ -1360,7 +1359,6 @@ def start_check(request):
     })
     
     
-@csrf_exempt
 @require_POST
 @require_user
 def create_payment(request):
@@ -1454,7 +1452,6 @@ def payment_success(request):
     })
 
 
-@csrf_exempt
 @require_POST
 @require_user
 def upload_verdict_photo(request, verdict_id):
@@ -1576,9 +1573,9 @@ def api_mobile_upload_verdict_photos(request):
     if request_data is None:
         return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
 
-    user, error_response = _resolve_user_by_tg_id(request_data)
-    if error_response:
-        return error_response
+    user = _resolve_api_user(request, request_data=request_data)
+    if not user:
+        return JsonResponse({"success": False, "error": "Не авторизован"}, status=401)
 
     files = _collect_photo_files(request)
     if not files:
@@ -1618,9 +1615,9 @@ def api_mobile_create_verdict(request):
     if request_data is None:
         return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
 
-    user, error_response = _resolve_user_by_tg_id(request_data)
-    if error_response:
-        return error_response
+    user = _resolve_api_user(request, request_data=request_data)
+    if not user:
+        return JsonResponse({"success": False, "error": "Не авторизован"}, status=401)
 
     verdict_payload, error_response = _build_verdict_payload(request_data)
     if error_response:
@@ -1660,6 +1657,10 @@ def api_mobile_create_verdict(request):
 
 @csrf_exempt
 def api_mobile_get_verdict_by_code(request, code):
+    user = _resolve_api_user(request)
+    if not user:
+        return JsonResponse({"success": False, "error": "Не авторизован"}, status=401)
+
     normalized_code = (code or "").strip().upper()
     if not normalized_code:
         return JsonResponse({"success": False, "error": "Не указан код вердикта"}, status=400)
@@ -1667,7 +1668,7 @@ def api_mobile_get_verdict_by_code(request, code):
     verdict = (
         Verdict.objects.select_related("user")
         .prefetch_related(_verdict_photos_prefetch())
-        .filter(code=normalized_code)
+        .filter(code=normalized_code, user=user)
         .first()
     )
     if not verdict:
@@ -1688,9 +1689,9 @@ def api_mobile_upload_verdict_photo(request, verdict_id):
     if request_data is None:
         return JsonResponse({"success": False, "error": "Некорректный JSON"}, status=400)
 
-    user, error_response = _resolve_user_by_tg_id(request_data)
-    if error_response:
-        return error_response
+    user = _resolve_api_user(request, request_data=request_data)
+    if not user:
+        return JsonResponse({"success": False, "error": "Не авторизован"}, status=401)
 
     verdict = (
         Verdict.objects.select_related("user")
@@ -1748,10 +1749,18 @@ ALLOWED_LOGIN_TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 
 def _client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0]
-    return request.META.get("REMOTE_ADDR")
+    remote = (request.META.get("REMOTE_ADDR") or "").strip()
+    trusted_proxies = set(getattr(settings, "TRUSTED_PROXY_IPS", set()))
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if remote in trusted_proxies and forwarded:
+        for candidate in reversed([part.strip() for part in forwarded.split(",") if part.strip()]):
+            try:
+                ipaddress.ip_address(candidate)
+            except ValueError:
+                continue
+            if candidate not in trusted_proxies:
+                return candidate
+    return remote or "unknown"
 
 
 @csrf_exempt
@@ -1762,12 +1771,14 @@ def api_create_login_token(request):
     Returns JSON with token and expiration timestamp.
     """
     ip = _client_ip(request)
+    if _rate_limited("login-token-create", ip, limit=8, window_seconds=300):
+        return JsonResponse({"error": "Too many requests"}, status=429)
     active = (LoginToken.objects
               .filter(ip_address=ip,
                       used_at__isnull=True,
                       created_at__gte=timezone.now() - timedelta(minutes=5))
               .count())
-    if active >= 30:
+    if active >= 8:
         return JsonResponse({"error": "Too many active tokens"}, status=429)
 
     token = get_random_string(6, allowed_chars=ALLOWED_LOGIN_TOKEN_CHARS)
@@ -1785,12 +1796,14 @@ def api_create_login_token(request):
     })
 
 
-@csrf_exempt
 def api_poll_login_token(request, token):
     """
     Poll login token status. Returns authenticated/expired flags.
     If authenticated, includes minimal user payload.
     """
+    if _rate_limited("login-token-poll", _client_ip(request), limit=150, window_seconds=300):
+        return JsonResponse({"error": "Too many requests"}, status=429)
+
     try:
         t = LoginToken.objects.select_related("user").get(token=token)
     except LoginToken.DoesNotExist:
@@ -1842,7 +1855,7 @@ def api_web_login_with_token(request, token):
     request.session.set_expiry(365 * 24 * 60 * 60)
     request.session.cycle_key()
 
-    return JsonResponse(
+    response = JsonResponse(
         {
             "success": True,
             "redirect_url": reverse("home"),
@@ -1852,30 +1865,37 @@ def api_web_login_with_token(request, token):
                 "username": user.username,
                 "img": user.img,
                 "balance": user.balance,
+                "auth_token": str(user.auth_token),
             },
         }
     )
+    return _set_device_cookie(response, user)
 
 
-def api_auth_restore(request, token):
-    """Restore session from persistent auth_token stored in localStorage."""
+@csrf_exempt
+@require_POST
+def api_auth_restore(request):
+    """Restore a session without placing the bearer credential in a URL."""
+    token = _extract_auth_token(request, request_data=_request_payload(request))
     import uuid as _uuid
     try:
         parsed = _uuid.UUID(str(token))
     except (ValueError, AttributeError):
-        return redirect('/?clear_token=1')
+        return JsonResponse({"success": False}, status=401)
 
     user = User.objects.filter(auth_token=parsed).first()
     if not user:
-        return redirect('/?clear_token=1')
+        return JsonResponse({"success": False}, status=401)
 
     request.session['tg_id'] = user.tgId
     request.session.set_expiry(365 * 24 * 60 * 60)
-    return redirect('home')
+    request.session.cycle_key()
+    response = JsonResponse({"success": True, "redirect_url": reverse("home")})
+    return _set_device_cookie(response, user)
 
 
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from .models import User, Verdict, VerdictPhoto, Payment
 from .serializers import (
@@ -1890,15 +1910,9 @@ from .serializers import (
 @permission_classes([AllowAny])
 def create_yookassa_payment_api(request):
     raw_amount = str(request.data.get("amount", "")).replace(",", ".")
-    user_id = request.data.get("user_id")
-
-    if not user_id:
-        return JsonResponse({"error": "user_id is required"}, status=400)
-
-    try:
-        user = User.objects.get(tgId=user_id)
-    except User.DoesNotExist:
-        return JsonResponse({"error": "user not found"}, status=404)
+    user = _resolve_api_user(request, request_data=request.data)
+    if not user:
+        return JsonResponse({"error": "Не авторизован"}, status=401)
 
     try:
         amount = Decimal(raw_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -1930,13 +1944,13 @@ def create_yookassa_payment_api(request):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
 
 class VerdictViewSet(viewsets.ModelViewSet):
     queryset = Verdict.objects.all().order_by('-created_at')
     serializer_class = VerdictSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         queryset = self.queryset.select_related('user').prefetch_related('photos')
@@ -1955,13 +1969,13 @@ class VerdictViewSet(viewsets.ModelViewSet):
 class VerdictPhotoViewSet(viewsets.ModelViewSet):
     queryset = VerdictPhoto.objects.all()
     serializer_class = VerdictPhotoSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all().order_by('-date')
     serializer_class = PaymentSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         user_id = self.request.query_params.get('user_id')
@@ -2063,6 +2077,9 @@ def email_send_otp(request):
     email = request.POST.get("email", "").strip().lower()
     if not email or "@" not in email:
         return redirect("/email-login/?error=invalid")
+    rate_identity = f"{_client_ip(request)}:{email}"
+    if _rate_limited("email-otp-send", rate_identity, limit=5, window_seconds=3600):
+        return redirect("/email-login/?error=rate_limited")
 
     password = request.POST.get("password", "")
     if password:
@@ -2072,7 +2089,7 @@ def email_send_otp(request):
         return redirect("/email-login/?error=invalid_credentials")
 
     # Генерируем 6-значный код
-    code = "{:06d}".format(random.randint(0, 999999))
+    code = f"{secrets.randbelow(1_000_000):06d}"
 
     # Инвалидируем старые неиспользованные коды для этого email
     EmailOTPToken.objects.filter(email=email, used=False).update(used=True)
@@ -2119,6 +2136,13 @@ def email_verify_otp(request):
         return redirect("email_login")
 
     code = request.POST.get("code", "").strip()
+    if _rate_limited(
+        "email-otp-verify",
+        f"{_client_ip(request)}:{email}",
+        limit=8,
+        window_seconds=600,
+    ):
+        return redirect("/email/verify/?error=rate_limited")
 
     token = (
         EmailOTPToken.objects

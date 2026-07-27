@@ -1923,7 +1923,11 @@ document.addEventListener('DOMContentLoaded', function() {
     isFreeCheckSubmitting = true;
     if (freeCheckCard) freeCheckCard.classList.add('free-check-tariff--loading');
 
-    fetch(freeCheckConfig.createUrl, { method: 'POST', body: buildVerdictFormData() })
+    fetch(freeCheckConfig.createUrl, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: buildVerdictFormData()
+    })
       .then(function(response) {
         return response.json().then(function(json) {
           if (!response.ok) {
@@ -2127,7 +2131,11 @@ document.addEventListener('DOMContentLoaded', function() {
     verdictBtn.disabled = true;
     verdictBtn.classList.add('opacity-70', 'pointer-events-none');
 
-    fetch("{% url 'create_verdict' %}", { method:'POST', body: formData })
+    fetch("{% url 'create_verdict' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: formData
+    })
       .then(function(r){return r.json();})
       .then(function(json){
         if (json && json.success) {
