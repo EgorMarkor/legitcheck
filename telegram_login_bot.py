@@ -32,7 +32,27 @@ logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 TOKEN_PATTERN = re.compile(r"[A-Z0-9]{6}")
+TELEGRAM_SECRET_PATTERN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b")
 DEFAULT_AVATAR_URL = "/static/avatar-placeholder.png"
+
+
+class TelegramCredentialFilter(logging.Filter):
+    """Prevent rejected Bot API credentials from reaching process logs."""
+
+    def filter(self, record):
+        rendered = record.getMessage()
+        redacted = TELEGRAM_SECRET_PATTERN.sub("[REDACTED_TELEGRAM_TOKEN]", rendered)
+        if redacted != rendered:
+            record.msg = redacted
+            record.args = ()
+        if record.exc_info and TELEGRAM_SECRET_PATTERN.search(str(record.exc_info[1])):
+            record.exc_info = None
+            record.exc_text = None
+        return True
+
+
+for root_handler in logging.getLogger().handlers:
+    root_handler.addFilter(TelegramCredentialFilter())
 
 
 class LoginTokenError(Exception):
