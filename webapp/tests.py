@@ -782,6 +782,24 @@ class VerdictApiTests(TestCase):
         self.assertEqual(response.context["popular_models"][0].title, "Nike Dunk")
         self.assertContains(response, "Nike Dunk")
 
+    @patch("webapp.views.parse_web_app_data", return_value=None)
+    def test_index_uses_signed_session_when_telegram_init_data_is_stale(self, parse_init_data):
+        session = self.client.session
+        session["tg_id"] = self.user.tgId
+        session.save()
+
+        response = self.client.get(
+            "/home/",
+            {"init_data": "stale-after-token-rotation"},
+            HTTP_HOST=self.host,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "index.html")
+        self.assertEqual(response.context["tg_user"], self.user)
+        self.assertIn("checker_device", response.cookies)
+        parse_init_data.assert_called_once()
+
     def test_account_delete_requires_login(self):
         response = self.client.get("/account/delete/", HTTP_HOST=self.host)
 

@@ -262,30 +262,44 @@ def _verdict_photos(verdict):
 
 def index(request):
     popular_models = _homepage_popular_models()
+    session_user = _session_user(request)
+
+    def render_home(user):
+        response = render(request, "index.html", {
+            "tg_user": user,
+            "popular_models": popular_models,
+        })
+        return _set_device_cookie(response, user)
+
+    def reject_telegram_init(message):
+        logger.warning(message, bool(TELEGRAM_BOT_TOKEN))
+        # A rotated Bot API token invalidates initData already held by an open
+        # Telegram WebView. A previously authenticated signed session remains
+        # trustworthy and must not be trapped in an init -> home redirect loop.
+        if session_user:
+            return render_home(session_user)
+        return redirect("init")
+
     raw_init_data = (
         request.GET.get("init_data")
         or request.GET.get("tgWebAppData")
     )
 
     if not raw_init_data:
-        user = _session_user(request)
-        if user:
-            response = render(request, "index.html", {
-                "tg_user": user,
-                "popular_models": popular_models,
-            })
-            return _set_device_cookie(response, user)
+        if session_user:
+            return render_home(session_user)
         return redirect("init")
 
     try:
         webapp_data = parse_web_app_data(TELEGRAM_BOT_TOKEN, raw_init_data)
     except Exception:
         logger.exception("parse_web_app_data raised, token_set=%s", bool(TELEGRAM_BOT_TOKEN))
+        if session_user:
+            return render_home(session_user)
         return redirect("init")
 
     if not webapp_data:
-        logger.warning("parse_web_app_data returned falsy, token_set=%s", bool(TELEGRAM_BOT_TOKEN))
-        return redirect("init")
+        return reject_telegram_init("parse_web_app_data returned falsy, token_set=%s")
 
     auth_date = webapp_data.get("auth_date")
     try:
@@ -295,12 +309,14 @@ def index(request):
             else int(str(auth_date))
         )
     except (TypeError, ValueError, OSError):
-        logger.warning("Telegram init data rejected: missing or invalid auth_date")
-        return redirect("init")
+        return reject_telegram_init(
+            "Telegram init data rejected: missing or invalid auth_date, token_set=%s"
+        )
     max_age = int(getattr(settings, "TELEGRAM_INIT_DATA_MAX_AGE", 600))
     if abs(timezone.now().timestamp() - auth_timestamp) > max_age:
-        logger.warning("Telegram init data rejected: expired auth_date")
-        return redirect("init")
+        return reject_telegram_init(
+            "Telegram init data rejected: expired auth_date, token_set=%s"
+        )
 
     tg_user_data = webapp_data.get("user")
     if not tg_user_data:
@@ -328,11 +344,7 @@ def index(request):
     request.session["tg_id"] = tg_id
     request.session.set_expiry(365 * 24 * 60 * 60)
 
-    response = render(request, "index.html", {
-        "tg_user": user,
-        "popular_models": popular_models,
-    })
-    return _set_device_cookie(response, user)
+    return render_home(user)
 
 
 def require_user(view_func):
