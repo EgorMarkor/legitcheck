@@ -11,10 +11,11 @@
   var DESTROY_EVENT = "app:page-destroy";
   var STATE_INDEX = "__pageTransitionIndex";
   var SCROLL_PREFIX = "page-transition:scroll:";
-  var VERSION = "20260601-2";
+  var VERSION = "20260728-1";
 
   var BLOCKED_EXACT_PATHS = {
     "/": true,
+    "/check": true,
     "/email-login": true,
     "/email-login/": true
   };
@@ -22,6 +23,7 @@
   var BLOCKED_PREFIXES = [
     "/admin/",
     "/api/",
+    "/check/",
     "/payment/create/",
     "/payment/success/",
     "/email/",

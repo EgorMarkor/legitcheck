@@ -1,6 +1,5 @@
-// Security cache reset: v23 invalidates every response cached before the
-// July 2026 incident cleanup.
-const CACHE_VERSION = 'checker-pwa-v23-security-reset';
+// v24 refreshes the navigation runtime after the CSP hardening rollout.
+const CACHE_VERSION = 'checker-pwa-v24-check-page-fix';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -13,7 +12,7 @@ const PRECACHE_URLS = [
   '/static/vendor/tailwind-cdn.js',
   '/static/vendor/google-sans.css',
   '/static/css/page-transitions.css?v=20260601-3',
-  '/static/js/page-transitions.js?v=20260601-2',
+  '/static/js/page-transitions.js?v=20260728-1',
   '/static/vendor/fonts/google-sans-cyrillic-700.woff2',
   '/static/vendor/fonts/google-sans-cyrillic-ext-700.woff2',
   '/static/vendor/fonts/google-sans-latin-700.woff2',

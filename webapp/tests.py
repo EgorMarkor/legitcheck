@@ -671,6 +671,7 @@ class VerdictApiTests(TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn("default-src 'self'", page["Content-Security-Policy"])
         self.assertIn("img-src 'self' data: blob:", page["Content-Security-Policy"])
+        self.assertNotIn("'unsafe-eval'", page["Content-Security-Policy"])
         self.assertEqual(page["X-Content-Type-Options"], "nosniff")
         self.assertNotContains(page, str(self.user.auth_token))
 
@@ -680,7 +681,20 @@ class VerdictApiTests(TestCase):
             worker["Cache-Control"],
             "no-store, no-cache, must-revalidate, max-age=0",
         )
-        self.assertContains(worker, "checker-pwa-v23-security-reset")
+        self.assertContains(worker, "checker-pwa-v24-check-page-fix")
+
+    def test_check_page_uses_full_navigation_under_csp(self):
+        transitions_path = (
+            Path(settings.BASE_DIR)
+            / "webapp"
+            / "static"
+            / "js"
+            / "page-transitions.js"
+        )
+        transitions = transitions_path.read_text(encoding="utf-8")
+
+        self.assertIn('"/check": true', transitions)
+        self.assertIn('"/check/"', transitions)
 
     def test_unused_telegram_webhook_is_not_routable(self):
         response = self.client.post(
